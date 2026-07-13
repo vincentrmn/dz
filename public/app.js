@@ -84,14 +84,14 @@ function carteChantier(c) {
     </div>
 
     <details class="repli">
-      <summary>Configuration technique — WBS et conversations Teams</summary>
+      <summary>Configuration des sources</summary>
       <div class="grille">
         <div class="champ"><label>Codes WBS Traxxeo</label><input data-role="wbs" placeholder="22.06 A;22.06 B"></div>
         <div class="champ"><label>ID conversation Teams — BL&L</label><input data-role="bll" placeholder="19:xxxx@thread.v2"></div>
         <div class="champ"><label>ID conversation Teams — RT</label><input data-role="rt" placeholder="19:xxxx@thread.v2"></div>
       </div>
       <div class="pied-carte">
-        <span class="detail" style="color: var(--gris); font-size: 12.5px;">La découverte automatique préremplit les IDs de conversations Teams.</span>
+        <span class="detail" style="color: var(--gris); font-size: 12.5px;">Le scan automatique préremplit les IDs de conversations Teams.</span>
         <button data-role="enregistrer">Enregistrer les modifications</button>
       </div>
     </details>`;
@@ -142,7 +142,7 @@ function carteChantier(c) {
     const lien = document.createElement('a');
     lien.href = '/configuration';
     lien.className = 'chip chip-lien';
-    lien.textContent = contacts.length ? '+ gérer le carnet' : '+ ajouter des destinataires';
+    lien.textContent = contacts.length ? '+ Gérer les destinataires' : '+ Ajouter des destinataires';
     zone.appendChild(lien);
   }
   rendreDestinataires();
@@ -259,7 +259,7 @@ $('#btn-ajouter').onclick = async () => {
 $('#btn-decouverte').onclick = async () => {
   try {
     await api('POST', '/api/decouverte', { declenchement: 'manuel' });
-    toast('Découverte lancée. Les nouveaux chantiers apparaîtront en inactif.');
+    toast('Scan lancé. Les nouveaux chantiers apparaîtront en inactif.');
     setTimeout(chargerChantiers, 10000);
   } catch (e) { toast(`Échec : ${e.message}`); }
 };

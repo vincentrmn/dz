@@ -17,13 +17,14 @@ async function chargerSante() {
   const zone = $('#sante');
   try {
     const s = await api('/api/health');
+    const moteurOk = s.n8n === 'ok';
     zone.innerHTML =
-      tuile('Cockpit', 'en ligne', true) +
-      tuile('n8n', s.n8n, s.n8n === 'ok') +
-      tuile('Stockage rapports', s.stockage === 'ok' ? `${s.rapports} fichier(s)` : 'absent', s.stockage === 'ok') +
+      tuile('Interface (Hub)', 'En ligne', true) +
+      tuile('Moteur de génération', moteurOk ? 'En ligne' : 'Hors ligne', moteurOk) +
+      tuile('Stockage rapports', s.stockage === 'ok' ? `${s.rapports} fichier(s)` : 'Hors ligne', s.stockage === 'ok') +
       tuile('Version', s.version);
   } catch (e) {
-    zone.innerHTML = tuile('Cockpit', 'injoignable', false);
+    zone.innerHTML = tuile('Interface (Hub)', 'Hors ligne', false);
   }
 }
 
@@ -51,9 +52,12 @@ async function chargerJournal() {
     const tb = document.createElement('tbody');
     runs.forEach((r) => {
       const tr = document.createElement('tr');
-      const debut = r.demarre_le ? new Date(r.demarre_le).toLocaleString('fr-FR') : '—';
+      const d = r.demarre_le ? new Date(r.demarre_le) : null;
+      const debut = d
+        ? `${d.toLocaleDateString('fr-FR')}<div>${d.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })}</div>`
+        : '—';
       tr.innerHTML = `
-        <td class="detail">${debut}<div class="detail">${majuscule(r.declenchement)}</div></td>
+        <td class="detail" style="white-space: nowrap;">${debut}<div class="detail">${majuscule(r.declenchement)}</div></td>
         <td></td>
         <td class="detail">${r.periode_debut || ''} → ${r.periode_fin || ''}</td>
         <td>${badgeStatut(r.statut)}</td>

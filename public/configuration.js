@@ -70,4 +70,30 @@ $('#btn-ajouter-contact').onclick = async () => {
   } catch (e) { toast(`Échec : ${e.message}`); }
 };
 
+/* Réglage du run hebdomadaire */
+const selHeure = $('#r-heure');
+for (let h = 0; h < 24; h++) {
+  const o = document.createElement('option');
+  o.value = h;
+  o.textContent = String(h).padStart(2, '0') + ':00';
+  selHeure.appendChild(o);
+}
+
+async function chargerReglages() {
+  try {
+    const r = (await api('GET', '/api/reglages')).reglages || {};
+    const run = r.run_hebdo || { jour: 3, heure: 7 };
+    $('#r-jour').value = String(run.jour);
+    $('#r-heure').value = String(run.heure);
+  } catch { /* valeurs par défaut du HTML */ }
+}
+
+$('#btn-reglage').onclick = async () => {
+  try {
+    await api('POST', '/api/reglages', { jour: Number($('#r-jour').value), heure: Number($('#r-heure').value) });
+    toast('Créneau du run hebdomadaire enregistré.');
+  } catch (e) { toast(`Échec : ${e.message}`); }
+};
+
+chargerReglages();
 chargerContacts();

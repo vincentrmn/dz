@@ -73,6 +73,8 @@ app.post('/api/chantiers', (req, res) => proxyToN8n(res, 'POST', 'dz/api/chantie
 app.get('/api/runs', (req, res) => proxyToN8n(res, 'GET', 'dz/api/runs'));
 app.get('/api/contacts', (req, res) => proxyToN8n(res, 'GET', 'dz/api/contacts'));
 app.post('/api/contacts', (req, res) => proxyToN8n(res, 'POST', 'dz/api/contacts', req.body));
+app.get('/api/reglages', (req, res) => proxyToN8n(res, 'GET', 'dz/api/reglages'));
+app.post('/api/reglages', (req, res) => proxyToN8n(res, 'POST', 'dz/api/reglages', req.body));
 app.post('/api/generer', (req, res) => proxyToN8n(res, 'POST', 'dz/generer', req.body));
 app.post('/api/decouverte', (req, res) => proxyToN8n(res, 'POST', 'dz/decouverte', req.body));
 

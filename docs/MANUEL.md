@@ -76,13 +76,13 @@ Les interrupteurs et pastilles s'enregistrent automatiquement ; les champs techn
 
 1. Dans Teams, créer (ou faire créer) les deux conversations de groupe du chantier en incluant le compte **assembleur@dzconstruct.lu**, avec `-BLL-` et `-RT-` dans leur nom.
    Exemple : `CH:23-04 Rue Neuve -BLL- Livraisons` et `CH:23-04 Rue Neuve -RT- Rapport technique`.
-2. Sur la page Chantiers, cliquer **« Lancer la découverte »** (sinon, elle tourne seule chaque lundi à 6h30).
+2. Sur la page Chantiers, cliquer **« Scan des nouveaux chantiers »** (sinon, elle tourne seule chaque lundi à 6h30).
 3. Le chantier apparaît en **inactif**, avec les IDs de conversations déjà remplis et le code chantier détecté.
 4. Vérifier/compléter les **codes WBS** (les mêmes que dans Traxxeo — en cas de doute, les demander au responsable Traxxeo), ajouter les emails si besoin, **Enregistrer**, puis passer l'interrupteur sur **actif**.
 
-### Comment fonctionne « Lancer la découverte » ?
+### Comment fonctionne le « Scan des nouveaux chantiers » ?
 
-La découverte parcourt **toutes les conversations Teams** du compte assembleur et repère celles dont le nom contient `-BLL-` ou `-RT-`. Elle regroupe les paires appartenant au même chantier (en normalisant les codes : `CH:22-06 B` côté Teams = `22.06 B` côté Traxxeo), ignore celles déjà connues, et crée les nouvelles lignes **en inactif**. Rien n'est jamais activé automatiquement : la validation finale reste humaine — on vérifie la ligne, puis on l'active.
+Le scan parcourt **toutes les conversations Teams** du compte assembleur et repère celles dont le nom contient `-BLL-` ou `-RT-`. Elle regroupe les paires appartenant au même chantier (en normalisant les codes : `CH:22-06 B` côté Teams = `22.06 B` côté Traxxeo), ignore celles déjà connues, et crée les nouvelles lignes **en inactif**. Rien n'est jamais activé automatiquement : la validation finale reste humaine — on vérifie la ligne, puis on l'active.
 
 ### Ajouter un chantier à la main
 
@@ -169,4 +169,4 @@ Uniquement les adresses du champ « Envoi par email » du chantier concerné. Ch
 | **Traxxeo** | Heures pointées (`person_hrd`) |
 | **PDFShift** | Conversion HTML → PDF |
 
-Les horaires : rapports le **mercredi 7h00**, découverte le **lundi 6h30**.
+Les horaires : le créneau du run hebdomadaire se règle dans la page **Configuration** (défaut : mercredi 07:00) ; le scan des nouveaux chantiers tourne le lundi à 06:30.
