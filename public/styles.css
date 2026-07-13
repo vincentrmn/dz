@@ -306,9 +306,9 @@ button.danger:disabled:hover { background: var(--blanc); border-color: #e5aeaa; 
 
 /* Page « Comment ça marche ? » */
 .guide h1 { font-size: 26px; font-weight: 700; margin-bottom: 10px; }
-.guide .intro { color: var(--encre-2); max-width: 720px; margin-bottom: 22px; }
+.guide .intro { color: var(--encre-2); margin-bottom: 22px; }
 .guide h2 { margin-top: 40px; }
-.guide p { max-width: 760px; margin: 10px 0; }
+.guide p { margin: 10px 0; }
 .guide code {
   font-family: ui-monospace, "SF Mono", Menlo, monospace; font-size: 12.5px;
   background: var(--fond); border: 1px solid var(--bord); border-radius: 5px; padding: 1px 6px;
@@ -331,7 +331,7 @@ button.danger:disabled:hover { background: var(--blanc); border-color: #e5aeaa; 
 .etape-schema .es-titre { font-size: 12px; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; color: var(--rouge); margin-bottom: 6px; }
 .es-fleche { align-self: center; color: var(--gris); font-size: 18px; flex: none; }
 @media (max-width: 900px) { .es-fleche { display: none; } }
-.liste-pas { max-width: 760px; margin: 10px 0 10px 0; padding-left: 0; list-style: none; counter-reset: pas; }
+.liste-pas { margin: 10px 0 10px 0; padding-left: 0; list-style: none; counter-reset: pas; }
 .liste-pas li {
   counter-increment: pas; position: relative; padding: 8px 0 8px 42px; margin: 0;
 }
@@ -341,11 +341,10 @@ button.danger:disabled:hover { background: var(--blanc); border-color: #e5aeaa; 
   background: var(--encre); color: #fff; font-size: 13px; font-weight: 700;
   display: flex; align-items: center; justify-content: center;
 }
-.exemple { background: var(--blanc); border: 1px solid var(--bord); border-radius: 10px; padding: 12px 16px; margin: 12px 0; max-width: 760px; }
+.exemple { background: var(--blanc); border: 1px solid var(--bord); border-radius: 10px; padding: 12px 16px; margin: 12px 0; }
 .exemple .ex-ok { color: var(--ok); font-weight: 600; padding: 4px 0; }
 .exemple .ex-ko { color: var(--err); padding: 4px 0; }
 .exemple code { font-weight: 400; }
-.guide table { max-width: 860px; }
 
 /* Bouton scindé « Générer » (flèche visible quand l'email du chantier est actif) */
 .scinde { position: relative; display: inline-flex; }
