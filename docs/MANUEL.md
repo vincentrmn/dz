@@ -45,16 +45,7 @@ Trois pages, accessibles depuis le menu en haut :
 
 > **Remarque** : le bouton « Générer » fonctionne aussi sur un chantier **inactif** — pratique pour tester un chantier avant de l'activer. Le run automatique du mercredi, lui, ne traite que les chantiers **actifs**.
 
-### Le bouton « Démo », à quoi ça sert ?
-
-**Démo** génère un rapport avec des **données d'exemple** (équipes, messages et photos fictifs) en passant par toute la vraie chaîne de fabrication (mise en page, PDF, Word, dépôt) — mais **sans toucher** à Teams, Traxxeo ni à la liste d'emails.
-
-C'est utile pour :
-- montrer à quelqu'un à quoi ressemble un rapport, sans données réelles ;
-- vérifier que la chaîne complète fonctionne (après une modification, par exemple) ;
-- former un nouvel utilisateur sans risque.
-
-Le rapport démo est clairement marqué « DÉMONSTRATION — données d'exemple » sur sa page de garde.
+> **Mode démo (technique)** : la chaîne sait générer un rapport avec des données d'exemple sans toucher à Teams/Traxxeo (utile pour le diagnostic). Le bouton a été retiré de l'interface ; la fonction reste accessible via l'API (`demo: true`).
 
 ---
 
@@ -113,7 +104,7 @@ En deux temps :
 1. Page **Configuration** : constituer le carnet de destinataires (nom + email).
 2. Sur chaque chantier : activer le mini-interrupteur **« Envoyer par email »** puis cocher les personnes concernées (pastilles vertes = destinataires).
 
-Chaque rapport généré pour ce chantier (hors mode démo) leur est alors envoyé : liens de téléchargement + le PDF en pièce jointe. L'envoi utilise le compte SMTP configuré dans n8n, l'expéditeur est le champ `mail_from` du nœud `Config`. *(Activation initiale : voir MISE-EN-SERVICE.md — l'interrupteur général `mail_actif` doit être à `true` et le credential SMTP valide.)*
+Chaque rapport généré pour ce chantier leur est alors envoyé : liens de téléchargement + le PDF en pièce jointe. L'envoi utilise le compte SMTP configuré dans n8n, l'expéditeur est le champ `mail_from` du nœud `Config`. *(Activation initiale : voir MISE-EN-SERVICE.md — l'interrupteur général `mail_actif` doit être à `true` et le credential SMTP valide.)*
 
 ---
 

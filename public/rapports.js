@@ -62,7 +62,7 @@ function afficher() {
   });
 
   const nbSemaines = Object.values(parChantier).reduce((n, c) => n + Object.keys(c).length, 0);
-  $('#compteur').textContent = `${nbSemaines} rapport(s), ${fichiers.length} fichier(s)`;
+  $('#compteur').textContent = `${nbSemaines} rapport(s)`;
 }
 
 async function charger() {

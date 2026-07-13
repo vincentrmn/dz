@@ -193,7 +193,11 @@ input[type="week"] { font: inherit; font-size: 13px; border: 1px solid var(--bor
   margin-top: 14px; padding-top: 12px; border-top: 1px solid var(--bord);
 }
 .bloc-mail .lib-mail { font-size: 13.5px; color: var(--encre-2); }
-.destinataires { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
+.destinataires {
+  flex-basis: 100%;
+  display: flex; align-items: center; gap: 6px; flex-wrap: wrap;
+  margin-top: 8px; padding-left: 42px;
+}
 
 .chip {
   display: inline-flex; align-items: center; gap: 6px;
@@ -212,7 +216,7 @@ details.repli summary {
   cursor: pointer; font-size: 12px; letter-spacing: 0.08em; text-transform: uppercase;
   color: var(--gris); font-weight: 600; list-style: none; display: flex; align-items: center; gap: 8px;
 }
-details.repli summary::before { content: "▸"; transition: transform 0.15s; }
+details.repli summary::before { content: "▸"; font-size: 17px; line-height: 1; color: var(--encre-2); transition: transform 0.15s; }
 details.repli[open] summary::before { transform: rotate(90deg); }
 details.repli summary::-webkit-details-marker { display: none; }
 

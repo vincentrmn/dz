@@ -70,7 +70,6 @@ function carteChantier(c) {
       ${c.source === 'decouverte' ? '<span class="badge type">découvert auto</span>' : ''}
       <div class="chantier-actions">
         <button data-role="generer" class="principal">Générer le rapport</button>
-        <button data-role="demo" title="Génère un rapport avec des données d'exemple, sans toucher à Teams ni Traxxeo">Démo</button>
       </div>
     </div>
 
@@ -157,7 +156,7 @@ function carteChantier(c) {
     sauvegarder(false);
   };
 
-  const lancer = async (demo) => {
+  $('[data-role=generer]', div).onclick = async () => {
     const semaine = $('#semaine').value || semainePrecedente();
     const { debut, fin } = bornesSemaine(semaine);
     try {
@@ -165,15 +164,12 @@ function carteChantier(c) {
         chantier: c.nom,
         date_debut: debut,
         date_fin: fin,
-        demo: !!demo,
-        declenchement: demo ? 'démo' : 'manuel',
+        declenchement: 'manuel',
       });
       toast(`Génération lancée (${debut} → ${fin}) — suivi sur la page Debug`);
       setTimeout(chargerRapports, 8000);
     } catch (e) { toast(`Échec : ${e.message}`); }
   };
-  $('[data-role=generer]', div).onclick = () => lancer(false);
-  $('[data-role=demo]', div).onclick = () => lancer(true);
 
   return div;
 }
