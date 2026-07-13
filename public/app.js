@@ -53,9 +53,12 @@ async function api(methode, chemin, corps) {
 /* Chantiers                                                           */
 /* ------------------------------------------------------------------ */
 
+let contacts = [];
+
 function carteChantier(c) {
   const div = document.createElement('div');
   div.className = 'carte';
+  const selection = new Set(String(c.emails || '').split(';').map((e) => e.trim()).filter(Boolean));
   div.innerHTML = `
     <div class="chantier-tete">
       <label class="interrupteur" title="Actif : inclus dans le run hebdomadaire">
@@ -70,23 +73,34 @@ function carteChantier(c) {
         <button data-role="demo" title="Génère un rapport avec des données d'exemple, sans toucher à Teams ni Traxxeo">Démo</button>
       </div>
     </div>
-    <div class="grille grille-4">
-      <div class="champ"><label>Codes WBS Traxxeo</label><input data-role="wbs" placeholder="22.06 A;22.06 B"></div>
-      <div class="champ"><label>ID conversation Teams — BLL</label><input data-role="bll" placeholder="19:xxxx@thread.v2"></div>
-      <div class="champ"><label>ID conversation Teams — RT</label><input data-role="rt" placeholder="19:xxxx@thread.v2"></div>
-      <div class="champ"><label>Envoi par email (séparés par ;)</label><input data-role="emails" placeholder="francis@dzconstruct.lu;fares@dzconstruct.lu"></div>
+
+    <div class="bloc-mail">
+      <label class="interrupteur mini" title="Envoyer le rapport par email aux destinataires cochés">
+        <input type="checkbox" ${c.mail_actif ? 'checked' : ''} data-role="mail">
+        <span class="piste"></span>
+      </label>
+      <span class="lib-mail">Envoyer par email</span>
+      <div class="destinataires" data-role="destinataires" style="${c.mail_actif ? '' : 'display:none'}"></div>
     </div>
-    <div class="pied-carte">
-      <span class="detail" style="color: var(--gris); font-size: 12.5px;">La découverte automatique préremplit les IDs de conversations Teams.</span>
-      <button data-role="enregistrer">Enregistrer les modifications</button>
-    </div>`;
+
+    <details class="repli">
+      <summary>Configuration technique — WBS et conversations Teams</summary>
+      <div class="grille">
+        <div class="champ"><label>Codes WBS Traxxeo</label><input data-role="wbs" placeholder="22.06 A;22.06 B"></div>
+        <div class="champ"><label>ID conversation Teams — BL&L</label><input data-role="bll" placeholder="19:xxxx@thread.v2"></div>
+        <div class="champ"><label>ID conversation Teams — RT</label><input data-role="rt" placeholder="19:xxxx@thread.v2"></div>
+      </div>
+      <div class="pied-carte">
+        <span class="detail" style="color: var(--gris); font-size: 12.5px;">La découverte automatique préremplit les IDs de conversations Teams.</span>
+        <button data-role="enregistrer">Enregistrer les modifications</button>
+      </div>
+    </details>`;
   $('.chantier-nom', div).textContent = c.nom;
   $('[data-role=wbs]', div).value = c.wbs || '';
   $('[data-role=bll]', div).value = c.conversation_bll || '';
   $('[data-role=rt]', div).value = c.conversation_rt || '';
-  $('[data-role=emails]', div).value = c.emails || '';
 
-  $('[data-role=enregistrer]', div).onclick = async () => {
+  const sauvegarder = async (rechargement) => {
     try {
       await api('POST', '/api/chantiers', {
         id: c.id,
@@ -94,15 +108,54 @@ function carteChantier(c) {
         wbs: $('[data-role=wbs]', div).value.trim(),
         conversation_bll: $('[data-role=bll]', div).value.trim(),
         conversation_rt: $('[data-role=rt]', div).value.trim(),
-        emails: $('[data-role=emails]', div).value.trim(),
+        emails: [...selection].join(';'),
+        mail_actif: $('[data-role=mail]', div).checked,
         actif: $('[data-role=actif]', div).checked,
       });
       toast('Chantier enregistré');
-      chargerChantiers();
+      if (rechargement) chargerChantiers();
     } catch (e) { toast(`Échec : ${e.message}`); }
   };
 
-  $('[data-role=actif]', div).onchange = () => $('[data-role=enregistrer]', div).click();
+  function rendreDestinataires() {
+    const zone = $('[data-role=destinataires]', div);
+    zone.innerHTML = '';
+    const connus = new Set(contacts.map((k) => k.email));
+    const affiches = [
+      ...contacts.map((k) => ({ nom: k.nom, email: k.email })),
+      ...[...selection].filter((e) => !connus.has(e)).map((e) => ({ nom: e, email: e })),
+    ];
+    affiches.forEach((p) => {
+      const actif = selection.has(p.email);
+      const chip = document.createElement('label');
+      chip.className = 'chip' + (actif ? ' chip-on' : '');
+      chip.title = p.email;
+      chip.innerHTML = `<input type="checkbox" ${actif ? 'checked' : ''}><span></span>`;
+      $('span', chip).textContent = p.nom;
+      $('input', chip).onchange = (ev) => {
+        if (ev.target.checked) selection.add(p.email); else selection.delete(p.email);
+        chip.classList.toggle('chip-on', ev.target.checked);
+        sauvegarder(false);
+      };
+      zone.appendChild(chip);
+    });
+    const lien = document.createElement('a');
+    lien.href = '/configuration';
+    lien.className = 'chip chip-lien';
+    lien.textContent = contacts.length ? '+ gérer le carnet' : '+ ajouter des destinataires';
+    zone.appendChild(lien);
+  }
+  rendreDestinataires();
+
+  $('[data-role=enregistrer]', div).onclick = () => sauvegarder(true);
+  $('[data-role=actif]', div).onchange = () => sauvegarder(true);
+  $('[data-role=mail]', div).onchange = (ev) => {
+    $('[data-role=destinataires]', div).style.display = ev.target.checked ? '' : 'none';
+    if (ev.target.checked && !contacts.length && !selection.size) {
+      toast('Ajoutez d’abord des destinataires dans la page Configuration.');
+    }
+    sauvegarder(false);
+  };
 
   const lancer = async (demo) => {
     const semaine = $('#semaine').value || semainePrecedente();
@@ -220,7 +273,13 @@ async function bandeauSante() {
   } catch {}
 }
 
+async function chargerContactsGlobaux() {
+  try {
+    contacts = (await api('GET', '/api/contacts')).contacts || [];
+  } catch { contacts = []; }
+}
+
 $('#semaine').value = semainePrecedente();
 bandeauSante();
-chargerChantiers();
+chargerContactsGlobaux().then(chargerChantiers);
 chargerRapports();

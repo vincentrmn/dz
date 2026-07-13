@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Configuration — Hub Rapport Technique DZ</title>
+  <link rel="stylesheet" href="/styles.css">
+  <link rel="icon" href="/logo-dz.png">
+</head>
+<body>
+  <header>
+    <img src="/logo-dz.png" alt="DZ Construct">
+    <div class="titre">Configuration</div>
+    <nav>
+      <a href="/">Chantiers</a>
+      <a href="/rapports">Rapports</a>
+      <a href="/configuration" class="actif">Configuration</a>
+      <a href="/debug">Debug</a>
+    </nav>
+  </header>
+
+  <main>
+    <h2>Carnet de destinataires</h2>
+    <p style="color: var(--encre-2); font-size: 14px; margin-bottom: 16px;">
+      Les personnes listées ici peuvent être activées comme destinataires des rapports,
+      chantier par chantier, depuis la page Chantiers.
+    </p>
+    <div class="carte">
+      <div class="barre-outils" style="margin-bottom: 0;">
+        <div class="champ"><label>Nom</label><input id="c-nom" placeholder="Francis" style="font-family: inherit;"></div>
+        <div class="champ"><label>Email</label><input id="c-email" type="email" placeholder="francis@dzconstruct.lu" style="min-width: 260px;"></div>
+        <div class="a-droite" style="align-self: flex-end;"><button id="btn-ajouter-contact" class="principal">Ajouter</button></div>
+      </div>
+    </div>
+    <div id="liste-contacts"><div class="vide">Chargement…</div></div>
+
+    <h2>Envoi des emails</h2>
+    <div class="carte" style="font-size: 13.5px; color: var(--encre-2);">
+      <p><strong style="color: var(--encre);">Expéditeur :</strong> défini dans n8n (workflow « DZ — Générer rapport chantier », nœud <code>Config</code>, champ <code>mail_from</code>), avec le compte SMTP du credential « SMTP account ».</p>
+      <p style="margin-top: 8px;"><strong style="color: var(--encre);">Interrupteur général :</strong> <code>mail_actif</code> dans le même nœud <code>Config</code>. Tant qu'il est désactivé, aucun email ne part — quels que soient les réglages des chantiers.</p>
+      <p style="margin-top: 8px;">Chaque email contient les liens de téléchargement et le rapport PDF en pièce jointe. Le mode Démo n'envoie jamais d'email.</p>
+    </div>
+  </main>
+
+  <div class="toast" id="toast"></div>
+  <footer>DZ Construct — configuration du système</footer>
+  <script src="/configuration.js"></script>
+</body>
+</html>

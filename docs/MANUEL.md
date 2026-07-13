@@ -29,8 +29,9 @@ Trois pages, accessibles depuis le menu en haut :
 
 | Page | À quoi elle sert |
 |---|---|
-| **Chantiers** | Configurer les chantiers, lancer une génération, activer/désactiver |
+| **Chantiers** | Configurer les chantiers, lancer une génération, activer/désactiver, choisir les destinataires |
 | **Rapports** | Retrouver et télécharger tous les rapports, classés par chantier et par semaine |
+| **Configuration** | Gérer le carnet de destinataires (noms + emails) |
 | **Debug** | Vérifier que tout va bien : état du système et journal des générations |
 
 ---
@@ -63,15 +64,13 @@ Le rapport démo est clairement marqué « DÉMONSTRATION — données d'exemple
 
 Chaque carte de la page **Chantiers** contient :
 
-| Champ | Contenu | Exemple |
-|---|---|---|
-| **Interrupteur + badge ACTIF** | Inclus (ou non) dans le run automatique du mercredi | — |
-| **Codes WBS Traxxeo** | Les codes analytiques du chantier dans Traxxeo, séparés par `;` | `22.06 A;22.06 B` |
-| **ID conversation Teams — BLL** | Identifiant technique de la conversation « bons de livraison » | `19:xxxx@thread.v2` |
-| **ID conversation Teams — RT** | Identifiant technique de la conversation « rapport technique » | `19:xxxx@thread.v2` |
-| **Envoi par email** | Destinataires du rapport, séparés par `;` (laisser vide = pas d'envoi) | `francis@dzconstruct.lu;fares@dzconstruct.lu` |
+| Élément | Contenu |
+|---|---|
+| **Interrupteur + badge ACTIF** | Inclus (ou non) dans le run automatique du mercredi |
+| **Envoyer par email** (mini-interrupteur) | Active l'envoi du rapport par email pour ce chantier ; les destinataires se cochent individuellement (pastilles), tirés du carnet de la page **Configuration** |
+| **Configuration technique** (section repliable) | Les codes WBS Traxxeo (séparés par `;`, ex. `22.06 A;22.06 B`) et les IDs des conversations Teams BL&L / RT |
 
-Après modification, cliquer sur **« Enregistrer les modifications »** en bas de la carte.
+Les interrupteurs et pastilles s'enregistrent automatiquement ; les champs techniques via le bouton **« Enregistrer les modifications »** de la section repliable.
 
 ### Ajouter un chantier : la méthode recommandée (automatique)
 
@@ -110,9 +109,11 @@ Chaque rapport mentionne la **date et l'heure de génération** sur sa page de g
 
 ## 6. L'envoi par email
 
-Si le champ **« Envoi par email »** d'un chantier contient des adresses (séparées par `;`), chaque rapport généré pour ce chantier (hors mode démo) est envoyé automatiquement à ces destinataires : liens de téléchargement + le document en pièce jointe.
+En deux temps :
+1. Page **Configuration** : constituer le carnet de destinataires (nom + email).
+2. Sur chaque chantier : activer le mini-interrupteur **« Envoyer par email »** puis cocher les personnes concernées (pastilles vertes = destinataires).
 
-L'envoi utilise le compte SMTP configuré dans n8n. *(Activation initiale : voir MISE-EN-SERVICE.md — un interrupteur `mail_actif` doit être passé à `true` une fois l'expéditeur validé.)*
+Chaque rapport généré pour ce chantier (hors mode démo) leur est alors envoyé : liens de téléchargement + le PDF en pièce jointe. L'envoi utilise le compte SMTP configuré dans n8n, l'expéditeur est le champ `mail_from` du nœud `Config`. *(Activation initiale : voir MISE-EN-SERVICE.md — l'interrupteur général `mail_actif` doit être à `true` et le credential SMTP valide.)*
 
 ---
 

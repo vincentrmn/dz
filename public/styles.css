@@ -183,6 +183,38 @@ td .detail { color: var(--gris); font-size: 12px; }
 .barre-outils .a-droite { margin-left: auto; display: flex; gap: 10px; align-items: center; }
 input[type="week"] { font: inherit; font-size: 13px; border: 1px solid var(--bord); border-radius: 6px; padding: 6px 10px; background: var(--blanc); color: var(--encre); }
 
+.interrupteur.mini { width: 32px; height: 18px; }
+.interrupteur.mini .piste::after { width: 12px; height: 12px; }
+.interrupteur.mini input:checked + .piste::after { transform: translateX(14px); }
+
+.bloc-mail {
+  display: flex; align-items: center; gap: 10px; flex-wrap: wrap;
+  margin-top: 14px; padding-top: 12px; border-top: 1px solid var(--bord);
+}
+.bloc-mail .lib-mail { font-size: 13.5px; color: var(--encre-2); }
+.destinataires { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
+
+.chip {
+  display: inline-flex; align-items: center; gap: 6px;
+  border: 1px solid var(--bord); border-radius: 999px;
+  padding: 3px 12px; font-size: 12.5px; color: var(--gris);
+  cursor: pointer; user-select: none; background: var(--fond);
+  text-decoration: none;
+}
+.chip input { display: none; }
+.chip-on { color: var(--ok); background: #eaf6ef; border-color: #bfe3cc; font-weight: 600; }
+.chip-lien { color: var(--rouge); background: var(--blanc); border-style: dashed; }
+.chip-lien:hover { border-color: var(--rouge); }
+
+details.repli { margin-top: 14px; border-top: 1px solid var(--bord); padding-top: 10px; }
+details.repli summary {
+  cursor: pointer; font-size: 12px; letter-spacing: 0.08em; text-transform: uppercase;
+  color: var(--gris); font-weight: 600; list-style: none; display: flex; align-items: center; gap: 8px;
+}
+details.repli summary::before { content: "▸"; transition: transform 0.15s; }
+details.repli[open] summary::before { transform: rotate(90deg); }
+details.repli summary::-webkit-details-marker { display: none; }
+
 .toast {
   position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%);
   background: var(--encre); color: #fff; padding: 10px 22px; border-radius: 8px;

@@ -71,6 +71,8 @@ async function proxyToN8n(res, method, webhookPath, body) {
 app.get('/api/chantiers', (req, res) => proxyToN8n(res, 'GET', 'dz/api/chantiers'));
 app.post('/api/chantiers', (req, res) => proxyToN8n(res, 'POST', 'dz/api/chantiers', req.body));
 app.get('/api/runs', (req, res) => proxyToN8n(res, 'GET', 'dz/api/runs'));
+app.get('/api/contacts', (req, res) => proxyToN8n(res, 'GET', 'dz/api/contacts'));
+app.post('/api/contacts', (req, res) => proxyToN8n(res, 'POST', 'dz/api/contacts', req.body));
 app.post('/api/generer', (req, res) => proxyToN8n(res, 'POST', 'dz/generer', req.body));
 app.post('/api/decouverte', (req, res) => proxyToN8n(res, 'POST', 'dz/decouverte', req.body));
 
@@ -158,6 +160,7 @@ app.get('/reports/:file', (req, res) => {
 
 app.get('/debug', (req, res) => res.sendFile(path.join(__dirname, 'public', 'debug.html')));
 app.get('/rapports', (req, res) => res.sendFile(path.join(__dirname, 'public', 'rapports.html')));
+app.get('/configuration', (req, res) => res.sendFile(path.join(__dirname, 'public', 'configuration.html')));
 
 app.listen(PORT, () => {
   console.log(`Hub Rapport Technique DZ — port ${PORT}`);
