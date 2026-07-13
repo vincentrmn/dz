@@ -48,7 +48,7 @@ async function chargerJournal() {
       return;
     }
     const tbl = document.createElement('table');
-    tbl.innerHTML = '<colgroup><col style="width:110px"><col style="width:19%"><col style="width:180px"><col style="width:125px"><col style="width:90px"><col></colgroup>'
+    tbl.innerHTML = '<colgroup><col style="width:108px"><col style="width:17%"><col style="width:208px"><col style="width:122px"><col style="width:88px"><col></colgroup>'
       + '<thead><tr><th>Démarré</th><th>Chantier</th><th>Période</th><th>Statut</th><th>Étape</th><th>Détails</th></tr></thead>';
     const tb = document.createElement('tbody');
     runs.forEach((r) => {
