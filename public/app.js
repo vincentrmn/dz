@@ -73,11 +73,12 @@ function carteChantier(c) {
       </div>
     </div>
 
-    <div class="bloc-mail">
+    <div class="bloc-mail${c.mail_actif ? ' mail-on' : ''}">
       <label class="interrupteur mini" title="Envoyer le rapport par email aux destinataires cochés">
         <input type="checkbox" ${c.mail_actif ? 'checked' : ''} data-role="mail">
         <span class="piste"></span>
       </label>
+      <svg class="ico-mail" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"/></svg>
       <span class="lib-mail">Envoyer par email</span>
       <div class="destinataires" data-role="destinataires" style="${c.mail_actif ? '' : 'display:none'}"></div>
     </div>
@@ -150,6 +151,7 @@ function carteChantier(c) {
   $('[data-role=actif]', div).onchange = () => sauvegarder(true);
   $('[data-role=mail]', div).onchange = (ev) => {
     $('[data-role=destinataires]', div).style.display = ev.target.checked ? '' : 'none';
+    $('.bloc-mail', div).classList.toggle('mail-on', ev.target.checked);
     if (ev.target.checked && !contacts.length && !selection.size) {
       toast('Ajoutez d’abord des destinataires dans la page Configuration.');
     }

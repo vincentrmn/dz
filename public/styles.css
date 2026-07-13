@@ -193,6 +193,13 @@ input[type="week"] { font: inherit; font-size: 13px; border: 1px solid var(--bor
   margin-top: 14px; padding-top: 12px; border-top: 1px solid var(--bord);
 }
 .bloc-mail .lib-mail { font-size: 13.5px; color: var(--encre-2); }
+.bloc-mail .ico-mail { color: var(--gris); flex: none; }
+.bloc-mail.mail-on .ico-mail { color: var(--rouge); }
+
+#journal th:nth-child(1), #journal td:nth-child(1),
+#journal th:nth-child(3), #journal td:nth-child(3),
+#journal th:nth-child(4), #journal td:nth-child(4),
+#journal th:nth-child(5), #journal td:nth-child(5) { width: 1%; white-space: nowrap; }
 .destinataires {
   flex-basis: 100%;
   display: flex; align-items: center; gap: 6px; flex-wrap: wrap;
