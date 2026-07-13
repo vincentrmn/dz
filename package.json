@@ -1,6 +1,6 @@
 {
   "name": "dz-rapport-technique-cockpit",
-  "version": "2.0.0",
+  "version": "2.2.0",
   "description": "Hub Rapport Technique DZ Construct — cockpit de pilotage, dépôt des rapports et conversion Word",
   "main": "server.js",
   "scripts": {

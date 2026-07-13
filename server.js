@@ -41,7 +41,7 @@ app.get('/api/health', async (req, res) => {
     n8n,
     stockage: fs.existsSync(REPORTS_DIR) ? 'ok' : 'absent',
     rapports: fs.readdirSync(REPORTS_DIR).length,
-    version: '2.1.0',
+    version: '2.2.0',
   });
 });
 
