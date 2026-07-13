@@ -1,7 +1,7 @@
 # Manuel d'utilisation — Rapport Technique DZ Construct
 
 *Génération automatique des rapports techniques hebdomadaires par chantier.*
-*Version 2.1 — juillet 2026*
+*Version 2.2 — juillet 2026*
 
 ---
 
@@ -31,7 +31,8 @@ Trois pages, accessibles depuis le menu en haut :
 |---|---|
 | **Chantiers** | Configurer les chantiers, lancer une génération, activer/désactiver, choisir les destinataires |
 | **Rapports** | Retrouver et télécharger tous les rapports, classés par chantier et par semaine |
-| **Configuration** | Gérer le carnet de destinataires (noms + emails) |
+| **Configuration** | Gérer le carnet de destinataires (noms + emails) et le créneau du run hebdomadaire |
+| **Comment ça marche ?** | Le guide intégré : chaîne de bout en bout, nommage des conversations Teams, activation d'un chantier, contacts |
 | **Debug** | Vérifier que tout va bien : état du système et journal des générations |
 
 ---
@@ -39,7 +40,7 @@ Trois pages, accessibles depuis le menu en haut :
 ## 3. Générer un rapport à la demande
 
 1. Page **Chantiers**, choisir la **semaine** dans le sélecteur en haut (par défaut : la semaine dernière).
-2. Cliquer sur **« Générer le rapport »** sur la carte du chantier voulu.
+2. Cliquer sur **« Générer le rapport »** sur la carte du chantier voulu. Ce clic génère le rapport **sans l'envoyer par email**. Si l'email du chantier est activé, une petite **flèche** apparaît à côté du bouton : elle ouvre l'option **« Générer et envoyer par email »**.
 3. La génération part en arrière-plan (quelques secondes à 1-2 minutes selon le nombre de photos). Suivre l'avancement sur la page **Debug**.
 4. Récupérer le résultat sur la page **Rapports** (PDF, Word, Aperçu).
 
@@ -62,6 +63,10 @@ Chaque carte de la page **Chantiers** contient :
 | **Configuration technique** (section repliable) | Les codes WBS Traxxeo (séparés par `;`, ex. `22.06 A;22.06 B`) et les IDs des conversations Teams BL&L / RT |
 
 Les interrupteurs et pastilles s'enregistrent automatiquement ; les champs techniques via le bouton **« Enregistrer les modifications »** de la section repliable.
+
+### Supprimer / restaurer un chantier
+
+La **Zone de danger** (en bas de la section repliable) supprime le chantier de la configuration après confirmation (saisie du nom exact). La suppression est **réversible** : le chantier passe dans le bloc discret **« Chantiers supprimés »** en bas de la liste, d'où un clic sur **Restaurer** le fait revenir (inactif). Ses rapports restent dans la page Rapports, et le scan automatique ne le recréera pas.
 
 ### Ajouter un chantier : la méthode recommandée (automatique)
 
@@ -104,7 +109,7 @@ En deux temps :
 1. Page **Configuration** : constituer le carnet de destinataires (nom + email).
 2. Sur chaque chantier : activer le mini-interrupteur **« Envoyer par email »** puis cocher les personnes concernées (pastilles vertes = destinataires).
 
-Chaque rapport généré pour ce chantier leur est alors envoyé : liens de téléchargement + le PDF en pièce jointe. L'envoi utilise le compte SMTP configuré dans n8n, l'expéditeur est le champ `mail_from` du nœud `Config`. *(Activation initiale : voir MISE-EN-SERVICE.md — l'interrupteur général `mail_actif` doit être à `true` et le credential SMTP valide.)*
+Le rapport part alors par email dans deux cas : le **run automatique du mercredi** (envoi systématique pour les chantiers dont l'email est activé), ou l'option **« Générer et envoyer par email »** du bouton scindé (le clic simple sur « Générer le rapport » ne déclenche jamais d'envoi). Contenu de l'email : liens de téléchargement + le PDF en pièce jointe. L'envoi utilise le compte SMTP configuré dans n8n, l'expéditeur est le champ `mail_from` du nœud `Config`. *(Activation initiale : voir MISE-EN-SERVICE.md — l'interrupteur général `mail_actif` doit être à `true` et le credential SMTP valide.)*
 
 ---
 

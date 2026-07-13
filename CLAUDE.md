@@ -16,20 +16,21 @@ Pas de couche IA de reformulation : **passthrough strict** des textes et photos 
 ### Cockpit web « Hub Rapport Technique »
 - Express (`server.js`) + front statique (`public/`), déployé sur **Railway**, URL : `https://cockpit-production-c3dc.up.railway.app`.
 - Déploiement : **auto-deploy à chaque push GitHub** sur la branche suivie par le service Railway. Vérifier un déploiement en pollant un marqueur dans les assets déployés (ex. `curl …/styles.css | grep <nouvelle-classe>`), ~30 s après le push.
-- Pages : `/` (Dashboard : chantiers, sélecteur de période calendrier, derniers rapports), `/rapports` (classés par chantier), `/configuration` (créneau du run hebdo + carnet de destinataires), `/debug` (santé + journal des runs).
+- Pages : `/` (Dashboard : chantiers, sélecteur de période calendrier, derniers rapports, bloc « Chantiers supprimés » restaurables), `/rapports` (classés par chantier), `/configuration` (créneau du run hebdo + carnet de destinataires), `/guide` (« Comment ça marche ? » — guide intégré : chaîne, nommage Teams, activation chantier, contacts), `/debug` (santé + journal des runs). Favicon : `public/favicon.png` (le « dz » rouge seul, extrait du logo).
+- Dashboard : bouton scindé sur chaque chantier — clic principal « Générer le rapport » = **sans** email ; la flèche (visible si le toggle email du chantier est actif) ouvre « Générer et envoyer par email » (`envoyer: true` dans le POST `dz/generer`).
 - Rapports stockés sur le **volume Railway monté sur `/app/data`** (persistant entre déploiements). Routes : upload `POST /api/reports/upload?chantier&periode&type=pdf|docx|html`, listing `GET /api/reports`, téléchargement `/reports/:file`.
 - Conversion Word : `POST /api/convert/docx` (lib `html-to-docx` ; les icônes du HTML sont inlinées en base64 côté serveur par `inlinerIcones()` avant conversion).
 - Icônes des chapitres : fichiers PNG dans `public/icons/` (equipes, illustrations, materiel), référencés **par URL** dans le HTML du rapport.
 - Le reste des routes `/api/*` sont des **proxys vers les webhooks n8n** (chantiers, runs, generer, decouverte, contacts, reglages).
 
 ### Workflows n8n (IDs)
-- **`DZ — Générer rapport chantier`** (`qZG6Q5LnQSrloeXR`) : sous-workflow appelé par chantier. Chaîne : Config (drapeaux `graph_actif`, `traxxeo_actif`, `pdfshift_actif`, `mail_actif`, `mail_from`, `cockpit_url`) → journalisation début (dz_runs) → Auth Microsoft → lecture BL&L + RT (pagination) → téléchargement/compression images → Auth/Lire/Mapper Traxxeo (désactivé tant que l'offre n'est pas signée) → `Fusionner sources` → `Préparer rapport` (HTML) → dépôt HTML → PDFShift → dépôt PDF → conversion Word via cockpit → dépôt Word → bilan (Succès / Succès partiel / Erreur) → envoi email éventuel (SMTP) → journalisation fin.
+- **`DZ — Générer rapport chantier`** (`qZG6Q5LnQSrloeXR`) : sous-workflow appelé par chantier. Chaîne : Config (drapeaux `graph_actif`, `traxxeo_actif`, `pdfshift_actif`, `mail_actif`, `mail_from`, `cockpit_url`) → journalisation début (dz_runs) → Auth Microsoft → lecture BL&L + RT (pagination) → téléchargement/compression images → Auth/Lire/Mapper Traxxeo (désactivé tant que l'offre n'est pas signée) → `Fusionner sources` → `Préparer rapport` (HTML) → dépôt HTML → PDFShift → dépôt PDF → conversion Word via cockpit → dépôt Word → bilan (Succès / Succès partiel / Erreur) → envoi email éventuel (SMTP) → journalisation fin. Entrée booléenne `envoyer` : l'email ne part que si `envoyer=true` (cron hebdo, ou option explicite du cockpit) **en plus** des conditions mail_actif ×2 + destinataires + non-démo + fichier produit.
 - **`DZ — Rapport hebdo`** (`5su1DOeswBlCdakw`) : webhook `dz/generer` (génération à la demande) + **cron horaire** dont un nœud Code (Europe/Luxembourg) compare au créneau stocké dans `dz_reglages` (`run_hebdo`, défaut mercredi 7 h). Charge les chantiers actifs et lance le sous-workflow pour chacun (`waitForSubWorkflow=false`).
 - **`DZ — Découverte chantiers`** (`49okCW9O85lYsP3r`) : cron lundi 06:30 + webhook `dz/decouverte`. Scanne les conversations Teams du compte assembleur (regex `-\s*(BL&L|BLL|RT)\s*-`), normalise les codes (`CH:22-06 B` → `22.06 B`), **upsert** dans dz_chantiers en préservant nom/wbs/actif existants et en ne remplissant que les IDs de conversations manquants. Nouveautés créées en `actif=false` (validation humaine).
-- **`DZ — Cockpit API`** (`FCZLzT8cabm3s3GE`) : webhooks GET/POST `dz/api/chantiers` (y compris **suppression** via `{id, supprimer:true}`), GET `dz/api/runs`, GET/POST `dz/api/contacts`, GET/POST `dz/api/reglages`.
+- **`DZ — Cockpit API`** (`FCZLzT8cabm3s3GE`) : webhooks GET/POST `dz/api/chantiers` (suppression **soft** via `{id, supprimer:true}` → `supprime=true, actif=false` ; restauration via `{id, restaurer:true}`), GET `dz/api/runs`, GET/POST `dz/api/contacts`, GET/POST `dz/api/reglages`.
 
 ### Data Tables n8n (IDs)
-- **dz_chantiers** (`6LXQADAq7StJE6TN`) : nom, wbs, conversation_bll, conversation_rt, emails (séparés par `;`), mail_actif, actif, source (`pilote`/`decouverte`/`cockpit`), notes.
+- **dz_chantiers** (`6LXQADAq7StJE6TN`) : nom, wbs, conversation_bll, conversation_rt, emails (séparés par `;`), mail_actif, actif, source (`pilote`/`decouverte`/`cockpit`), notes, supprime (soft-delete).
 - **dz_runs** (`9HVj9380Vw6DulOr`) : journal des générations (chantier, période, statut, étape, message, stats, declenchement).
 - **dz_contacts** (`OQfO7bWw9oSYba7g`) : nom, email (carnet de destinataires).
 - **dz_reglages** (`B9TiHAJqJbOJXUNe`) : clé/valeur ; `run_hebdo` = `{"jour": 3, "heure": 7}`.
@@ -88,8 +89,8 @@ Pas de couche IA de reformulation : **passthrough strict** des textes et photos 
 - Depuis l'environnement de dev distant, Chromium/Playwright **ne sort pas sur Internet** (proxy → ERR_CONNECTION_RESET) : pour vérifier l'UI, servir `public/` en local avec des stubs `/api/*` et capturer sur `127.0.0.1`. `curl` fonctionne normalement pour vérifier la prod.
 
 ### Fonctionnel
-- Suppression d'un chantier (Zone de danger) = suppression de la **ligne de config uniquement** : les rapports générés restent sur le volume, l'historique reste dans dz_runs. ⚠️ Le scan de découverte **recréera** le chantier (inactif) tant que le soft-delete de la roadmap n'est pas implémenté.
-- L'envoi email d'un chantier ne part que si : interrupteur général `mail_actif` (Config) **et** toggle du chantier **et** destinataires non vides.
+- Suppression d'un chantier (Zone de danger) = **soft-delete** : la ligne reste dans dz_chantiers avec `supprime=true, actif=false`, masquée du Dashboard (bloc « Chantiers supprimés » avec restauration), ignorée par le run hebdo et par le scan de découverte. Les rapports générés restent sur le volume, l'historique dans dz_runs. La restauration remet `supprime=false` (le chantier revient inactif).
+- L'envoi email d'un chantier ne part que si : interrupteur général `mail_actif` (Config) **et** toggle du chantier **et** destinataires non vides **et** `envoyer=true` (cron hebdo ou « Générer et envoyer par email » du cockpit).
 
 ## Conventions de travail
 
@@ -116,17 +117,22 @@ Pas de couche IA de reformulation : **passthrough strict** des textes et photos 
 
 ## Roadmap
 
-Par priorité :
+Fait le 13/07 au soir (session « déploiement roadmap ») :
 
-1. **« Comment ça marche ? » — LA partie stratégique.** Un grand guide intégré à l'outil (pas un PDF à part) expliquant pas à pas : comment fonctionne la chaîne de bout en bout, à quoi sert chaque menu, comment bien nommer les prochaines conversations Teams (`… -BL&L- …` / `… -RT- …`), comment activer un nouveau chantier, comment maintenir l'outil, qui contacter en cas de besoin (Vincent, CBC/Benoît pour le tenant Microsoft, Matthieu pour Traxxeo). Exhaustif mais parfaitement intégré à l'UI/UX — à travailler ensemble avant d'implémenter.
-2. **Réglage SMTP Gmail** (côté Vincent : port 465 SSL/TLS + mot de passe d'application), puis re-test d'envoi sur Gaichel.
-3. **Suppression de chantier durable (soft-delete).** Aujourd'hui un chantier supprimé est recréé (inactif) au scan suivant → relou. Solution retenue à implémenter : ne plus effacer la ligne mais la marquer supprimée (colonne dédiée dans dz_chantiers) ; le scan ignore ces lignes, le Dashboard les masque, et prévoir une restauration simple.
-4. **Générer + envoyer par email en une action.** Proposition sans surcharger l'UI : transformer « Générer le rapport » en bouton scindé (split button) — clic principal = générer ; petite flèche = menu avec « Générer et envoyer par email » (visible seulement si le toggle email du chantier est actif). Le cron hebdo, lui, envoie déjà automatiquement.
-5. **Authentification Microsoft** pour accéder à l'outil (login Entra ID / compte DZ, tenant géré par CBC — prévoir d'impliquer Benoît pour l'app registration). Aujourd'hui le cockpit est public : à traiter avant un usage large.
-6. **Favicon** : utiliser uniquement le « dz » rouge du logo (l'actuel est le logo complet, déformé en 16×16).
-7. **À demander à Francis** : (a) où déposer les rapports — quel site/répertoire SharePoint, option tampon secrétariat ou dépôt direct (Lot 4) ; (b) quelle adresse email doit être l'expéditeur des rapports (aujourd'hui un Gmail de test) ; (c) pourquoi les conversations RT ne sont pas alimentées.
-8. **Manuel PDF** : convertir `docs/MANUEL.md` en PDF quand le contenu est validé (probablement fusionné avec le « Comment ça marche ? »).
-9. **GAMMA** : backfill des rapports depuis début janvier 2026 après validation BETA + offre Traxxeo (attention volumétrie PDFShift ; les semaines sans usage Teams auront peu/pas de photos — attendu, ne pas « corriger »).
+- ✅ **« Comment ça marche ? »** — page `/guide` intégrée au cockpit (chaîne de bout en bout, contenu du rapport, nommage Teams `-BL&L-`/`-RT-` avec exemples, activation d'un chantier pas à pas, rôle de chaque page, run du mercredi, envoi email, suppression/restauration, contacts Vincent/Benoît/Matthieu). Première version complète rédigée en autonomie : **à faire relire par Vincent**, le contenu s'ajuste dans `public/guide.html`.
+- ✅ **Soft-delete des chantiers** — colonne `supprime` dans dz_chantiers ; suppression cockpit = marquage (`supprime=true, actif=false`) ; restauration en un clic (bloc « Chantiers supprimés » du Dashboard) ; run hebdo et scan de découverte ignorent ces lignes. Testé en réel (chantier `00.00-Test-SoftDelete`, id 18, laissé en supprimé comme exemple).
+- ✅ **Générer + envoyer en une action** — bouton scindé sur la carte chantier ; drapeau `envoyer` propagé webhook → orchestrateur → générateur (6e condition du IF « Envoi email ? »).
+- ✅ **Favicon** — `public/favicon.png` : le « dz » rouge seul.
+
+Reste, par priorité :
+
+1. **Réglage SMTP Gmail** (côté Vincent : port 465 SSL/TLS + mot de passe d'application Google sur le credential « SMTP account » n8n), puis re-test d'envoi sur Gaichel — dernier essai : *Connection timeout*.
+2. **Relecture du guide `/guide`** par Vincent (et Francis ?) — ajuster le texte, puis en tirer le manuel PDF (point 5).
+3. **Authentification Microsoft** pour accéder à l'outil (login Entra ID / compte DZ, tenant géré par CBC — prévoir d'impliquer Benoît pour l'app registration). Aujourd'hui le cockpit est public : à traiter avant un usage large.
+4. **À demander à Francis** : (a) où déposer les rapports — quel site/répertoire SharePoint, option tampon secrétariat ou dépôt direct (Lot 4) ; (b) quelle adresse email doit être l'expéditeur des rapports (aujourd'hui un Gmail de test) ; (c) pourquoi les conversations RT ne sont pas alimentées.
+5. **Manuel PDF** : convertir `docs/MANUEL.md` en PDF quand le contenu est validé (probablement fusionné avec le « Comment ça marche ? »).
+6. **GAMMA** : backfill des rapports depuis début janvier 2026 après validation BETA + offre Traxxeo (attention volumétrie PDFShift ; les semaines sans usage Teams auront peu/pas de photos — attendu, ne pas « corriger »).
+7. *(Qualité, non bloquant)* Remplacer les secrets en clair des nœuds n8n (client_secret Graph dans les 2 `Auth Microsoft`, clé PDFShift dans `Convertir en PDF`) par des credentials n8n — à faire à la main dans l'UI (le MCP ne sait pas attacher un credential httpBasicAuth). Et poser `EXECUTIONS_DATA_MAX_AGE=168` sur le service n8n Railway.
 
 ### Hors périmètre (garder au chaud)
 - Bascule conversation Teams → canal : faisable (~mêmes endpoints Graph, quelques heures), uniquement si DZ fait évoluer son usage de Teams. Ne pas anticiper.

@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Comment ça marche ? — Hub Rapport Technique DZ Construct</title>
+  <link rel="stylesheet" href="/styles.css">
+  <link rel="icon" href="/favicon.png">
+</head>
+<body>
+  <header>
+    <a href="/" style="display:flex;align-items:center;"><img src="/logo-dz.png" alt="DZ Construct"></a>
+    <div class="titre">Hub Rapport Technique</div>
+    <nav>
+      <a href="/">Dashboard</a>
+      <a href="/rapports">Rapports</a>
+      <a href="/configuration">Configuration</a>
+      <a href="/guide" class="actif">Comment ça marche ?</a>
+      <a href="/debug">Debug</a>
+    </nav>
+  </header>
+
+  <main class="guide">
+    <h1>Comment ça marche ?</h1>
+    <p class="intro">
+      Cette page explique tout ce qu'il faut savoir pour utiliser et entretenir l'outil :
+      d'où viennent les informations des rapports, comment bien nommer les conversations Teams,
+      comment activer un nouveau chantier, et qui contacter en cas de besoin.
+    </p>
+
+    <div class="sommaire">
+      <a href="#chaine">La chaîne de bout en bout</a>
+      <a href="#rapport">Ce que contient un rapport</a>
+      <a href="#teams">Bien nommer les conversations Teams</a>
+      <a href="#activer">Activer un nouveau chantier</a>
+      <a href="#pages">À quoi sert chaque page</a>
+      <a href="#hebdo">Le rapport automatique du mercredi</a>
+      <a href="#email">L'envoi par email</a>
+      <a href="#suppression">Supprimer ou restaurer un chantier</a>
+      <a href="#contacts">Qui contacter</a>
+    </div>
+
+    <h2 id="chaine">La chaîne de bout en bout</h2>
+    <div class="schema">
+      <div class="etape-schema"><div class="es-titre">1 · Sur le chantier</div>Les équipes postent photos et explications dans les conversations Teams du chantier, et déclarent leurs heures dans Traxxeo.</div>
+      <div class="es-fleche">→</div>
+      <div class="etape-schema"><div class="es-titre">2 · Collecte automatique</div>Chaque semaine, l'outil lit les deux conversations Teams (BL&amp;L et RT) et les heures Traxxeo de la semaine écoulée.</div>
+      <div class="es-fleche">→</div>
+      <div class="etape-schema"><div class="es-titre">3 · Assemblage</div>Le rapport est assemblé jour par jour, sans reformulation : les textes et photos sont repris tels quels.</div>
+      <div class="es-fleche">→</div>
+      <div class="etape-schema"><div class="es-titre">4 · Diffusion</div>Le rapport est produit en PDF et en Word, disponible dans la page Rapports, et envoyé par email si l'envoi est activé.</div>
+    </div>
+    <p>
+      Aucune saisie supplémentaire n'est demandée aux équipes : si les conversations Teams sont alimentées
+      et les heures déclarées dans Traxxeo, le rapport se construit tout seul.
+    </p>
+
+    <h2 id="rapport">Ce que contient un rapport</h2>
+    <p>Un rapport couvre une période (en général une semaine, du lundi au dimanche) et présente, <strong>pour chaque jour</strong>, trois chapitres :</p>
+    <ol class="liste-pas">
+      <li><strong>Activité des équipes</strong> — qui a travaillé, sur quelle tâche, avec quel équipement, combien d'heures (avec le total de la journée par personne). Source : Traxxeo.</li>
+      <li><strong>Illustrations et explications techniques</strong> — les photos et messages postés dans la conversation Teams <strong>RT</strong> (Rapport Technique).</li>
+      <li><strong>Matériel et bons de livraison</strong> — les photos et messages postés dans la conversation Teams <strong>BL&amp;L</strong> (Bons de Livraison &amp; Location).</li>
+    </ol>
+    <p>Un chapitre sans information ce jour-là est simplement indiqué comme vide : c'est le reflet fidèle de ce qui a été partagé.</p>
+
+    <h2 id="teams">Bien nommer les conversations Teams</h2>
+    <p>
+      L'outil détecte les chantiers automatiquement grâce au <strong>nom des conversations de groupe Teams</strong>
+      du compte <code>assembleur@dzconstruct.lu</code>. Pour qu'un nouveau chantier soit reconnu, il faut donc :
+    </p>
+    <ol class="liste-pas">
+      <li>Créer <strong>deux conversations de groupe</strong> Teams (pas des canaux) et y inclure le compte assembleur.</li>
+      <li>Nommer chacune avec <strong>le code du chantier</strong>, puis <code>-BL&amp;L-</code> ou <code>-RT-</code>, puis le nom du chantier.</li>
+    </ol>
+    <div class="exemple">
+      <div class="ex-ok">✓ <code>22.06-BL&amp;L-Gaichel-Maisons</code> &nbsp;et&nbsp; <code>22.06-RT-Gaichel-Maisons</code></div>
+      <div class="ex-ko">✗ <code>Gaichel bons de livraison</code> — pas de code chantier ni de repère BL&amp;L/RT : la conversation ne sera pas détectée.</div>
+    </div>
+    <p>
+      Le repère <code>-BL&amp;L-</code> (ou <code>-BLL-</code>) et <code>-RT-</code> peut être placé n'importe où dans le nom,
+      mais l'ordre <em>code · repère · nom</em> est la convention à suivre. Le code chantier (ex. <code>22.06</code>)
+      doit correspondre aux codes WBS utilisés dans Traxxeo pour que les heures soient rattachées au bon chantier.
+    </p>
+
+    <h2 id="activer">Activer un nouveau chantier</h2>
+    <ol class="liste-pas">
+      <li>Créez les deux conversations Teams comme expliqué ci-dessus.</li>
+      <li>Sur le Dashboard, cliquez sur <strong>« Scan des nouveaux chantiers »</strong> (sinon, le scan tourne de toute façon chaque lundi matin). Le chantier apparaît alors dans la liste, <strong>inactif</strong>, avec ses conversations préremplies.</li>
+      <li>Ouvrez sa <strong>Configuration des sources</strong> : vérifiez le nom, complétez les <strong>codes WBS Traxxeo</strong> (plusieurs codes séparés par <code>;</code>, ex. <code>22.06 A;22.06 B</code>).</li>
+      <li>Cliquez sur <strong>Enregistrer les modifications</strong>, puis passez l'interrupteur du chantier sur <strong>actif</strong>.</li>
+    </ol>
+    <p>C'est tout : dès le mercredi suivant, le chantier aura son rapport hebdomadaire. Vous pouvez aussi générer un rapport immédiatement avec le bouton « Générer le rapport » pour vérifier.</p>
+
+    <h2 id="pages">À quoi sert chaque page</h2>
+    <table>
+      <thead><tr><th>Page</th><th>À quoi elle sert</th></tr></thead>
+      <tbody>
+        <tr><td><strong>Dashboard</strong></td><td>La page de travail au quotidien : liste des chantiers, activation, choix d'une période et génération manuelle d'un rapport, scan des nouveaux chantiers, derniers rapports produits.</td></tr>
+        <tr><td><strong>Rapports</strong></td><td>Tous les rapports générés, classés par chantier, téléchargeables en PDF et en Word (avec un aperçu HTML).</td></tr>
+        <tr><td><strong>Configuration</strong></td><td>Le créneau du rapport automatique (jour et heure) et le carnet des destinataires email.</td></tr>
+        <tr><td><strong>Comment ça marche ?</strong></td><td>Cette page.</td></tr>
+        <tr><td><strong>Debug</strong></td><td>La santé de l'outil et le journal des générations. En cas de doute (« le rapport n'est pas arrivé »), c'est ici qu'on regarde d'abord.</td></tr>
+      </tbody>
+    </table>
+
+    <h2 id="hebdo">Le rapport automatique du mercredi</h2>
+    <p>
+      Chaque <strong>mercredi à 7 h</strong> (réglable dans Configuration), l'outil génère le rapport de la
+      <strong>semaine précédente</strong> (lundi → dimanche) pour <strong>tous les chantiers actifs</strong>,
+      et l'envoie par email aux destinataires des chantiers dont l'envoi est activé.
+      Une génération manuelle reste possible à tout moment depuis le Dashboard, sur n'importe quelle période.
+    </p>
+
+    <h2 id="email">L'envoi par email</h2>
+    <p>Pour qu'un rapport parte par email, il faut trois choses sur la carte du chantier :</p>
+    <ol class="liste-pas">
+      <li>L'interrupteur <strong>« Envoyer par email »</strong> activé.</li>
+      <li>Au moins un <strong>destinataire</strong> coché (le carnet d'adresses se gère dans Configuration).</li>
+      <li>Un envoi déclenché : soit le <strong>rapport automatique du mercredi</strong> (envoi systématique), soit l'option <strong>« Générer et envoyer par email »</strong> de la petite flèche à côté du bouton « Générer le rapport ». Le clic simple sur « Générer le rapport » produit le rapport <em>sans</em> l'envoyer.</li>
+    </ol>
+
+    <h2 id="suppression">Supprimer ou restaurer un chantier</h2>
+    <p>
+      La suppression (dans « Configuration des sources » → Zone de danger) retire le chantier du Dashboard et
+      des générations, mais <strong>ne détruit rien</strong> : ses rapports restent dans la page Rapports, et le
+      chantier lui-même se retrouve dans le bloc <strong>« Chantiers supprimés »</strong> en bas du Dashboard,
+      d'où on peut le <strong>restaurer</strong> en un clic (il revient inactif). Un chantier supprimé ne sera
+      pas recréé par le scan automatique.
+    </p>
+
+    <h2 id="contacts">Qui contacter</h2>
+    <table>
+      <thead><tr><th>Sujet</th><th>Contact</th></tr></thead>
+      <tbody>
+        <tr><td>L'outil lui-même : fonctionnement, évolutions, incident de génération</td><td><strong>Vincent Romano</strong></td></tr>
+        <tr><td>Le compte Microsoft / Teams (<code>assembleur@dzconstruct.lu</code>, droits d'accès, tenant)</td><td><strong>Benoît Herbays</strong> — CBC Informatique</td></tr>
+        <tr><td>Traxxeo (accès API, données d'heures, contrat)</td><td><strong>Matthieu</strong> — Traxxeo</td></tr>
+      </tbody>
+    </table>
+    <p class="note" style="margin-top:20px;">
+      <strong>Bon réflexe :</strong> si un rapport semble incomplet, vérifiez d'abord que les photos ont bien été postées
+      dans la <em>bonne</em> conversation Teams (BL&amp;L ou RT) pendant la période, et que les heures sont déclarées dans
+      Traxxeo. L'outil reprend fidèlement ce qui existe — il n'invente rien.
+    </p>
+  </main>
+
+  <div class="toast" id="toast"></div>
+  <footer>
+    <div class="pied-page">
+      <span>© 2026 <strong>DZ Construct S.A.</strong> - Tous droits réservés</span>
+      <span>Outil interne - Confidentiel</span>
+      <span>173, Route de Belvaux · L-4026 Esch-sur-Alzette</span>
+    </div>
+  </footer>
+</body>
+</html>

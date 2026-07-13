@@ -90,12 +90,19 @@ nœuds `Auth Microsoft`.
 | Workflow orchestrateur | `5su1DOeswBlCdakw` |
 | Workflow API cockpit | `FCZLzT8cabm3s3GE` |
 | Workflow découverte | `49okCW9O85lYsP3r` |
-| Data table chantiers | `6LXQADAq7StJE6TN` (colonnes : nom, wbs, conversation_bll, conversation_rt, emails, actif, source, notes) |
+| Data table chantiers | `6LXQADAq7StJE6TN` (colonnes : nom, wbs, conversation_bll, conversation_rt, emails, mail_actif, actif, source, notes, supprime) |
 | Data table runs | `9HVj9380Vw6DulOr` |
 | Service Railway cockpit | `9521b395-17d6-4acf-ac50-f46a315a2dcd` (projet `dz`, branche `claude/adoring-bardeen-35fld7`) |
 
 Drapeaux du nœud `Config` (workflow générateur) : `graph_actif=true`, `pdfshift_actif=true`,
 `traxxeo_actif=false` (offre en attente), `mail_actif=false` (à activer volontairement).
+
+Depuis le 13/07 au soir, le générateur reçoit aussi une entrée booléenne **`envoyer`** :
+le cron hebdo la passe à `true` (envoi automatique), une génération manuelle à `false`
+sauf si le cockpit demande explicitement « Générer et envoyer par email » (bouton scindé).
+La suppression d'un chantier est un **soft-delete** (colonne `supprime` de dz_chantiers) :
+la ligne est conservée, masquée du Dashboard, ignorée par le run hebdo et par le scan de
+découverte, et restaurable depuis le bloc « Chantiers supprimés » du Dashboard.
 
 ## Questions ouvertes
 
@@ -115,3 +122,6 @@ Drapeaux du nœud `Config` (workflow générateur) : `graph_actif=true`, `pdfshi
   `POST /webhook/dz/generer` avec `date_debut`/`date_fin` (je fournirai le script au moment voulu).
 - Après merge de la branche vers `main` : rebrancher le service Railway `cockpit` sur `main`
   (Settings du service) et supprimer l'ancien service `dz` vide.
+  ⚠️ Depuis le 13/07 au soir, la branche de travail à jour est **`claude/roadmap-deployment-t1m07g`**
+  (elle contient tout `claude/adoring-bardeen-35fld7` + guide `/guide`, soft-delete, bouton scindé,
+  favicon) : c'est elle qu'il faut merger vers `main` — ou rebrancher le service Railway dessus.

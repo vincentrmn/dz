@@ -101,6 +101,9 @@ $('#cal-prec').onclick = () => { moisAffiche.setUTCMonth(moisAffiche.getUTCMonth
 $('#cal-suiv').onclick = () => { moisAffiche.setUTCMonth(moisAffiche.getUTCMonth() + 1); rendreCalendrier(); };
 document.addEventListener('click', (ev) => {
   if (!$('#zone-semaine').contains(ev.target)) $('#calendrier').hidden = true;
+  document.querySelectorAll('[data-role=menu-generer]').forEach((m) => {
+    if (!m.parentElement.contains(ev.target)) m.hidden = true;
+  });
 });
 
 function periodeChoisie() {
@@ -166,7 +169,13 @@ function carteChantier(c) {
       <span class="badge ${c.actif ? 'on' : 'off'}" data-role="badge-actif">${c.actif ? 'actif' : 'inactif'}</span>
       ${c.source === 'cockpit' ? '<span class="badge type">ajouté manuellement</span>' : ''}
       <div class="chantier-actions">
-        <button data-role="generer" class="principal">Générer le rapport</button>
+        <div class="scinde">
+          <button data-role="generer" class="principal">Générer le rapport</button>
+          <button data-role="generer-fleche" class="principal scinde-fleche" title="Autres actions" style="display:none">▾</button>
+          <div class="menu-scinde" data-role="menu-generer" hidden>
+            <button data-role="generer-envoyer">Générer et envoyer par email</button>
+          </div>
+        </div>
       </div>
     </div>
 
@@ -266,8 +275,17 @@ function carteChantier(c) {
     badge.textContent = ev.target.checked ? 'actif' : 'inactif';
     sauvegarder(false);
   };
+  /* La flèche « Générer et envoyer » n'apparaît que si le toggle email du chantier est actif */
+  const majFleche = (mailActif) => {
+    $('[data-role=generer-fleche]', div).style.display = mailActif ? '' : 'none';
+    $('[data-role=generer]', div).classList.toggle('avec-fleche', mailActif);
+    if (!mailActif) $('[data-role=menu-generer]', div).hidden = true;
+  };
+  majFleche(c.mail_actif);
+
   $('[data-role=mail]', div).onchange = (ev) => {
     $('[data-role=destinataires]', div).style.display = ev.target.checked ? '' : 'none';
+    majFleche(ev.target.checked);
     if (ev.target.checked && !contacts.length && !selection.size) {
       toast('Ajoutez d’abord des destinataires dans la page Configuration.');
     }
@@ -300,7 +318,7 @@ function carteChantier(c) {
     } catch (e) { toast(`Échec : ${e.message}`); }
   };
 
-  $('[data-role=generer]', div).onclick = async () => {
+  const lancerGeneration = async (envoyer) => {
     const periode = periodeChoisie();
     if (!periode) { toast('Choisissez d’abord une période (au moins la date de début).'); return; }
     const { debut, fin } = periode;
@@ -309,14 +327,47 @@ function carteChantier(c) {
         chantier: c.nom,
         date_debut: debut,
         date_fin: fin,
-        declenchement: 'manuel',
+        envoyer: envoyer,
+        declenchement: envoyer ? 'manuel + email' : 'manuel',
       });
-      toast(`Génération lancée (${debut} → ${fin}) — suivi sur la page Debug`);
+      toast(`Génération lancée (${debut} → ${fin})${envoyer ? ' avec envoi par email' : ''} — suivi sur la page Debug`);
       setTimeout(chargerRapports, 8000);
     } catch (e) { toast(`Échec : ${e.message}`); }
   };
+  $('[data-role=generer]', div).onclick = () => lancerGeneration(false);
+  $('[data-role=generer-fleche]', div).onclick = (ev) => {
+    ev.stopPropagation();
+    const menu = $('[data-role=menu-generer]', div);
+    menu.hidden = !menu.hidden;
+  };
+  $('[data-role=generer-envoyer]', div).onclick = () => {
+    $('[data-role=menu-generer]', div).hidden = true;
+    lancerGeneration(true);
+  };
 
   return div;
+}
+
+/* Bloc discret listant les chantiers supprimés (soft-delete), avec restauration */
+function blocSupprimes(supprimes) {
+  const det = document.createElement('details');
+  det.className = 'repli supprimes';
+  det.innerHTML = `<summary>Chantiers supprimés (${supprimes.length})</summary>`;
+  supprimes.forEach((c) => {
+    const ligne = document.createElement('div');
+    ligne.className = 'ligne-supprime';
+    ligne.innerHTML = '<span class="nom-supprime"></span><button class="discret">Restaurer</button>';
+    $('.nom-supprime', ligne).textContent = c.nom;
+    $('button', ligne).onclick = async () => {
+      try {
+        await api('POST', '/api/chantiers', { id: c.id, restaurer: true });
+        toast(`Chantier « ${c.nom} » restauré (inactif). Réactivez-le quand il est prêt.`);
+        chargerChantiers();
+      } catch (e) { toast(`Échec : ${e.message}`); }
+    };
+    det.appendChild(ligne);
+  });
+  return det;
 }
 
 async function chargerChantiers() {
@@ -324,12 +375,15 @@ async function chargerChantiers() {
   try {
     const data = await api('GET', '/api/chantiers');
     const liste = Array.isArray(data) ? data : (data.chantiers || []);
+    const visibles = liste.filter((c) => !c.supprime);
+    const supprimes = liste.filter((c) => c.supprime);
     zone.innerHTML = '';
-    if (!liste.length) {
+    if (!visibles.length) {
       zone.innerHTML = '<div class="vide">Aucun chantier configuré. Ajoutez-en un, ou lancez la découverte automatique.</div>';
-      return;
+    } else {
+      visibles.forEach((c) => zone.appendChild(carteChantier(c)));
     }
-    liste.forEach((c) => zone.appendChild(carteChantier(c)));
+    if (supprimes.length) zone.appendChild(blocSupprimes(supprimes));
   } catch (e) {
     zone.innerHTML = `<div class="vide">Configuration injoignable (${e.message}). Vérifiez que le workflow « DZ — Cockpit API » est publié dans n8n.</div>`;
   }

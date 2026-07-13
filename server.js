@@ -161,6 +161,7 @@ app.get('/reports/:file', (req, res) => {
 });
 
 app.get('/debug', (req, res) => res.sendFile(path.join(__dirname, 'public', 'debug.html')));
+app.get('/guide', (req, res) => res.sendFile(path.join(__dirname, 'public', 'guide.html')));
 app.get('/rapports', (req, res) => res.sendFile(path.join(__dirname, 'public', 'rapports.html')));
 app.get('/configuration', (req, res) => res.sendFile(path.join(__dirname, 'public', 'configuration.html')));
 
