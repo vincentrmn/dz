@@ -22,15 +22,16 @@ function semainePrecedente() {
 }
 
 function bornesSemaine(valeurWeek) {
+  // Semaine ISO : le 4 janvier appartient toujours à la semaine 1
   const [an, sem] = valeurWeek.split('-W').map(Number);
-  const simple = new Date(an, 0, 1 + (sem - 1) * 7);
-  const jour = simple.getDay();
-  const lundi = new Date(simple);
-  lundi.setDate(simple.getDate() - ((jour + 6) % 7) + (jour <= 4 && jour !== 0 ? 0 : 7) - ((jour === 0) ? 7 : 0));
-  // Ajustement ISO : se recaler sur le lundi de la semaine ISO
-  const iso = (dt) => dt.toISOString().substring(0, 10);
+  const j4 = new Date(Date.UTC(an, 0, 4));
+  const lundiS1 = new Date(j4);
+  lundiS1.setUTCDate(j4.getUTCDate() - ((j4.getUTCDay() + 6) % 7));
+  const lundi = new Date(lundiS1);
+  lundi.setUTCDate(lundiS1.getUTCDate() + (sem - 1) * 7);
   const dimanche = new Date(lundi);
-  dimanche.setDate(lundi.getDate() + 6);
+  dimanche.setUTCDate(lundi.getUTCDate() + 6);
+  const iso = (dt) => dt.toISOString().substring(0, 10);
   return { debut: iso(lundi), fin: iso(dimanche) };
 }
 
