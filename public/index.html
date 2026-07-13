@@ -24,9 +24,21 @@
 
     <h2>Chantiers</h2>
     <div class="barre-outils">
-      <div class="champ" style="flex-direction: row; align-items: center; gap: 8px;">
-        <label for="semaine" style="text-transform:none; letter-spacing:0; font-size:13px; color: var(--encre-2);">Semaine du rapport</label>
-        <input type="week" id="semaine">
+      <div class="selecteur-periode">
+        <div class="segmente">
+          <button id="mode-semaine" class="seg actif">Semaine</button>
+          <button id="mode-libre" class="seg">Période libre</button>
+        </div>
+        <div class="zone-sem" id="zone-semaine">
+          <button class="fleche" id="sem-prec" title="Semaine précédente">‹</button>
+          <div class="sem-label" id="sem-label"></div>
+          <button class="fleche" id="sem-suiv" title="Semaine suivante">›</button>
+        </div>
+        <div class="zone-libre" id="zone-libre" style="display:none">
+          <input type="date" id="d-debut" title="Premier jour du rapport">
+          <span style="color: var(--gris);">→</span>
+          <input type="date" id="d-fin" title="Dernier jour du rapport">
+        </div>
       </div>
       <div class="a-droite">
         <button id="btn-decouverte" title="Scanner les conversations Teams pour détecter de nouveaux chantiers" style="display:inline-flex;align-items:center;gap:7px;"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg>Scan des nouveaux chantiers</button>
@@ -41,7 +53,12 @@
   </main>
 
   <div class="toast" id="toast"></div>
-  <footer>DZ Construct — génération automatique des rapports techniques hebdomadaires</footer>
+  <footer>
+    <div class="pied-page">
+      <span>© 2026 <strong>DZ Construct S.A.</strong> — Tous droits réservés</span>
+      <span>173, Route de Belvaux · L-4026 Esch-sur-Alzette</span>
+    </div>
+  </footer>
   <script src="/app.js"></script>
 </body>
 </html>

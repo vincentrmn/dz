@@ -9,31 +9,70 @@ function toast(msg) {
   setTimeout(() => t.classList.remove('visible'), 3200);
 }
 
-/* Semaine précédente (lundi -> dimanche), valeur par défaut du sélecteur */
-function semainePrecedente() {
-  const d = new Date();
-  d.setDate(d.getDate() - 7);
-  const jeudi = new Date(d);
-  jeudi.setDate(d.getDate() + 3 - ((d.getDay() + 6) % 7));
-  const an = jeudi.getFullYear();
-  const debut = new Date(an, 0, 4);
-  const num = 1 + Math.round(((jeudi - debut) / 86400000 - 3 + ((debut.getDay() + 6) % 7)) / 7);
-  return `${an}-W${String(num).padStart(2, '0')}`;
+/* --- Sélecteur de période : mode Semaine (lundi -> dimanche) ou Période libre --- */
+
+const iso = (dt) => dt.toISOString().substring(0, 10);
+
+/* Lundi de la semaine contenant la date donnée */
+function lundiDe(date) {
+  const d = new Date(Date.UTC(date.getFullYear(), date.getMonth(), date.getDate()));
+  d.setUTCDate(d.getUTCDate() - ((d.getUTCDay() + 6) % 7));
+  return d;
 }
 
-function bornesSemaine(valeurWeek) {
-  // Semaine ISO : le 4 janvier appartient toujours à la semaine 1
-  const [an, sem] = valeurWeek.split('-W').map(Number);
-  const j4 = new Date(Date.UTC(an, 0, 4));
+let modeSemaine = true;
+let lundiCourant = (() => {
+  const d = new Date();
+  d.setDate(d.getDate() - 7);
+  return lundiDe(d);
+})();
+
+function numeroSemaineISO(lundi) {
+  const jeudi = new Date(lundi);
+  jeudi.setUTCDate(lundi.getUTCDate() + 3);
+  const j4 = new Date(Date.UTC(jeudi.getUTCFullYear(), 0, 4));
   const lundiS1 = new Date(j4);
   lundiS1.setUTCDate(j4.getUTCDate() - ((j4.getUTCDay() + 6) % 7));
-  const lundi = new Date(lundiS1);
-  lundi.setUTCDate(lundiS1.getUTCDate() + (sem - 1) * 7);
-  const dimanche = new Date(lundi);
-  dimanche.setUTCDate(lundi.getUTCDate() + 6);
-  const iso = (dt) => dt.toISOString().substring(0, 10);
-  return { debut: iso(lundi), fin: iso(dimanche) };
+  return 1 + Math.round((lundi - lundiS1) / (7 * 86400000));
 }
+
+function rendreSemaine() {
+  const dimanche = new Date(lundiCourant);
+  dimanche.setUTCDate(lundiCourant.getUTCDate() + 6);
+  const opts = { day: 'numeric', month: 'long', timeZone: 'UTC' };
+  const debutTxt = lundiCourant.toLocaleDateString('fr-FR', { ...opts, month: lundiCourant.getUTCMonth() === dimanche.getUTCMonth() ? undefined : 'long' });
+  const finTxt = dimanche.toLocaleDateString('fr-FR', { ...opts, year: 'numeric' });
+  $('#sem-label').innerHTML = `<b>Semaine ${numeroSemaineISO(lundiCourant)}</b> · du lundi ${debutTxt} au dimanche ${finTxt}`;
+}
+
+function periodeChoisie() {
+  if (modeSemaine) {
+    const dimanche = new Date(lundiCourant);
+    dimanche.setUTCDate(lundiCourant.getUTCDate() + 6);
+    return { debut: iso(lundiCourant), fin: iso(dimanche) };
+  }
+  const debut = $('#d-debut').value;
+  const fin = $('#d-fin').value || debut;
+  if (!debut) return null;
+  return debut <= fin ? { debut, fin } : { debut: fin, fin: debut };
+}
+
+$('#mode-semaine').onclick = () => {
+  modeSemaine = true;
+  $('#mode-semaine').classList.add('actif');
+  $('#mode-libre').classList.remove('actif');
+  $('#zone-semaine').style.display = '';
+  $('#zone-libre').style.display = 'none';
+};
+$('#mode-libre').onclick = () => {
+  modeSemaine = false;
+  $('#mode-libre').classList.add('actif');
+  $('#mode-semaine').classList.remove('actif');
+  $('#zone-semaine').style.display = 'none';
+  $('#zone-libre').style.display = '';
+};
+$('#sem-prec').onclick = () => { lundiCourant.setUTCDate(lundiCourant.getUTCDate() - 7); rendreSemaine(); };
+$('#sem-suiv').onclick = () => { lundiCourant.setUTCDate(lundiCourant.getUTCDate() + 7); rendreSemaine(); };
 
 async function api(methode, chemin, corps) {
   const r = await fetch(chemin, {
@@ -66,19 +105,18 @@ function carteChantier(c) {
         <span class="piste"></span>
       </label>
       <span class="chantier-nom"></span>
-      <span class="badge ${c.actif ? 'on' : 'off'}">${c.actif ? 'actif' : 'inactif'}</span>
-      ${c.source === 'decouverte' ? '<span class="badge type">découvert auto</span>' : ''}
+      <span class="badge ${c.actif ? 'on' : 'off'}" data-role="badge-actif">${c.actif ? 'actif' : 'inactif'}</span>
+      ${c.source === 'cockpit' ? '<span class="badge type">ajouté manuellement</span>' : ''}
       <div class="chantier-actions">
         <button data-role="generer" class="principal">Générer le rapport</button>
       </div>
     </div>
 
-    <div class="bloc-mail${c.mail_actif ? ' mail-on' : ''}">
-      <label class="interrupteur mini" title="Envoyer le rapport par email aux destinataires cochés">
+    <div class="bloc-mail">
+      <label class="interrupteur toggle-mail" title="Envoyer le rapport par email aux destinataires cochés">
         <input type="checkbox" ${c.mail_actif ? 'checked' : ''} data-role="mail">
-        <span class="piste"></span>
+        <span class="piste"><span class="pouce"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"/></svg></span></span>
       </label>
-      <svg class="ico-mail" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"/></svg>
       <span class="lib-mail">Envoyer par email</span>
       <div class="destinataires" data-role="destinataires" style="${c.mail_actif ? '' : 'display:none'}"></div>
     </div>
@@ -86,9 +124,9 @@ function carteChantier(c) {
     <details class="repli">
       <summary>Configuration des sources</summary>
       <div class="grille">
-        <div class="champ"><label>Codes WBS Traxxeo</label><input data-role="wbs" placeholder="22.06 A;22.06 B"></div>
-        <div class="champ"><label>ID conversation Teams — BL&L</label><input data-role="bll" placeholder="19:xxxx@thread.v2"></div>
-        <div class="champ"><label>ID conversation Teams — RT</label><input data-role="rt" placeholder="19:xxxx@thread.v2"></div>
+        <div class="champ"><label>Codes WBS Traxxeo</label><input data-role="wbs" placeholder="À compléter — codes du chantier dans Traxxeo"></div>
+        <div class="champ"><label>ID conversation Teams — BL&L</label><input data-role="bll" placeholder="Aucune conversation détectée — lancez un scan"></div>
+        <div class="champ"><label>ID conversation Teams — RT</label><input data-role="rt" placeholder="Aucune conversation détectée — lancez un scan"></div>
       </div>
       <div class="pied-carte">
         <span class="detail" style="color: var(--gris); font-size: 12.5px;">Le scan automatique préremplit les IDs de conversations Teams.</span>
@@ -148,10 +186,15 @@ function carteChantier(c) {
   rendreDestinataires();
 
   $('[data-role=enregistrer]', div).onclick = () => sauvegarder(true);
-  $('[data-role=actif]', div).onchange = () => sauvegarder(true);
+  $('[data-role=actif]', div).onchange = (ev) => {
+    const badge = $('[data-role=badge-actif]', div);
+    badge.classList.toggle('on', ev.target.checked);
+    badge.classList.toggle('off', !ev.target.checked);
+    badge.textContent = ev.target.checked ? 'actif' : 'inactif';
+    sauvegarder(false);
+  };
   $('[data-role=mail]', div).onchange = (ev) => {
     $('[data-role=destinataires]', div).style.display = ev.target.checked ? '' : 'none';
-    $('.bloc-mail', div).classList.toggle('mail-on', ev.target.checked);
     if (ev.target.checked && !contacts.length && !selection.size) {
       toast('Ajoutez d’abord des destinataires dans la page Configuration.');
     }
@@ -159,8 +202,9 @@ function carteChantier(c) {
   };
 
   $('[data-role=generer]', div).onclick = async () => {
-    const semaine = $('#semaine').value || semainePrecedente();
-    const { debut, fin } = bornesSemaine(semaine);
+    const periode = periodeChoisie();
+    if (!periode) { toast('Choisissez d’abord une période (au moins la date de début).'); return; }
+    const { debut, fin } = periode;
     try {
       await api('POST', '/api/generer', {
         chantier: c.nom,
@@ -277,7 +321,7 @@ async function chargerContactsGlobaux() {
   } catch { contacts = []; }
 }
 
-$('#semaine').value = semainePrecedente();
+rendreSemaine();
 bandeauSante();
 chargerContactsGlobaux().then(chargerChantiers);
 chargerRapports();
