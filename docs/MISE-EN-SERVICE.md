@@ -97,6 +97,15 @@ nœuds `Auth Microsoft`.
 Drapeaux du nœud `Config` (workflow générateur) : `graph_actif=true`, `pdfshift_actif=true`,
 `traxxeo_actif=false` (offre en attente), `mail_actif=false` (à activer volontairement).
 
+## Questions ouvertes
+
+- **Pour Francis** : pourquoi les conversations RT ne sont-elles pas alimentées par les équipes ?
+  (test du 13/07 sur la semaine 06-12/07 : 0 message RT sur les 11 chantiers qui ont une
+  conversation RT, alors que les BL&L sont actives — 57 messages, 61 photos au total).
+  Et 3 chantiers n'ont pas de conversation RT du tout : 26.06 Maison-OMS, 26.07 MaisonFluhe,
+  99.02 Chantiers-Divers.
+- **Pour Francis** (Lot 4) : dépôt final des rapports — tampon secrétariat ou SharePoint chantier ?
+
 ## Lots suivants
 
 - **Lot 4** (dépôt SharePoint/OneDrive) : en attente de la décision de Francis — le dépôt
