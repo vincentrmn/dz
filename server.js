@@ -78,12 +78,24 @@ app.post('/api/decouverte', (req, res) => proxyToN8n(res, 'POST', 'dz/decouverte
 // Conversion HTML -> Word (.docx) — appelée par le workflow n8n (Lot 2)
 // Corps attendu : { html: "<html…>", filename: "rapport.docx" }
 // ---------------------------------------------------------------------------
+// Remplace les URLs /icons/xxx.png par leur contenu en base64 (Word n'aime pas les images distantes)
+function inlinerIcones(html) {
+  return html.replace(/src="[^"]*\/icons\/(equipes|illustrations|materiel)\.png"/g, (m, nom) => {
+    try {
+      const b64 = fs.readFileSync(path.join(__dirname, 'public', 'icons', `${nom}.png`)).toString('base64');
+      return `src="data:image/png;base64,${b64}"`;
+    } catch {
+      return m;
+    }
+  });
+}
+
 app.post('/api/convert/docx', async (req, res) => {
   const { html, filename } = req.body || {};
   if (!html) return res.status(400).json({ erreur: 'champ "html" manquant' });
   try {
     const HTMLtoDOCX = (await import('html-to-docx')).default;
-    const buffer = await HTMLtoDOCX(html, null, {
+    const buffer = await HTMLtoDOCX(inlinerIcones(html), null, {
       table: { row: { cantSplit: true } },
       footer: true,
       pageNumber: true,
