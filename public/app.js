@@ -39,11 +39,69 @@ function numeroSemaineISO(lundi) {
 function rendreSemaine() {
   const dimanche = new Date(lundiCourant);
   dimanche.setUTCDate(lundiCourant.getUTCDate() + 6);
-  const opts = { day: 'numeric', month: 'long', timeZone: 'UTC' };
-  const debutTxt = lundiCourant.toLocaleDateString('fr-FR', { ...opts, month: lundiCourant.getUTCMonth() === dimanche.getUTCMonth() ? undefined : 'long' });
-  const finTxt = dimanche.toLocaleDateString('fr-FR', { ...opts, year: 'numeric' });
-  $('#sem-label').innerHTML = `<b>Semaine ${numeroSemaineISO(lundiCourant)}</b> · du lundi ${debutTxt} au dimanche ${finTxt}`;
+  const memeMois = lundiCourant.getUTCMonth() === dimanche.getUTCMonth();
+  const debutTxt = memeMois
+    ? String(lundiCourant.getUTCDate())
+    : lundiCourant.toLocaleDateString('fr-FR', { day: 'numeric', month: 'short', timeZone: 'UTC' });
+  const finTxt = dimanche.toLocaleDateString('fr-FR', { day: 'numeric', month: 'short', year: 'numeric', timeZone: 'UTC' });
+  $('#sem-label').innerHTML = `<b>Semaine ${numeroSemaineISO(lundiCourant)}</b> · ${debutTxt} → ${finTxt}`;
+  if (!$('#calendrier').hidden) rendreCalendrier();
 }
+
+/* --- Calendrier : choisir un jour = choisir sa semaine (lundi → dimanche) --- */
+
+let moisAffiche = new Date(Date.UTC(lundiCourant.getUTCFullYear(), lundiCourant.getUTCMonth(), 1));
+
+function rendreCalendrier() {
+  $('#cal-mois').textContent = moisAffiche.toLocaleDateString('fr-FR', { month: 'long', year: 'numeric', timeZone: 'UTC' });
+  const grille = $('#cal-grille');
+  grille.innerHTML = '';
+  ['L', 'M', 'M', 'J', 'V', 'S', 'D'].forEach((j) => {
+    const e = document.createElement('div');
+    e.className = 'cal-jour-nom';
+    e.textContent = j;
+    grille.appendChild(e);
+  });
+  const debut = new Date(moisAffiche);
+  debut.setUTCDate(1 - ((debut.getUTCDay() + 6) % 7));
+  for (let i = 0; i < 42; i++) {
+    const d = new Date(debut);
+    d.setUTCDate(debut.getUTCDate() + i);
+    const lundiJ = new Date(d);
+    lundiJ.setUTCDate(d.getUTCDate() - ((d.getUTCDay() + 6) % 7));
+    const cell = document.createElement('button');
+    cell.type = 'button';
+    cell.className = 'cal-jour'
+      + (d.getUTCMonth() !== moisAffiche.getUTCMonth() ? ' hors-mois' : '')
+      + (iso(lundiJ) === iso(lundiCourant) ? ' sem-on' : '');
+    cell.dataset.lundi = iso(lundiJ);
+    cell.textContent = d.getUTCDate();
+    cell.onmouseenter = () => {
+      grille.querySelectorAll('.cal-jour').forEach((x) => x.classList.toggle('sem-hover', x.dataset.lundi === cell.dataset.lundi));
+    };
+    cell.onclick = () => {
+      lundiCourant = lundiJ;
+      rendreSemaine();
+      $('#calendrier').hidden = true;
+    };
+    grille.appendChild(cell);
+  }
+  grille.onmouseleave = () => grille.querySelectorAll('.sem-hover').forEach((x) => x.classList.remove('sem-hover'));
+}
+
+$('#sem-btn').onclick = () => {
+  const cal = $('#calendrier');
+  if (cal.hidden) {
+    moisAffiche = new Date(Date.UTC(lundiCourant.getUTCFullYear(), lundiCourant.getUTCMonth(), 1));
+    rendreCalendrier();
+  }
+  cal.hidden = !cal.hidden;
+};
+$('#cal-prec').onclick = () => { moisAffiche.setUTCMonth(moisAffiche.getUTCMonth() - 1); rendreCalendrier(); };
+$('#cal-suiv').onclick = () => { moisAffiche.setUTCMonth(moisAffiche.getUTCMonth() + 1); rendreCalendrier(); };
+document.addEventListener('click', (ev) => {
+  if (!$('#zone-semaine').contains(ev.target)) $('#calendrier').hidden = true;
+});
 
 function periodeChoisie() {
   if (modeSemaine) {
@@ -113,9 +171,9 @@ function carteChantier(c) {
     </div>
 
     <div class="bloc-mail">
-      <label class="interrupteur toggle-mail" title="Envoyer le rapport par email aux destinataires cochés">
+      <label class="interrupteur mini" title="Envoyer le rapport par email aux destinataires cochés">
         <input type="checkbox" ${c.mail_actif ? 'checked' : ''} data-role="mail">
-        <span class="piste"><span class="pouce"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"/></svg></span></span>
+        <span class="piste"></span>
       </label>
       <span class="lib-mail">Envoyer par email</span>
       <div class="destinataires" data-role="destinataires" style="${c.mail_actif ? '' : 'display:none'}"></div>
@@ -131,6 +189,21 @@ function carteChantier(c) {
       <div class="pied-carte">
         <span class="detail" style="color: var(--gris); font-size: 12.5px;">Le scan automatique préremplit les IDs de conversations Teams.</span>
         <button data-role="enregistrer">Enregistrer les modifications</button>
+      </div>
+      <div class="zone-danger">
+        <div class="zd-ligne">
+          <div>
+            <div class="zd-titre">Zone de danger</div>
+            <div class="zd-texte">Supprime ce chantier de la configuration : il ne sera plus généré. Les rapports déjà générés restent disponibles dans la page Rapports.</div>
+          </div>
+          <button data-role="supprimer" class="danger">Supprimer ce chantier</button>
+        </div>
+        <div class="zd-confirm" data-role="zd-confirm" style="display:none">
+          <span>Pour confirmer, tapez le nom exact du chantier :</span>
+          <input data-role="zd-nom">
+          <button data-role="zd-valider" class="danger" disabled>Supprimer définitivement</button>
+          <button data-role="zd-annuler" class="discret">Annuler</button>
+        </div>
       </div>
     </details>`;
   $('.chantier-nom', div).textContent = c.nom;
@@ -199,6 +272,32 @@ function carteChantier(c) {
       toast('Ajoutez d’abord des destinataires dans la page Configuration.');
     }
     sauvegarder(false);
+  };
+
+  /* Zone de danger : suppression avec revalidation par saisie du nom */
+  const zdConfirm = $('[data-role=zd-confirm]', div);
+  const zdNom = $('[data-role=zd-nom]', div);
+  zdNom.placeholder = c.nom;
+  $('[data-role=supprimer]', div).onclick = () => {
+    zdConfirm.style.display = '';
+    $('[data-role=supprimer]', div).style.display = 'none';
+    zdNom.focus();
+  };
+  $('[data-role=zd-annuler]', div).onclick = () => {
+    zdConfirm.style.display = 'none';
+    $('[data-role=supprimer]', div).style.display = '';
+    zdNom.value = '';
+    $('[data-role=zd-valider]', div).disabled = true;
+  };
+  zdNom.oninput = () => {
+    $('[data-role=zd-valider]', div).disabled = zdNom.value.trim() !== c.nom;
+  };
+  $('[data-role=zd-valider]', div).onclick = async () => {
+    try {
+      await api('POST', '/api/chantiers', { id: c.id, supprimer: true });
+      toast(`Chantier « ${c.nom} » supprimé. Ses rapports restent dans la page Rapports.`);
+      chargerChantiers();
+    } catch (e) { toast(`Échec : ${e.message}`); }
   };
 
   $('[data-role=generer]', div).onclick = async () => {

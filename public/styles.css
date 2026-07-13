@@ -188,18 +188,6 @@ input[type="week"] { font: inherit; font-size: 13px; border: 1px solid var(--bor
 .interrupteur.mini .piste::after { width: 12px; height: 12px; }
 .interrupteur.mini input:checked + .piste::after { transform: translateX(14px); }
 
-/* Toggle avec icône dans le curseur (enveloppe) */
-.toggle-mail { width: 40px; height: 22px; }
-.toggle-mail .piste::after { display: none; }
-.toggle-mail .pouce {
-  position: absolute; top: 3px; left: 3px;
-  width: 16px; height: 16px; border-radius: 50%;
-  background: #fff; box-shadow: 0 1px 2px rgba(0,0,0,0.2);
-  display: flex; align-items: center; justify-content: center;
-  color: var(--gris); transition: transform 0.15s;
-}
-.toggle-mail input:checked + .piste .pouce { transform: translateX(18px); color: var(--rouge); }
-
 .bloc-mail {
   display: flex; align-items: center; gap: 10px; flex-wrap: wrap;
   margin-top: 14px; padding-top: 12px; border-top: 1px solid var(--bord);
@@ -218,15 +206,38 @@ input[type="week"] { font: inherit; font-size: 13px; border: 1px solid var(--bor
   background: var(--blanc); color: var(--gris); cursor: pointer;
 }
 .segmente .seg.actif { background: var(--encre); color: #fff; font-weight: 600; }
-.zone-sem { display: inline-flex; align-items: center; gap: 4px; }
+.zone-sem { display: inline-flex; align-items: center; gap: 4px; position: relative; }
 .fleche {
   padding: 5px 11px; font-size: 15px; line-height: 1; border-radius: 7px;
 }
-.sem-label {
-  font-size: 13.5px; color: var(--encre); background: var(--blanc);
-  border: 1px solid var(--bord); border-radius: 7px; padding: 7px 14px; white-space: nowrap;
+.sem-btn {
+  display: inline-flex; align-items: center; gap: 8px;
+  font-size: 13.5px; padding: 7px 13px; border-radius: 7px; white-space: nowrap;
+  color: var(--encre);
 }
-.sem-label b { color: var(--rouge); }
+.sem-btn svg { color: var(--gris); flex: none; }
+.sem-btn b { color: var(--rouge); }
+
+/* Calendrier de sélection de semaine */
+.calendrier {
+  position: absolute; top: calc(100% + 6px); left: 0; z-index: 50;
+  background: var(--blanc); border: 1px solid var(--bord); border-radius: 10px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.12); padding: 12px; width: 272px;
+}
+.cal-tete { display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px; }
+.cal-mois { font-size: 13.5px; font-weight: 650; text-transform: capitalize; }
+.cal-grille { display: grid; grid-template-columns: repeat(7, 1fr); row-gap: 2px; }
+.cal-jour-nom { text-align: center; font-size: 10.5px; color: var(--gris); text-transform: uppercase; padding: 3px 0; }
+.cal-jour {
+  border: none; background: transparent; font-size: 12.5px; padding: 6px 0;
+  text-align: center; cursor: pointer; color: var(--encre); border-radius: 0;
+}
+.cal-jour.hors-mois { color: #c9c9c2; }
+.cal-jour.sem-hover { background: #fdecea; }
+.cal-jour.sem-on { background: var(--rouge); color: #fff; font-weight: 600; }
+.cal-jour.sem-on.hors-mois { color: #fff; opacity: 0.85; }
+.cal-grille .cal-jour:nth-child(7n + 1) { border-radius: 999px 0 0 999px; }
+.cal-grille .cal-jour:nth-child(7n) { border-radius: 0 999px 999px 0; }
 .zone-libre { display: inline-flex; align-items: center; gap: 8px; }
 .zone-libre input[type="date"] {
   font: inherit; font-size: 13px; border: 1px solid var(--bord); border-radius: 7px;
@@ -270,6 +281,28 @@ details.repli summary {
 details.repli summary::before { content: "▸"; font-size: 17px; line-height: 1; color: var(--encre-2); transition: transform 0.15s; }
 details.repli[open] summary::before { transform: rotate(90deg); }
 details.repli summary::-webkit-details-marker { display: none; }
+
+/* Zone de danger (suppression d'un chantier) */
+.zone-danger {
+  margin-top: 16px; border: 1px solid #f3c9c6; background: #fff8f7;
+  border-radius: 8px; padding: 12px 16px;
+}
+.zd-ligne { display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; }
+.zd-titre { font-size: 11px; letter-spacing: 0.08em; text-transform: uppercase; color: var(--err); font-weight: 700; }
+.zd-texte { font-size: 12.5px; color: var(--encre-2); margin-top: 2px; }
+button.danger { border-color: #e5aeaa; color: var(--err); background: var(--blanc); font-weight: 600; flex: none; }
+button.danger:hover { background: var(--err); border-color: var(--err); color: #fff; }
+button.danger:disabled:hover { background: var(--blanc); border-color: #e5aeaa; color: var(--err); }
+.zd-confirm {
+  display: flex; align-items: center; gap: 10px; flex-wrap: wrap;
+  margin-top: 10px; padding-top: 12px; border-top: 1px dashed #f3c9c6;
+  font-size: 13px; color: var(--encre-2);
+}
+.zd-confirm input {
+  border: 1px solid #e5aeaa; border-radius: 6px; padding: 6px 10px;
+  font-size: 13px; min-width: 250px; font-family: inherit;
+}
+.zd-confirm input:focus { outline: none; border-color: var(--err); }
 
 .toast {
   position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%);
