@@ -41,7 +41,7 @@ app.get('/api/health', async (req, res) => {
     n8n,
     stockage: fs.existsSync(REPORTS_DIR) ? 'ok' : 'absent',
     rapports: fs.readdirSync(REPORTS_DIR).length,
-    version: '2.0.0',
+    version: '2.1.0',
   });
 });
 
@@ -145,6 +145,7 @@ app.get('/reports/:file', (req, res) => {
 });
 
 app.get('/debug', (req, res) => res.sendFile(path.join(__dirname, 'public', 'debug.html')));
+app.get('/rapports', (req, res) => res.sendFile(path.join(__dirname, 'public', 'rapports.html')));
 
 app.listen(PORT, () => {
   console.log(`Hub Rapport Technique DZ — port ${PORT}`);
