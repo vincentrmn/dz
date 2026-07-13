@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Debug — Hub Rapport Technique DZ</title>
+  <link rel="stylesheet" href="/styles.css">
+  <link rel="icon" href="/logo-dz.png">
+</head>
+<body>
+  <header>
+    <img src="/logo-dz.png" alt="DZ Construct">
+    <div class="titre">Debug</div>
+    <nav>
+      <a href="/">Chantiers</a>
+      <a href="/#rapports">Rapports</a>
+      <a href="/debug" class="actif">Debug</a>
+    </nav>
+  </header>
+
+  <main>
+    <h2>État du système</h2>
+    <div class="sante" id="sante"><div class="vide">Chargement…</div></div>
+
+    <h2>Journal des générations</h2>
+    <div class="barre-outils">
+      <span class="detail" style="color: var(--gris); font-size: 13px;">Actualisation automatique toutes les 15 secondes.</span>
+      <div class="a-droite"><button id="btn-rafraichir">Rafraîchir</button></div>
+    </div>
+    <div id="journal"><div class="vide">Chargement…</div></div>
+
+    <h2>Aide au diagnostic</h2>
+    <div class="carte" style="font-size: 13.5px; color: var(--encre-2);">
+      <p><strong style="color: var(--encre);">Un run reste « en cours » ?</strong> Ouvrir n8n → Executions du workflow « DZ — Générer rapport chantier » pour voir le nœud en échec.</p>
+      <p style="margin-top: 8px;"><strong style="color: var(--encre);">Erreur Traxxeo ?</strong> L’accès API est payant : vérifier que l’offre est signée et que le credential « Traxxeo API » est renseigné, puis passer <code>traxxeo_actif</code> à <code>true</code> dans le nœud « Config » du workflow.</p>
+      <p style="margin-top: 8px;"><strong style="color: var(--encre);">Erreur Teams / Graph ?</strong> Vérifier le credential « Microsoft Graph DZ » et les IDs de conversations BLL / RT du chantier.</p>
+      <p style="margin-top: 8px;"><strong style="color: var(--encre);">Pas de PDF ?</strong> Vérifier le credential « PDFShift » et le drapeau <code>pdfshift_actif</code> dans le nœud « Config ». Le Word et l’aperçu HTML sont générés même sans PDFShift.</p>
+    </div>
+  </main>
+
+  <footer>DZ Construct — page de diagnostic</footer>
+  <script src="/debug.js"></script>
+</body>
+</html>

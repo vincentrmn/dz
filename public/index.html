@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Hub Rapport Technique — DZ Construct</title>
+  <link rel="stylesheet" href="/styles.css">
+  <link rel="icon" href="/logo-dz.png">
+</head>
+<body>
+  <header>
+    <img src="/logo-dz.png" alt="DZ Construct">
+    <div class="titre">Hub Rapport Technique</div>
+    <nav>
+      <a href="/" class="actif">Chantiers</a>
+      <a href="#rapports">Rapports</a>
+      <a href="/debug">Debug</a>
+    </nav>
+  </header>
+
+  <main>
+    <div id="bandeau"></div>
+
+    <h2>Chantiers</h2>
+    <div class="barre-outils">
+      <div class="champ" style="flex-direction: row; align-items: center; gap: 8px;">
+        <label for="semaine" style="text-transform:none; letter-spacing:0; font-size:13px; color: var(--encre-2);">Semaine du rapport</label>
+        <input type="week" id="semaine">
+      </div>
+      <div class="a-droite">
+        <button id="btn-decouverte" title="Scanner Teams et Traxxeo pour détecter de nouveaux chantiers">Lancer la découverte</button>
+        <button id="btn-ajouter">+ Ajouter un chantier</button>
+      </div>
+    </div>
+    <div id="chantiers"><div class="vide">Chargement…</div></div>
+
+    <h2 id="rapports">Rapports générés</h2>
+    <div id="liste-rapports"><div class="vide">Chargement…</div></div>
+  </main>
+
+  <div class="toast" id="toast"></div>
+  <footer>DZ Construct — génération automatique des rapports techniques hebdomadaires</footer>
+  <script src="/app.js"></script>
+</body>
+</html>
