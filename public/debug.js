@@ -27,9 +27,14 @@ async function chargerSante() {
   }
 }
 
+function majuscule(s) {
+  s = String(s || '');
+  return s.charAt(0).toUpperCase() + s.slice(1);
+}
+
 function badgeStatut(s) {
   const cls = /succ/i.test(s) ? 'succes' : /erreur|échec|echec/i.test(s) ? 'erreur' : 'encours';
-  return `<span class="badge ${cls}">${s || '—'}</span>`;
+  return `<span class="badge ${cls}">${majuscule(s) || '—'}</span>`;
 }
 
 async function chargerJournal() {
@@ -48,11 +53,11 @@ async function chargerJournal() {
       const tr = document.createElement('tr');
       const debut = r.demarre_le ? new Date(r.demarre_le).toLocaleString('fr-FR') : '—';
       tr.innerHTML = `
-        <td class="detail">${debut}<div class="detail">${r.declenchement || ''}</div></td>
+        <td class="detail">${debut}<div class="detail">${majuscule(r.declenchement)}</div></td>
         <td></td>
         <td class="detail">${r.periode_debut || ''} → ${r.periode_fin || ''}</td>
         <td>${badgeStatut(r.statut)}</td>
-        <td class="detail">${r.etape || ''}</td>
+        <td class="detail">${majuscule(r.etape)}</td>
         <td class="detail"></td>`;
       tr.children[1].textContent = r.chantier || '';
       const det = tr.children[5];

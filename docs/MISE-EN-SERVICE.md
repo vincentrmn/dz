@@ -1,64 +1,86 @@
 # Mise en service — Rapport Technique DZ Construct (Phase 2)
 
-État au 13/07/2026 : toute la chaîne est construite, publiée et testée en mode démo.
-Il reste **4 branchements manuels** (impossibles à faire par API) avant la BETA réelle.
+État au 13/07/2026 : chaîne complète **opérationnelle en production** — Teams (Graph) et PDFShift
+branchés, rapport réel généré et déposé. Le manuel d'utilisation est dans `docs/MANUEL.md`.
 
-## 1. Domaine public du cockpit (2 min) — bloquant
+## Ce qui tourne (testé en réel)
 
-Le service Railway `cockpit` (projet `dz`) est déployé et fonctionnel, mais sans domaine public.
+- **Cockpit** `https://cockpit-production-c3dc.up.railway.app` : chantiers, page Rapports (classement
+  par chantier), page Debug, conversion Word, dépôt des rapports.
+- **Workflows n8n publiés** :
+  - `DZ — Rapport hebdo` — webhook `dz/generer` + **cron mercredi 07:00** (semaine N-1, chantiers actifs) ;
+  - `DZ — Générer rapport chantier` — Traxxeo + Teams BLL/RT → HTML (logo, icônes, totaux journée)
+    → PDF (PDFShift) + Word (cockpit) → dépôt → email (optionnel) → journal `dz_runs` ;
+  - `DZ — Découverte chantiers` — **cron lundi 06:30** + bouton du cockpit, Graph branché ;
+  - `DZ — Cockpit API` — endpoints du cockpit.
+- **Microsoft Graph** : token applicatif (app « DZ-Teams-Extractor », tenant DZ géré par CBC),
+  repris du POC — nœuds `Auth Microsoft`. Les secrets vivent dans n8n uniquement, jamais dans ce repo.
+- **PDFShift** : clé du POC en place, `pdfshift_actif = true` (sandbox désactivé = crédits payants).
+- **IDs conversations Gaichel** : préremplis depuis le POC.
+- **Mapping Traxxeo** : calé sur les champs réels du POC (`wbs_ref_number`, `date_day`,
+  `user_comment` avec le cas « Calculated », `declared_vehicle_name`, `work_duration`)
+  + `from_date`/`to_date` automatiques. En attente d'activation (voir ci-dessous).
 
-1. Railway → projet **dz** → service **cockpit** → Settings → Networking → **Generate Domain**.
-2. Copier l'URL obtenue (ex : `https://cockpit-production-xxxx.up.railway.app`).
-3. Dans n8n, ouvrir **DZ — Générer rapport chantier** → nœud **Config** → remplacer la valeur
-   de `cockpit_url` (actuellement `https://COCKPIT-URL-A-DEFINIR.up.railway.app`) → sauvegarder → publier.
+## Restes à faire
 
-Optionnel mais recommandé : ajouter un **volume** Railway monté sur `/app/data` au service
-cockpit pour que les rapports survivent aux redéploiements.
+### 1. Volume Railway (2 min) — sinon les rapports disparaissent à chaque déploiement
 
-Le service Railway `dz` d'origine (qui suit la branche `main`) peut être supprimé ou gardé :
-`cockpit` suit la branche `claude/adoring-bardeen-35fld7` ; après merge vers `main`,
-rebrancher `cockpit` sur `main` dans ses Settings.
+Le stockage des rapports est sur le disque du conteneur, effacé à chaque redéploiement du cockpit.
 
-## 2. Récupérer les acquis du POC (5 min) — fortement recommandé
+Dans Railway (`railway.com`) → projet **dz** :
+1. Sur le canvas du projet, **clic droit sur le service `cockpit`** → **Attach Volume**
+   *(autre chemin : bouton « + Create » en haut à droite → Volume → choisir le service `cockpit`)*.
+2. **Mount path** : `/app/data` → confirmer. Railway redéploie le service tout seul.
+3. Vérifier ensuite : page Debug du cockpit → « Stockage rapports » doit rester vert,
+   et les rapports survivent désormais aux déploiements.
 
-Le workflow **« POC DZ rapport technique »** n'est pas accessible par MCP (toggle désactivé),
-je n'ai donc pas pu réutiliser : les **IDs des conversations Teams** BLL/RT de Gaichel, les
-**noms exacts des champs Traxxeo** (WBS, date) dans `person_hrd`, ni la clé PDFShift.
+### 2. Traxxeo — le jour où l'offre est signée (2 min)
 
-→ Dans n8n, liste des workflows → carte « POC DZ rapport technique » → menu ⋯ →
-**activer l'accès MCP** (ou m'envoyer l'export JSON). Je recale alors les parseurs,
-les IDs de conversations et le mapping Traxxeo en quelques minutes.
+1. n8n → workflow **DZ — Générer rapport chantier** → nœud **`Auth Traxxeo`** →
+   sélectionner le credential Basic Auth existant du POC (« Unnamed credential »).
+2. Nœud **`Config`** → `traxxeo_actif` → `true` → sauvegarder → **publier**.
+3. Tester : cockpit → Gaichel → « Générer le rapport » sur une semaine pointée →
+   le chapitre 1 doit se remplir.
 
-En attendant, « Mapper activité Traxxeo » teste plusieurs noms de champs candidats
-(`wbs`, `wbs_code`, `project_code`…) — ça fonctionnera probablement tel quel, mais à valider.
+⚠️ Ne pas lancer le backfill GAMMA (toute l'année) avant validation de l'offre : chaque
+génération interroge l'API Traxxeo.
 
-## 3. Credentials n8n (une fois chacun)
+### 3. Envoi par email — pour l'activer (5 min)
 
-| Credential à créer | Type n8n | Paramètres | Puis |
-|---|---|---|---|
-| **Microsoft Graph DZ** | OAuth2 API (générique) | Grant type : Client Credentials · Access Token URL : `https://login.microsoftonline.com/<TENANT>/oauth2/v2.0/token` · Scope : `https://graph.microsoft.com/.default` · Authentication : Body | à sélectionner sur les nœuds Teams des workflows « Générer rapport chantier » et « Découverte chantiers », puis `graph_actif = true` dans leurs nœuds Config |
-| **Traxxeo API** ⚠️ après signature de l'offre | OAuth2 API (générique) | Grant type : Client Credentials · Access Token URL : `https://ords.traxxeo.com/oauth/token` · Authentication : Header (= Basic) | nœud « Lire activité Traxxeo », puis `traxxeo_actif = true` |
-| **PDFShift** | Basic Auth | user `api`, mot de passe = clé API PDFShift | nœud « Convertir en PDF », puis `pdfshift_actif = true` |
+La mécanique est en place (destinataires par chantier dans le cockpit, pièce jointe + liens).
+Elle est **désactivée par défaut** pour éviter tout envoi accidentel.
 
-Les drapeaux `graph_actif` / `traxxeo_actif` / `pdfshift_actif` vivent dans le nœud **Config**
-de « DZ — Générer rapport chantier » (et `graph_actif` dans « Config découverte »).
-Tant qu'un drapeau est à `false`, la source est proprement ignorée — le rapport sort quand même
-avec ce qui est disponible (aperçu HTML + Word toujours générés).
+1. n8n → **DZ — Générer rapport chantier** → nœud **`Config`** :
+   - `mail_from` : vérifier/adapter l'expéditeur (doit correspondre au compte SMTP utilisé) ;
+   - `mail_actif` → `true`.
+2. Le nœud **`Envoyer rapport par email`** utilise le credential **« SMTP account »** existant —
+   pour la passation à DZ, le remplacer par un SMTP DZ (voir plus bas).
+3. Renseigner le champ « Envoi par email » des chantiers concernés dans le cockpit, puis publier.
 
-## 4. IDs des conversations Teams de Gaichel
+Le mode démo n'envoie jamais d'email.
 
-Deux options :
-- automatique : une fois Graph branché, bouton **« Lancer la découverte »** du cockpit
-  (les conversations `-BLL-` / `-RT-` remontent préremplies) ;
-- manuelle : coller les IDs (`19:…@thread.v2`) du POC dans la carte Gaichel du cockpit.
+## Passation à DZ Construct (quand le moment viendra)
 
-## Ce qui tourne déjà (testé)
+Objectif : que plus rien ne dépende des comptes personnels de Vincent. Dans l'ordre :
 
-- Cockpit : dashboard chantiers, page Debug, conversion Word, dépôt des rapports.
-- Workflows n8n publiés : `DZ — Rapport hebdo` (webhook + cron mercredi 07:00, semaine N-1),
-  `DZ — Générer rapport chantier`, `DZ — Cockpit API`, `DZ — Découverte chantiers` (cron lundi 06:30).
-- Data Tables n8n : `dz_chantiers` (config, Gaichel préremplie), `dz_runs` (journal Debug).
-- Mode **Démo** de bout en bout (rapport complet avec données d'exemple).
+1. **Comptes à créer côté DZ** : un compte Railway (avec facturation DZ), un compte PDFShift
+   (la clé actuelle est celle du POC), et une boîte d'envoi SMTP DZ (ex. `rapports@dzconstruct.lu`
+   via l'Exchange géré par CBC).
+2. **Railway** : transférer les projets `dz` (cockpit) et l'instance n8n vers le workspace DZ
+   (Railway : Project → Settings → Transfer project), ou redéployer proprement chez DZ —
+   le cockpit se redéploie depuis GitHub en quelques minutes, n8n s'exporte/importe.
+3. **GitHub** : transférer le repo `vincentrmn/dz` à une organisation DZ
+   (Settings → Danger Zone → Transfer ownership) et rebrancher le service Railway dessus.
+4. **n8n** : les 4 workflows s'exportent en JSON (menu ⋯ → Download) et se réimportent tels quels ;
+   recréer les credentials chez DZ (Graph : l'app « DZ-Teams-Extractor » est déjà dans le tenant DZ,
+   il suffit de reporter client_id/secret ; Traxxeo : identifiants du contrat DZ ; SMTP DZ ;
+   nouvelle clé PDFShift) et re-renseigner les nœuds `Auth Microsoft` / `Auth Traxxeo` / PDF / email.
+5. **Rien d'autre à migrer** : la configuration des chantiers et le journal vivent dans les
+   Data Tables n8n (exportables), les rapports dans le volume du cockpit.
+
+Point d'attention : le secret de l'app Microsoft expire (durée définie par CBC à la création) —
+prévoir son renouvellement dans le tenant (CBC/Benoît Herbays) et sa mise à jour dans les
+nœuds `Auth Microsoft`.
 
 ## Identifiants techniques
 
@@ -68,16 +90,19 @@ Deux options :
 | Workflow orchestrateur | `5su1DOeswBlCdakw` |
 | Workflow API cockpit | `FCZLzT8cabm3s3GE` |
 | Workflow découverte | `49okCW9O85lYsP3r` |
-| Data table chantiers | `6LXQADAq7StJE6TN` |
+| Data table chantiers | `6LXQADAq7StJE6TN` (colonnes : nom, wbs, conversation_bll, conversation_rt, emails, actif, source, notes) |
 | Data table runs | `9HVj9380Vw6DulOr` |
-| Service Railway cockpit | `9521b395-17d6-4acf-ac50-f46a315a2dcd` (projet `dz`) |
+| Service Railway cockpit | `9521b395-17d6-4acf-ac50-f46a315a2dcd` (projet `dz`, branche `claude/adoring-bardeen-35fld7`) |
 
-## Reste à faire (lots suivants)
+Drapeaux du nœud `Config` (workflow générateur) : `graph_actif=true`, `pdfshift_actif=true`,
+`traxxeo_actif=false` (offre en attente), `mail_actif=false` (à activer volontairement).
+
+## Lots suivants
 
 - **Lot 4** (dépôt SharePoint/OneDrive) : en attente de la décision de Francis — le dépôt
-  tampon actuel du cockpit fait l'intérim.
-- **Lot 6** (BETA Walter, fin juillet) : brancher Graph + PDFShift, générer une vraie semaine Gaichel.
-- **Lot 7** (GAMMA backfill 2026) : après offre Traxxeo signée — boucler sur les semaines via
-  `POST /webhook/dz/generer` avec `date_debut`/`date_fin`.
-- Config chantiers dans Excel/SharePoint (Lot 3 d'origine) : la table n8n + cockpit couvre le
-  besoin sans interface Excel ; si Francis exige le fichier SharePoint, on remplace le loader.
+  tampon du cockpit fait l'intérim (`GET /reports/...`).
+- **Lot 6** (BETA Walter, fin juillet) : choisir une semaine avec activité RT ; idéalement Traxxeo actif.
+- **Lot 7** (GAMMA backfill 2026) : après offre Traxxeo — boucler sur les semaines via
+  `POST /webhook/dz/generer` avec `date_debut`/`date_fin` (je fournirai le script au moment voulu).
+- Après merge de la branche vers `main` : rebrancher le service Railway `cockpit` sur `main`
+  (Settings du service) et supprimer l'ancien service `dz` vide.

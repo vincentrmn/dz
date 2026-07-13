@@ -91,7 +91,16 @@ h2:first-child { margin-top: 0; }
 }
 .champ input:focus { outline: none; border-color: var(--gris); background: var(--blanc); }
 .grille { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 14px; margin-top: 18px; }
-@media (max-width: 760px) { .grille { grid-template-columns: 1fr; } }
+.grille-4 { grid-template-columns: 1fr 1fr; }
+@media (max-width: 760px) { .grille, .grille-4 { grid-template-columns: 1fr; } }
+
+.pied-carte {
+  display: flex; align-items: center; justify-content: space-between;
+  gap: 12px; margin-top: 16px; padding-top: 14px; border-top: 1px solid var(--bord);
+  flex-wrap: wrap;
+}
+
+select { font: inherit; font-size: 13px; border: 1px solid var(--bord); border-radius: 6px; padding: 6px 10px; background: var(--blanc); color: var(--encre); }
 
 button {
   font: inherit;
@@ -112,9 +121,10 @@ button:disabled { opacity: 0.5; cursor: default; }
 
 .badge {
   display: inline-block;
-  font-size: 11.5px;
-  font-weight: 600;
-  letter-spacing: 0.04em;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
   padding: 3px 10px;
   border-radius: 999px;
   border: 1px solid transparent;

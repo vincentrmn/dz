@@ -68,18 +68,23 @@ function carteChantier(c) {
       <div class="chantier-actions">
         <button data-role="generer" class="principal">Générer le rapport</button>
         <button data-role="demo" title="Génère un rapport avec des données d'exemple, sans toucher à Teams ni Traxxeo">Démo</button>
-        <button data-role="enregistrer" class="discret">Enregistrer</button>
       </div>
     </div>
-    <div class="grille">
+    <div class="grille grille-4">
       <div class="champ"><label>Codes WBS Traxxeo</label><input data-role="wbs" placeholder="22.06 A;22.06 B"></div>
       <div class="champ"><label>ID conversation Teams — BLL</label><input data-role="bll" placeholder="19:xxxx@thread.v2"></div>
       <div class="champ"><label>ID conversation Teams — RT</label><input data-role="rt" placeholder="19:xxxx@thread.v2"></div>
+      <div class="champ"><label>Envoi par email (séparés par ;)</label><input data-role="emails" placeholder="francis@dzconstruct.lu;fares@dzconstruct.lu"></div>
+    </div>
+    <div class="pied-carte">
+      <span class="detail" style="color: var(--gris); font-size: 12.5px;">La découverte automatique préremplit les IDs de conversations Teams.</span>
+      <button data-role="enregistrer">Enregistrer les modifications</button>
     </div>`;
   $('.chantier-nom', div).textContent = c.nom;
   $('[data-role=wbs]', div).value = c.wbs || '';
   $('[data-role=bll]', div).value = c.conversation_bll || '';
   $('[data-role=rt]', div).value = c.conversation_rt || '';
+  $('[data-role=emails]', div).value = c.emails || '';
 
   $('[data-role=enregistrer]', div).onclick = async () => {
     try {
@@ -89,6 +94,7 @@ function carteChantier(c) {
         wbs: $('[data-role=wbs]', div).value.trim(),
         conversation_bll: $('[data-role=bll]', div).value.trim(),
         conversation_rt: $('[data-role=rt]', div).value.trim(),
+        emails: $('[data-role=emails]', div).value.trim(),
         actif: $('[data-role=actif]', div).checked,
       });
       toast('Chantier enregistré');
@@ -191,7 +197,7 @@ $('#btn-ajouter').onclick = async () => {
   const nom = prompt('Nom du chantier (ex : 22.06-Gaichel-Maisons) :');
   if (!nom) return;
   try {
-    await api('POST', '/api/chantiers', { nom: nom.trim(), wbs: '', conversation_bll: '', conversation_rt: '', actif: false });
+    await api('POST', '/api/chantiers', { nom: nom.trim(), wbs: '', conversation_bll: '', conversation_rt: '', emails: '', actif: false });
     toast('Chantier ajouté (inactif). Complétez WBS et conversations puis activez-le.');
     chargerChantiers();
   } catch (e) { toast(`Échec : ${e.message}`); }
