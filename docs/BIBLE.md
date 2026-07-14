@@ -3,9 +3,9 @@
 *Référence technique complète de l'outil : architecture, technologies, workflows, données, fragilités, exploitation.*
 *Version au 13/07/2026. Public : Vincent, un successeur technique, ou un lecteur curieux chez DZ/CBC.*
 
-Les autres documents : `MANUEL.md` (mode d'emploi utilisateur), `MISE-EN-SERVICE.md` (activation des
-dernières briques + passation à DZ), la page `/guide` du Hub (guide utilisateur intégré). Ce document-ci
-est le niveau en dessous : **comment c'est construit et pourquoi**.
+Les autres documents : la page **`/guide`** du Hub (« Comment ça marche ? », la doc utilisateur,
+intégrée à l'outil) et **`CLAUDE.md`** (le pilotage du projet : roadmap, questions pour Francis,
+séquence de passation). Ce document-ci est le niveau en dessous : **comment c'est construit et pourquoi**.
 
 ---
 
@@ -159,8 +159,8 @@ première des périodes non encore générées.
 | Compte assembleur requis dans chaque conversation | La découverte ne voit que les conversations dont `assembleur@dzconstruct.lu` est membre : une conversation créée sans lui est invisible | Règle d'usage à la création (voir `/guide`) ; ou bascule vers des canaux d'équipe Teams (lecture sans compte membre, ~quelques heures d'adaptation) — décision Francis |
 | Envoi SMTP bloqué | Railway bloque le SMTP sortant : timeout systématique, quelle que soit la config Gmail | Bascule vers Microsoft Graph `Mail.Send` (HTTPS, OAuth2, expéditeur DZ) — demande faite à CBC |
 | Secret Microsoft expirant | Le client_secret de l'app Graph a une date d'expiration fixée par CBC | Calendrier de renouvellement avec Benoît ; mise à jour ensuite dans les nœuds `Auth Microsoft` |
-| Traxxeo inactif | Accès API payant, offre en attente : chapitre 1 vide | Signature de l'offre, puis 2 minutes d'activation (voir MISE-EN-SERVICE §2) |
-| Comptes personnels | Railway, PDFShift, Gmail de test appartiennent à Vincent | Plan de passation complet dans MISE-EN-SERVICE |
+| Traxxeo inactif | Accès API payant, offre en attente : chapitre 1 vide | Signature de l'offre, puis 2 minutes d'activation (voir §10 « Activations restantes ») |
+| Comptes personnels | Railway, PDFShift, Gmail de test appartiennent à Vincent | Séquence de passation complète dans `CLAUDE.md`, section « Passation à DZ » |
 | Crédits PDFShift | Chaque PDF consomme des crédits payants | Surveiller le solde ; budgéter le backfill GAMMA |
 | Disque Postgres n8n | Les exécutions de test avec photos remplissent la base (crash « No space left on device » déjà vécu, volume agrandi à 5 GB) | Poser `EXECUTIONS_DATA_MAX_AGE=168` sur le service n8n (7 jours de rétention) — pas encore fait |
 | Run bloqué « En cours » | Si un nœud plante « dur », la ligne `dz_runs` n'est jamais clôturée | Diagnostic via n8n → Executions ; amélioration possible (statut Échec automatique) non prioritaire |
@@ -180,7 +180,24 @@ première des périodes non encore générées.
   Tables s'exportent en CSV ; les rapports se copient depuis le volume. Aucune sauvegarde automatique
   externe à ce jour — à considérer lors de la passation.
 - **Ajouter/retirer un chantier, régler le créneau, gérer les destinataires** : tout se fait dans le
-  Hub, voir `MANUEL.md` et `/guide`.
+  Hub, voir la page `/guide`.
+
+### Activations restantes (une fois, le moment venu)
+
+**Traxxeo, le jour où l'offre est signée (2 min)** :
+1. n8n → workflow « DZ — Générer rapport chantier » → nœud `Auth Traxxeo` → sélectionner le
+   credential Basic Auth existant du POC.
+2. Nœud `Config` → `traxxeo_actif` → `true` → sauvegarder → **publier**.
+3. Tester : Hub → Gaichel → « Générer le rapport » sur une semaine pointée → le chapitre 1 doit se
+   remplir. ⚠️ Ne pas lancer le backfill GAMMA avant validation : chaque génération interroge l'API.
+
+**Envoi email (après la bascule Microsoft Graph `Mail.Send`)** :
+1. n8n → « DZ — Générer rapport chantier » → nœud `Config` : vérifier `mail_from` (l'expéditeur DZ
+   choisi avec Francis) puis `mail_actif` → `true` → **publier**.
+2. Dans le Hub : activer le toggle « Envoyer par email » des chantiers concernés + cocher les
+   destinataires.
+3. Tester avec « Générer et envoyer par email » sur Gaichel, vers une seule adresse d'abord.
+   Rappel des 6 conditions d'envoi : voir §4 étape 10. Le mode démo n'envoie jamais.
 
 ## 11. Ce qui reste ouvert
 

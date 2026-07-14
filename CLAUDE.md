@@ -47,7 +47,7 @@ Pas de couche IA de reformulation : **passthrough strict** des textes et photos 
 - **Microsoft Graph** : compte `assembleur@dzconstruct.lu`, permissions Chat.Read.All, Files.Read.All, Team.ReadBasic.All, Channel.ReadBasic.All. Tenant géré par CBC Informatique (Benoît Herbays).
 - **Traxxeo** : contact vendeur = Matthieu. ⚠️ Accès API **payant**, offre commerciale en attente : `traxxeo_actif=false`, ne rien lancer de massif (backfill GAMMA) avant signature. Pour activer : sélectionner le credential Basic Auth sur « Auth Traxxeo » (à la main dans l'UI n8n) + passer `traxxeo_actif` à `true` dans « Config ».
 - **SMTP** : nœud emailSend n8n, credential « SMTP account ». Railway **bloque le port 25** ; Gmail exige `smtp.gmail.com` port 465 SSL/TLS (ou 587 STARTTLS) + **mot de passe d'application** Google. État courant : *Connection timeout* → configuration Gmail à corriger côté Vincent, puis re-tester.
-- **GitHub** : le dépôt contient le cockpit + `docs/MANUEL.md` (manuel utilisateur, à convertir en PDF à la fin) + `docs/MISE-EN-SERVICE.md` (exploitation, passation à DZ, questions ouvertes) + `docs/BIBLE.md` (référence technique complète : architecture, technologies, workflows, données, fragilités, exploitation). Les tenir à jour à chaque évolution.
+- **GitHub** : le dépôt contient le cockpit + `docs/BIBLE.md`, l'unique doc technique (architecture, technologies, workflows, données, fragilités, activations Traxxeo/email, exploitation). La doc utilisateur vit dans l'outil (page `/guide`). `MANUEL.md` et `MISE-EN-SERVICE.md` ont été supprimés le 13/07 (contenu fusionné dans BIBLE, `/guide` et les sections Passation/Francis de ce fichier). Tenir BIBLE et `/guide` à jour à chaque évolution.
 
 ## Données Traxxeo — acquis
 
@@ -101,7 +101,7 @@ Pas de couche IA de reformulation : **passthrough strict** des textes et photos 
 - Vincent n'est pas développeur pur : instructions opérationnelles précises (quel nœud, quel champ, quel code à coller) ; pour Railway/Gmail, guider écran par écran.
 - **Jamais de secrets dans le repo ni dans les fichiers** (tokens, client_secret, tenant ID). Les credentials vivent dans n8n.
 - L'UI du cockpit est en français, épurée, palette DZ (`--rouge:#ff110b`, `--gris:#8a8a81`) ; toute évolution d'UI se vérifie par capture d'écran avant d'annoncer que c'est fait.
-- Tenir `docs/MANUEL.md` et `docs/MISE-EN-SERVICE.md` alignés avec l'outil.
+- Tenir `docs/BIBLE.md` et la page `/guide` alignés avec l'outil.
 
 ## État des lots Phase 2
 
@@ -130,7 +130,7 @@ Reste, par priorité :
 2. **Relecture du guide `/guide`** par Vincent (et Francis ?) — ajuster le texte, puis en tirer le manuel PDF (point 5).
 3. **Authentification Microsoft** pour accéder à l'outil (login Entra ID / compte DZ, tenant géré par CBC — prévoir d'impliquer Benoît pour l'app registration). Aujourd'hui le cockpit est public : à traiter avant un usage large.
 4. **À demander à Francis** : voir la section dédiée « Pour Francis — questions & points fragiles » ci-dessous.
-5. **Manuel PDF** : convertir `docs/MANUEL.md` en PDF quand le contenu est validé (probablement fusionné avec le « Comment ça marche ? »).
+5. **Manuel PDF** : le tirer du contenu de la page `/guide` quand le texte est validé (la page est la seule doc utilisateur depuis la suppression de MANUEL.md).
 6. **GAMMA** : backfill des rapports depuis début janvier 2026 après validation BETA + offre Traxxeo (attention volumétrie PDFShift ; les semaines sans usage Teams auront peu/pas de photos — attendu, ne pas « corriger »).
 7. *(Qualité, non bloquant)* Remplacer les secrets en clair des nœuds n8n (client_secret Graph dans les 2 `Auth Microsoft`, clé PDFShift dans `Convertir en PDF`) par des credentials n8n — à faire à la main dans l'UI (le MCP ne sait pas attacher un credential httpBasicAuth). Et poser `EXECUTIONS_DATA_MAX_AGE=168` sur le service n8n Railway.
 
@@ -153,7 +153,7 @@ Reste, par priorité :
 - **Emails** : l'envoi SMTP est bloqué depuis Railway (timeout) ; bascule prévue vers Microsoft Graph `Mail.Send` (demande faite à Benoît). D'ici là, aucun email ne part.
 - **Secret Microsoft qui expire** : le client_secret de l'app « DZ-Teams-Extractor » a une date d'expiration fixée par CBC — à renouveler avant échéance sinon plus de lecture Teams (et prévenir Vincent pour la mise à jour dans n8n).
 - **Traxxeo inactif** : chapitre « Activité des équipes » vide tant que l'offre API n'est pas signée (Matthieu).
-- **Comptes personnels de Vincent** : Railway, PDFShift et le Gmail de test sont sur ses comptes — la passation vers des comptes DZ est décrite dans `docs/MISE-EN-SERVICE.md`.
+- **Comptes personnels de Vincent** : Railway, PDFShift et le Gmail de test sont sur ses comptes — la passation vers des comptes DZ est décrite dans la section « Passation à DZ » ci-dessous.
 - **Crédits PDFShift** : chaque PDF consomme des crédits payants — le backfill GAMMA (6+ mois × 15 chantiers) devra être budgété.
 
 ## Passation à DZ (séquence technique)

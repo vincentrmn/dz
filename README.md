@@ -32,5 +32,6 @@ Fonctionne en tandem avec les workflows n8n (instance Railway `n8n-production-89
 | `DZ — Découverte chantiers` | Scan hebdo des conversations Teams (`-BLL-`/`-RT-`) et des WBS Traxxeo → nouvelles lignes `actif=N` |
 | `DZ — Cockpit API` | Webhooks `dz/api/chantiers`, `dz/api/runs` consommés par ce cockpit |
 
-Voir `docs/MISE-EN-SERVICE.md` pour les étapes de branchement des credentials
-(Microsoft Graph, Traxxeo, PDFShift) et l'activation des sources.
+Voir `docs/BIBLE.md` pour la référence technique complète : architecture, credentials,
+activation des sources (Traxxeo, email), fragilités et exploitation. La doc utilisateur
+est la page `/guide` du cockpit (« Comment ça marche ? »).
