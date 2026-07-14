@@ -156,6 +156,21 @@ Reste, par priorité :
 - **Comptes personnels de Vincent** : Railway, PDFShift et le Gmail de test sont sur ses comptes — la passation vers des comptes DZ est décrite dans `docs/MISE-EN-SERVICE.md`.
 - **Crédits PDFShift** : chaque PDF consomme des crédits payants — le backfill GAMMA (6+ mois × 15 chantiers) devra être budgété.
 
+## Passation à DZ (séquence technique)
+
+Objectif : plus rien ne dépend des comptes personnels de Vincent. À dérouler dans cet ordre, le moment venu :
+
+1. **Comptes à créer côté DZ** (préalable) : un compte **Railway** avec facturation DZ ; un compte **PDFShift** ; une boîte d'envoi DZ (`rapports@dzconstruct.lu` via CBC) — le Microsoft, lui, est déjà chez DZ (tenant géré par CBC).
+2. **GitHub** : transférer le repo `vincentrmn/dz` vers une organisation DZ (Settings → Danger Zone → Transfer ownership). Les URLs de clone changent, rien d'autre.
+3. **Railway — cockpit** : transférer le projet `dz` vers le workspace DZ (Project → Settings → Transfer project) — le **volume `/app/data` suit le projet** (les rapports sont conservés). Rebrancher ensuite le service sur le repo GitHub transféré (Settings du service → Source) et vérifier la variable `N8N_WEBHOOK_BASE`.
+4. **Railway — n8n** : transférer le projet `pacific-endurance` (n8n + Postgres, le volume suit aussi). Alternative propre si le transfert coince : réinstaller n8n chez DZ et réimporter (voir 5).
+5. **n8n — export/réimport** (seulement si nouvelle instance) : exporter les 4 workflows en JSON (menu ⋯ → Download) et les Data Tables en CSV ; réimporter ; **republier** chaque workflow ; reporter l'URL de la nouvelle instance dans `N8N_WEBHOOK_BASE` du cockpit.
+6. **Credentials à recréer dans n8n côté DZ** : Microsoft Graph (l'app « DZ-Teams-Extractor » est déjà dans le tenant DZ : reporter client_id/secret, CBC peut générer un nouveau secret) ; Traxxeo (identifiants du contrat DZ) ; PDFShift (clé du nouveau compte, à poser dans `Convertir en PDF`) ; envoi email (Graph `Mail.Send` une fois la bascule faite). Renseigner les nœuds `Auth Microsoft` ×2, `Auth Traxxeo`, `Convertir en PDF`.
+7. **Accès humains** : ajouter le(s) admin(s) DZ sur Railway, n8n (compte owner), GitHub ; retirer les accès de Vincent à la fin.
+8. **Validation post-passation** : une génération manuelle Gaichel (Succès dans Debug, PDF + Word téléchargeables) ; attendre un mercredi (cron OK) ; un envoi email test ; un scan de découverte. Ensuite seulement, fermer les anciens comptes.
+
+Points d'attention : le **secret Microsoft expire** (date fixée par CBC — calendrier de renouvellement) ; les rapports du volume et l'historique dz_runs survivent au transfert de projet Railway mais **pas** à une recréation de service (copier `/app/data` avant si besoin) ; après bascule GitHub, vérifier que l'auto-deploy pointe sur la bonne branche.
+
 ## Contrainte budget
 
 Enveloppe facturée : **1 à 2 jours** (choix assumé de Vincent, service à Francis). L'effort réel est supérieur : privilégier systématiquement la solution la plus simple qui remplit le besoin, réutiliser l'existant, ne rien construire de spéculatif.
