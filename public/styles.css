@@ -348,6 +348,33 @@ button.danger:disabled:hover { background: var(--blanc); border-color: #e5aeaa; 
 
 .tableau-pages td { height: 96px; vertical-align: middle; }
 .tableau-pages td:first-child { width: 190px; white-space: nowrap; }
+.tableau-contacts td { height: 76px; vertical-align: middle; }
+
+/* Mise en avant du guide sur le Dashboard */
+.promo-guide {
+  display: flex; align-items: center; gap: 18px;
+  background: var(--blanc); border: 1px solid var(--bord); border-left: 4px solid var(--rouge);
+  border-radius: 10px; padding: 16px 22px; margin-bottom: 30px;
+}
+.pg-badge {
+  flex: none; width: 40px; height: 40px; border-radius: 50%;
+  background: #fdecea; color: var(--rouge);
+  font-size: 22px; font-weight: 800;
+  display: flex; align-items: center; justify-content: center;
+}
+.pg-titre { font-size: 15px; font-weight: 700; }
+.pg-texte p { font-size: 13.5px; color: var(--encre-2); margin-top: 2px; }
+.pg-bouton {
+  flex: none; margin-left: auto;
+  color: #fff; background: var(--rouge); text-decoration: none;
+  font-size: 14px; font-weight: 600; padding: 9px 18px; border-radius: 7px;
+  white-space: nowrap;
+}
+.pg-bouton:hover { filter: brightness(0.92); }
+@media (max-width: 760px) {
+  .promo-guide { flex-wrap: wrap; }
+  .pg-bouton { margin-left: 58px; }
+}
 
 /* Bouton scindé « Générer » (flèche visible quand l'email du chantier est actif) */
 .scinde { position: relative; display: inline-flex; }

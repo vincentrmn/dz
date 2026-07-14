@@ -47,7 +47,7 @@ Pas de couche IA de reformulation : **passthrough strict** des textes et photos 
 - **Microsoft Graph** : compte `assembleur@dzconstruct.lu`, permissions Chat.Read.All, Files.Read.All, Team.ReadBasic.All, Channel.ReadBasic.All. Tenant géré par CBC Informatique (Benoît Herbays).
 - **Traxxeo** : contact vendeur = Matthieu. ⚠️ Accès API **payant**, offre commerciale en attente : `traxxeo_actif=false`, ne rien lancer de massif (backfill GAMMA) avant signature. Pour activer : sélectionner le credential Basic Auth sur « Auth Traxxeo » (à la main dans l'UI n8n) + passer `traxxeo_actif` à `true` dans « Config ».
 - **SMTP** : nœud emailSend n8n, credential « SMTP account ». Railway **bloque le port 25** ; Gmail exige `smtp.gmail.com` port 465 SSL/TLS (ou 587 STARTTLS) + **mot de passe d'application** Google. État courant : *Connection timeout* → configuration Gmail à corriger côté Vincent, puis re-tester.
-- **GitHub** : le dépôt contient le cockpit + `docs/MANUEL.md` (manuel utilisateur, à convertir en PDF à la fin) + `docs/MISE-EN-SERVICE.md` (exploitation, passation à DZ, questions ouvertes). Les tenir à jour à chaque évolution.
+- **GitHub** : le dépôt contient le cockpit + `docs/MANUEL.md` (manuel utilisateur, à convertir en PDF à la fin) + `docs/MISE-EN-SERVICE.md` (exploitation, passation à DZ, questions ouvertes) + `docs/BIBLE.md` (référence technique complète : architecture, technologies, workflows, données, fragilités, exploitation). Les tenir à jour à chaque évolution.
 
 ## Données Traxxeo — acquis
 
@@ -129,13 +129,32 @@ Reste, par priorité :
 1. **Réglage SMTP Gmail** (côté Vincent : port 465 SSL/TLS + mot de passe d'application Google sur le credential « SMTP account » n8n), puis re-test d'envoi sur Gaichel — dernier essai : *Connection timeout*.
 2. **Relecture du guide `/guide`** par Vincent (et Francis ?) — ajuster le texte, puis en tirer le manuel PDF (point 5).
 3. **Authentification Microsoft** pour accéder à l'outil (login Entra ID / compte DZ, tenant géré par CBC — prévoir d'impliquer Benoît pour l'app registration). Aujourd'hui le cockpit est public : à traiter avant un usage large.
-4. **À demander à Francis** : (a) où déposer les rapports — quel site/répertoire SharePoint, option tampon secrétariat ou dépôt direct (Lot 4) ; (b) quelle adresse email doit être l'expéditeur des rapports (aujourd'hui un Gmail de test) ; (c) pourquoi les conversations RT ne sont pas alimentées.
+4. **À demander à Francis** : voir la section dédiée « Pour Francis — questions & points fragiles » ci-dessous.
 5. **Manuel PDF** : convertir `docs/MANUEL.md` en PDF quand le contenu est validé (probablement fusionné avec le « Comment ça marche ? »).
 6. **GAMMA** : backfill des rapports depuis début janvier 2026 après validation BETA + offre Traxxeo (attention volumétrie PDFShift ; les semaines sans usage Teams auront peu/pas de photos — attendu, ne pas « corriger »).
 7. *(Qualité, non bloquant)* Remplacer les secrets en clair des nœuds n8n (client_secret Graph dans les 2 `Auth Microsoft`, clé PDFShift dans `Convertir en PDF`) par des credentials n8n — à faire à la main dans l'UI (le MCP ne sait pas attacher un credential httpBasicAuth). Et poser `EXECUTIONS_DATA_MAX_AGE=168` sur le service n8n Railway.
 
 ### Hors périmètre (garder au chaud)
 - Bascule conversation Teams → canal : faisable (~mêmes endpoints Graph, quelques heures), uniquement si DZ fait évoluer son usage de Teams. Ne pas anticiper.
+
+## Pour Francis — questions & points fragiles
+
+À dérouler avec Francis (démo BETA fin juillet ou avant). Les réponses conditionnent la fin de la Phase 2.
+
+### Questions à poser
+1. **Dépôt des rapports (Lot 4)** : où doivent-ils atterrir ? Site/répertoire SharePoint précis, ou tampon secrétariat qui valide avant classement ? Aujourd'hui les rapports vivent dans le Hub (volume Railway), ça marche mais ce n'est pas le classement définitif DZ.
+2. **Adresse expéditrice des emails** : aujourd'hui un Gmail de test. Proposer une boîte DZ (`rapports@dzconstruct.lu` ou `assembleur@`) via Microsoft Graph (voir fragilité SMTP ci-dessous) — qui la crée, qui la relève ?
+3. **Conversations RT non alimentées** : sur la semaine testée, 0 message RT sur les 11 chantiers équipés (les BL&L sont actives : 57 messages, 61 photos). Les équipes savent-elles qu'elles doivent poster les explications techniques dans la conversation RT ? Et 3 chantiers n'ont pas de conversation RT du tout (26.06 Maison-OMS, 26.07 MaisonFluhe, 99.02 Chantiers-Divers) — faut-il les créer ?
+4. **Compte assembleur dans chaque conversation** : la découverte automatique ne voit que les conversations dont `assembleur@dzconstruct.lu` est membre. Deux options à lui proposer : (a) garder la règle « toujours inclure assembleur@ à la création » (simple, mais fragile : une conversation créée sans lui est invisible) ; (b) basculer vers des **canaux d'équipe Teams** (une équipe « Chantiers », un canal par chantier) — l'outil pourrait alors tout lire **sans** compte invité, la fragilité disparaît (~quelques heures d'adaptation, endpoints Graph similaires). À trancher selon l'usage Teams que DZ veut avoir.
+5. **Qui utilise l'outil chez DZ** : confirmer que c'est Fares (et qui d'autre ?) — nécessaire pour la liste d'accès de l'authentification Microsoft à venir.
+
+### Points fragiles à connaître (état au 13/07)
+- **Cockpit public** : pas encore d'authentification — ne pas diffuser l'URL largement avant le login Microsoft (roadmap n°3).
+- **Emails** : l'envoi SMTP est bloqué depuis Railway (timeout) ; bascule prévue vers Microsoft Graph `Mail.Send` (demande faite à Benoît). D'ici là, aucun email ne part.
+- **Secret Microsoft qui expire** : le client_secret de l'app « DZ-Teams-Extractor » a une date d'expiration fixée par CBC — à renouveler avant échéance sinon plus de lecture Teams (et prévenir Vincent pour la mise à jour dans n8n).
+- **Traxxeo inactif** : chapitre « Activité des équipes » vide tant que l'offre API n'est pas signée (Matthieu).
+- **Comptes personnels de Vincent** : Railway, PDFShift et le Gmail de test sont sur ses comptes — la passation vers des comptes DZ est décrite dans `docs/MISE-EN-SERVICE.md`.
+- **Crédits PDFShift** : chaque PDF consomme des crédits payants — le backfill GAMMA (6+ mois × 15 chantiers) devra être budgété.
 
 ## Contrainte budget
 
