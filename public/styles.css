@@ -346,6 +346,9 @@ button.danger:disabled:hover { background: var(--blanc); border-color: #e5aeaa; 
 .exemple .ex-ko { color: var(--err); padding: 4px 0; }
 .exemple code { font-weight: 400; }
 
+.tableau-pages td { height: 96px; vertical-align: middle; }
+.tableau-pages td:first-child { width: 190px; white-space: nowrap; }
+
 /* Bouton scindé « Générer » (flèche visible quand l'email du chantier est actif) */
 .scinde { position: relative; display: inline-flex; }
 .scinde .principal.avec-fleche { border-top-right-radius: 0; border-bottom-right-radius: 0; }

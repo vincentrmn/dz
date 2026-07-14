@@ -48,7 +48,7 @@ async function chargerJournal() {
       return;
     }
     const tbl = document.createElement('table');
-    tbl.innerHTML = '<colgroup><col style="width:108px"><col style="width:17%"><col style="width:208px"><col style="width:122px"><col style="width:88px"><col></colgroup>'
+    tbl.innerHTML = '<colgroup><col style="width:108px"><col style="width:17%"><col style="width:112px"><col style="width:122px"><col style="width:160px"><col></colgroup>'
       + '<thead><tr><th>Démarré</th><th>Chantier</th><th>Période</th><th>Statut</th><th>Étape</th><th>Détails</th></tr></thead>';
     const tb = document.createElement('tbody');
     runs.forEach((r) => {
@@ -60,7 +60,7 @@ async function chargerJournal() {
       tr.innerHTML = `
         <td class="detail" style="white-space: nowrap;">${debut}<div class="detail">${majuscule(r.declenchement)}</div></td>
         <td></td>
-        <td class="detail">${r.periode_debut || ''} → ${r.periode_fin || ''}</td>
+        <td class="detail" style="white-space: nowrap;">${r.periode_debut || ''}<div>→ ${r.periode_fin || ''}</div></td>
         <td>${badgeStatut(r.statut)}</td>
         <td class="detail">${majuscule(r.etape)}</td>
         <td class="detail"></td>`;

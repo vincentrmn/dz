@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Comment ça marche ? — Hub Rapport Technique DZ Construct</title>
+  <title>Comment ça marche ? · Hub Rapport Technique DZ Construct</title>
   <link rel="stylesheet" href="/styles.css">
   <link rel="icon" href="/favicon.png">
 </head>
@@ -33,11 +33,11 @@
       <a href="#rapport">Ce que contient un rapport</a>
       <a href="#teams">Bien nommer les conversations Teams</a>
       <a href="#activer">Activer un nouveau chantier</a>
-      <a href="#pages">À quoi sert chaque page</a>
+      <a href="#pages">À quoi sert chaque page ?</a>
       <a href="#hebdo">Le rapport automatique du mercredi</a>
       <a href="#email">L'envoi par email</a>
       <a href="#suppression">Supprimer ou restaurer un chantier</a>
-      <a href="#contacts">Qui contacter</a>
+      <a href="#contacts">Qui contacter ?</a>
     </div>
 
     <h2 id="chaine">La chaîne de bout en bout</h2>
@@ -58,9 +58,9 @@
     <h2 id="rapport">Ce que contient un rapport</h2>
     <p>Un rapport couvre une période (en général une semaine, du lundi au dimanche) et présente, <strong>pour chaque jour</strong>, trois chapitres :</p>
     <ol class="liste-pas">
-      <li><strong>Activité des équipes</strong> — qui a travaillé, sur quelle tâche, avec quel équipement, combien d'heures (avec le total de la journée par personne). Source : Traxxeo.</li>
-      <li><strong>Illustrations et explications techniques</strong> — les photos et messages postés dans la conversation Teams <strong>RT</strong> (Rapport Technique).</li>
-      <li><strong>Matériel et bons de livraison</strong> — les photos et messages postés dans la conversation Teams <strong>BL&amp;L</strong> (Bons de Livraison &amp; Location).</li>
+      <li><strong>Activité des équipes</strong> : qui a travaillé, sur quelle tâche, avec quel équipement, combien d'heures (avec le total de la journée par personne). Source : Traxxeo.</li>
+      <li><strong>Illustrations et explications techniques</strong> : les photos et messages postés dans la conversation Teams <strong>RT</strong> (Rapport Technique).</li>
+      <li><strong>Matériel et bons de livraison</strong> : les photos et messages postés dans la conversation Teams <strong>BL&amp;L</strong> (Bons de Livraison &amp; Location).</li>
     </ol>
     <p>Un chapitre sans information ce jour-là est simplement indiqué comme vide : c'est le reflet fidèle de ce qui a été partagé.</p>
 
@@ -75,7 +75,7 @@
     </ol>
     <div class="exemple">
       <div class="ex-ok">✓ <code>22.06-BL&amp;L-Gaichel-Maisons</code> &nbsp;et&nbsp; <code>22.06-RT-Gaichel-Maisons</code></div>
-      <div class="ex-ko">✗ <code>Gaichel bons de livraison</code> — pas de code chantier ni de repère BL&amp;L/RT : la conversation ne sera pas détectée.</div>
+      <div class="ex-ko">✗ <code>Gaichel bons de livraison</code> : sans code chantier ni repère BL&amp;L/RT, la conversation ne sera pas détectée.</div>
     </div>
     <p>
       Le repère <code>-BL&amp;L-</code> (ou <code>-BLL-</code>) et <code>-RT-</code> peut être placé n'importe où dans le nom,
@@ -87,20 +87,20 @@
     <ol class="liste-pas">
       <li>Créez les deux conversations Teams comme expliqué ci-dessus.</li>
       <li>Sur le Dashboard, cliquez sur <strong>« Scan des nouveaux chantiers »</strong> (sinon, le scan tourne de toute façon chaque lundi matin). Le chantier apparaît alors dans la liste, <strong>inactif</strong>, avec ses conversations préremplies.</li>
-      <li>Ouvrez sa <strong>Configuration des sources</strong> : vérifiez le nom, complétez les <strong>codes WBS Traxxeo</strong> (plusieurs codes séparés par <code>;</code>, ex. <code>22.06 A;22.06 B</code>).</li>
+      <li>Ouvrez sa <strong>Configuration des sources</strong> : vérifiez le nom et les <strong>codes WBS Traxxeo</strong>. Le scan préremplit le code déduit du nom Teams (ex. <code>22.06</code>), mais certains chantiers sont découpés en plusieurs lots dans Traxxeo : dans ce cas, indiquez tous les codes séparés par <code>;</code> (ex. <code>22.06 A;22.06 B</code>). Ce préremplissage deviendra entièrement automatique quand l'accès à l'API Traxxeo sera actif.</li>
       <li>Cliquez sur <strong>Enregistrer les modifications</strong>, puis passez l'interrupteur du chantier sur <strong>actif</strong>.</li>
     </ol>
     <p>C'est tout : dès le mercredi suivant, le chantier aura son rapport hebdomadaire. Vous pouvez aussi générer un rapport immédiatement avec le bouton « Générer le rapport » pour vérifier.</p>
 
-    <h2 id="pages">À quoi sert chaque page</h2>
-    <table>
+    <h2 id="pages">À quoi sert chaque page ?</h2>
+    <table class="tableau-pages">
       <thead><tr><th>Page</th><th>À quoi elle sert</th></tr></thead>
       <tbody>
-        <tr><td><strong>Dashboard</strong></td><td>La page de travail au quotidien : liste des chantiers, activation, choix d'une période et génération manuelle d'un rapport, scan des nouveaux chantiers, derniers rapports produits.</td></tr>
-        <tr><td><strong>Rapports</strong></td><td>Tous les rapports générés, classés par chantier, téléchargeables en PDF et en Word (avec un aperçu HTML).</td></tr>
-        <tr><td><strong>Configuration</strong></td><td>Le créneau du rapport automatique (jour et heure) et le carnet des destinataires email.</td></tr>
-        <tr><td><strong>Comment ça marche ?</strong></td><td>Cette page.</td></tr>
-        <tr><td><strong>Debug</strong></td><td>La santé de l'outil et le journal des générations. En cas de doute (« le rapport n'est pas arrivé »), c'est ici qu'on regarde d'abord.</td></tr>
+        <tr><td><strong>Dashboard</strong></td><td>C'est la page de travail au quotidien. Elle liste tous les chantiers et permet de les activer, de les configurer, de choisir une période et de lancer une génération manuelle, ou encore de scanner les nouvelles conversations Teams. Les derniers rapports produits s'affichent en bas.</td></tr>
+        <tr><td><strong>Rapports</strong></td><td>Elle regroupe tous les rapports générés depuis le début, classés par chantier puis par semaine. Chaque rapport se télécharge en PDF ou en Word, et peut aussi se consulter directement dans le navigateur grâce au lien Aperçu.</td></tr>
+        <tr><td><strong>Configuration</strong></td><td>Elle permet de régler le jour et l'heure du rapport automatique de la semaine, et de tenir à jour le carnet d'adresses des personnes qui peuvent recevoir les rapports par email sur les différents chantiers.</td></tr>
+        <tr><td><strong>Comment ça marche ?</strong></td><td>C'est la page que vous lisez en ce moment. Elle sert de guide de référence pour comprendre le fonctionnement de l'outil, former un nouvel utilisateur ou retrouver une procédure oubliée, comme l'activation d'un nouveau chantier.</td></tr>
+        <tr><td><strong>Debug</strong></td><td>Elle affiche l'état de santé de l'outil et le journal de toutes les générations. Si un rapport n'est pas arrivé ou semble incomplet, c'est la première page à consulter pour comprendre ce qui s'est passé et où ça a bloqué.</td></tr>
       </tbody>
     </table>
 
@@ -129,19 +129,19 @@
       pas recréé par le scan automatique.
     </p>
 
-    <h2 id="contacts">Qui contacter</h2>
+    <h2 id="contacts">Qui contacter ?</h2>
     <table>
-      <thead><tr><th>Sujet</th><th>Contact</th></tr></thead>
+      <thead><tr><th>Sujet</th><th>Contact</th><th>Email</th><th>Téléphone</th></tr></thead>
       <tbody>
-        <tr><td>L'outil lui-même : fonctionnement, évolutions, incident de génération</td><td><strong>Vincent Romano</strong></td></tr>
-        <tr><td>Le compte Microsoft / Teams (<code>assembleur@dzconstruct.lu</code>, droits d'accès, tenant)</td><td><strong>Benoît Herbays</strong> — CBC Informatique</td></tr>
-        <tr><td>Traxxeo (accès API, données d'heures, contrat)</td><td><strong>Matthieu</strong> — Traxxeo</td></tr>
+        <tr><td>L'outil lui-même : fonctionnement, évolutions, incident de génération</td><td><strong>Vincent Romano</strong></td><td><a href="mailto:v.romano57@gmail.com">v.romano57@gmail.com</a></td><td>à compléter</td></tr>
+        <tr><td>Le compte Microsoft / Teams (<code>assembleur@dzconstruct.lu</code>, droits d'accès, tenant)</td><td><strong>Benoît Herbays</strong><br>CBC Informatique</td><td>à compléter</td><td>à compléter</td></tr>
+        <tr><td>Traxxeo (accès API, données d'heures, contrat)</td><td><strong>Matthieu</strong><br>Traxxeo</td><td>à compléter</td><td>à compléter</td></tr>
       </tbody>
     </table>
     <p class="note" style="margin-top:20px;">
       <strong>Bon réflexe :</strong> si un rapport semble incomplet, vérifiez d'abord que les photos ont bien été postées
       dans la <em>bonne</em> conversation Teams (BL&amp;L ou RT) pendant la période, et que les heures sont déclarées dans
-      Traxxeo. L'outil reprend fidèlement ce qui existe — il n'invente rien.
+      Traxxeo. L'outil reprend fidèlement ce qui existe, il n'invente rien.
     </p>
   </main>
 
@@ -150,7 +150,7 @@
     <div class="pied-page">
       <span>© 2026 <strong>DZ Construct S.A.</strong> - Tous droits réservés</span>
       <span>Outil interne - Confidentiel</span>
-      <span>173, Route de Belvaux · L-4026 Esch-sur-Alzette</span>
+      <span>173, Route de Belvaux, L-4026 Esch-sur-Alzette</span>
     </div>
   </footer>
 </body>
