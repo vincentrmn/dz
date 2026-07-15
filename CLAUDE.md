@@ -55,9 +55,15 @@ Pas de couche IA de reformulation : **passthrough strict** des textes et photos 
 - Gaichel = WBS `22.06 A` + `22.06 B` (pas de nœud parent `22.06` : filtrer côté code).
 - Garder uniquement `work_code_name.trim() === 'Heure travail'` ; exclure « Jour férié », « Congé », « Heure trajet ».
 - Dates reçues en `DD/MM/YYYY` → convertir en `YYYY-MM-DD`.
-- `user_comment` rempli à ~39 % sur Gaichel (`'Calculated'` = vide) ; `declared_vehicle_name` = équipement ; `work_duration` = heures de la ligne. **Ne jamais utiliser « Heures déclarées visibles »** (total journée) comme heures de ligne.
+- `user_comment` rempli à ~70 % en prod (`'Calculated'` = vide) ; `declared_vehicle_name` = équipement ; `work_duration` = heures de la ligne. **Ne jamais utiliser « Heures déclarées visibles »** (total journée) comme heures de ligne.
 - Doc publique `rest.traxxeo.com` = coquille vide ; la vraie doc est `wiki-api.traxxeo.com`.
-- Champs encore à vérifier avec Matthieu : Personne-Code (`person_erp_id`/`person_identifier` null), catégorie DZC vs intérim (piste `company_nr`), qualification, activité de liste finie.
+- **Inventaire des champs prod (15/07, 508 lignes person_hrd inspectées)** — les champs demandés par Francis existent :
+  - Catégorie employeur : `company_name` (`DZ CONSTRUCT`/`ARHIS`/`KENOB`/`IMPULSE`), `person_category_name` (`DZC`/`Arhis`/…/`Étudiants`), `employee_contract_type_name` (`Worker`/`Interim`).
+  - Qualification : `qualification_name` (~72 % rempli) — `Coffreur B1/B2/B3/BD`, `Maçon B1-B3`, `Manoeuvre A2`, `Grutier F2`, `Chef d'équipe G1`…
+  - Activité (liste finie, distincte de `user_comment`) : `activity_code` + `activity_name` (~90 %, 17 codes : `6-C` Coffrage, `6-B` Bettonage, `4-D` Dallage…) + famille `parent_activity_name` (10 valeurs : `GO BETON & FER COFFRAGE`…).
+  - Code personne : `person_erp_id`/`person_identifier` **null même en prod** ; mais `company_nr` est en réalité un **matricule par personne** (086, 165…, ~70 valeurs distinctes) et `person_erp_company_code` = `10`+matricule — ⚠️ à confirmer avec Matthieu que c'est le matricule paie ; ne PAS utiliser `company_nr` comme catégorie société.
+  - ⚠️ **Espaces de fin** dans tous les libellés Traxxeo (`"DZC "`, `"Chef de chantier "`) : toujours `trim()`.
+  - Autres `work_code_name` vus : `Absence`, `Accident de travail`, `Maladie`, `Heure trajet` — le filtre `'Heure travail'` les exclut correctement.
 
 ## Microsoft Graph / Teams — acquis
 
@@ -107,7 +113,7 @@ Pas de couche IA de reformulation : **passthrough strict** des textes et photos 
 
 | Lot | État |
 |---|---|
-| 1 — Champs Traxxeo enrichis | ✅ **Fait et testé en réel le 15/07** (Gaichel 06-12/07 : 37 lignes, tâches/équipements/heures/totaux journée OK dans le PDF) ; reste seulement : champs manquants à vérifier avec Matthieu (Personne-Code, catégorie DZC/intérim, qualification) |
+| 1 — Champs Traxxeo enrichis | ✅ **Fait et testé en réel le 15/07** (37 lignes, tâches/équipements/heures/totaux journée OK dans le PDF). Champs complémentaires de Francis **tous trouvés dans les données prod** (catégorie, qualification, activité ; matricule via `company_nr` à confirmer avec Matthieu) — intégration au rapport : proposition de mise en page faite à Vincent, en attente de son choix |
 | 2 — Word (.docx) | ✅ Fait (html-to-docx via cockpit) |
 | 3 — Cockpit config + découverte auto | ✅ Fait (Data Tables + scan Teams ; Excel SharePoint abandonné au profit des Data Tables n8n) |
 | 4 — Dépôt des rapports | ⏳ Décision Francis en attente (voir roadmap « à demander à Francis ») |
