@@ -113,7 +113,7 @@ Pas de couche IA de reformulation : **passthrough strict** des textes et photos 
 
 | Lot | État |
 |---|---|
-| 1 — Champs Traxxeo enrichis | ✅ **Fait et testé en réel le 15/07** (37 lignes, tâches/équipements/heures/totaux journée OK dans le PDF). Champs complémentaires de Francis **tous trouvés dans les données prod** (catégorie, qualification, activité ; matricule via `company_nr` à confirmer avec Matthieu) — intégration au rapport : proposition de mise en page faite à Vincent, en attente de son choix |
+| 1 — Champs Traxxeo enrichis | ✅ **Terminé le 15/07, validé en réel.** Les 8 champs de Francis sont dans le rapport : sous-ligne Personne « qualification · catégorie · mat. NNN », cellule Tâche « activité (FR seul, découpe sur " / ") + commentaire libre en sous-ligne ». Reste : confirmer avec Matthieu que `company_nr` = matricule paie |
 | 2 — Word (.docx) | ✅ Fait (html-to-docx via cockpit) |
 | 3 — Cockpit config + découverte auto | ✅ Fait (Data Tables + scan Teams ; Excel SharePoint abandonné au profit des Data Tables n8n) |
 | 4 — Dépôt des rapports | ⏳ Décision Francis en attente (voir roadmap « à demander à Francis ») |
