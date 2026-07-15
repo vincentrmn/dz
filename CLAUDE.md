@@ -45,7 +45,7 @@ Pas de couche IA de reformulation : **passthrough strict** des textes et photos 
 - **n8n v2.16** self-hosted Railway, MCP officiel : `https://n8n-production-8929d.up.railway.app/mcp-server/http`. Après chaque `update_workflow` : **`publish_workflow` obligatoire**, sinon la modif n'est pas active.
 - **PDFShift** pour HTML→PDF (credential dans le nœud).
 - **Microsoft Graph** : compte `assembleur@dzconstruct.lu`, permissions Chat.Read.All, Files.Read.All, Team.ReadBasic.All, Channel.ReadBasic.All. Tenant géré par CBC Informatique (Benoît Herbays).
-- **Traxxeo** : contact vendeur = Matthieu ; support = ticket sur www.support.traxxeo.com. **Offre signée le 15/07/2026, accès API actifs** (identifiants identiques à la phase de test). `traxxeo_actif=true` publié le 15/07 ; ⚠️ le credential « Unnamed credential » (httpBasicAuth) doit être sélectionné **à la main** sur `Auth Traxxeo` dans l'UI n8n (le MCP refuse de l'attacher — piège confirmé, y compris via setNodeCredential) puis republier. Tant que ce n'est pas fait : échec Traxxeo **silencieux** (chapitre 1 vide, statut Succès quand même). GAMMA seulement après BETA validée.
+- **Traxxeo** : ✅ **actif en production depuis le 15/07/2026** (offre signée, identifiants = phase de test, credential « Traxxeo API » httpBasicAuth sur `Auth Traxxeo`, `traxxeo_actif=true`, testé sur Gaichel). Contact vendeur = Matthieu ; support = ticket sur www.support.traxxeo.com. Pièges rencontrés à l'activation (ne pas re-découvrir) : (1) le MCP n8n **refuse d'attacher** un credential httpBasicAuth — sélection à la main dans l'UI obligatoire ; (2) l'UI **préaffiche** un credential non enregistré (re-sélectionner + Save + republier) ; (3) un credential d'avant redéploiement n8n peut être **indéchiffrable** (« Credentials could not be decrypted », encryptionKey changée) → re-saisir les valeurs ; (4) l'échec Traxxeo est **silencieux** (chapitre 1 vide, statut Succès). GAMMA seulement après BETA validée.
 - **SMTP** : nœud emailSend n8n, credential « SMTP account ». Railway **bloque le port 25** ; Gmail exige `smtp.gmail.com` port 465 SSL/TLS (ou 587 STARTTLS) + **mot de passe d'application** Google. État courant : *Connection timeout* → configuration Gmail à corriger côté Vincent, puis re-tester.
 - **GitHub** : le dépôt contient le cockpit + `docs/BIBLE.md`, l'unique doc technique (architecture, technologies, workflows, données, fragilités, activations Traxxeo/email, exploitation). La doc utilisateur vit dans l'outil (page `/guide`). `MANUEL.md` et `MISE-EN-SERVICE.md` ont été supprimés le 13/07 (contenu fusionné dans BIBLE, `/guide` et les sections Passation/Francis de ce fichier). Tenir BIBLE et `/guide` à jour à chaque évolution.
 
@@ -107,13 +107,13 @@ Pas de couche IA de reformulation : **passthrough strict** des textes et photos 
 
 | Lot | État |
 |---|---|
-| 1 — Champs Traxxeo enrichis | Codé ; **offre signée le 15/07, accès API actifs** (identifiants = phase de test) ; `traxxeo_actif=true` publié ; ⏳ reste : Vincent sélectionne le credential « Unnamed credential » sur `Auth Traxxeo` dans l'UI n8n + republication + test Gaichel ; champs manquants à vérifier avec Matthieu |
+| 1 — Champs Traxxeo enrichis | ✅ **Fait et testé en réel le 15/07** (Gaichel 06-12/07 : 37 lignes, tâches/équipements/heures/totaux journée OK dans le PDF) ; reste seulement : champs manquants à vérifier avec Matthieu (Personne-Code, catégorie DZC/intérim, qualification) |
 | 2 — Word (.docx) | ✅ Fait (html-to-docx via cockpit) |
 | 3 — Cockpit config + découverte auto | ✅ Fait (Data Tables + scan Teams ; Excel SharePoint abandonné au profit des Data Tables n8n) |
 | 4 — Dépôt des rapports | ⏳ Décision Francis en attente (voir roadmap « à demander à Francis ») |
 | 5 — Déclenchement | ✅ Fait (webhook à la demande + cron hebdo configurable) |
-| 6 — BETA Gaichel (démo Walter fin juillet) | Prêt hors Traxxeo/SMTP |
-| 7 — GAMMA (backfill depuis janvier 2026) | ⏳ Après BETA validée + offre Traxxeo signée |
+| 6 — BETA Gaichel (démo Walter fin juillet) | **Prêt** (hors envoi email — bascule Graph en cours) |
+| 7 — GAMMA (backfill depuis janvier 2026) | ⏳ Après BETA validée (offre Traxxeo ✅ signée le 15/07) |
 
 ## Roadmap
 
@@ -177,7 +177,7 @@ Enveloppe facturée : **1 à 2 jours** (choix assumé de Vincent, service à Fra
 
 ## Définition of done Phase 2
 
-- Rapport hebdo Gaichel généré automatiquement le mercredi, PDF + Word, chapitres complets avec champs Traxxeo enrichis et totaux journée. *(Reste : Traxxeo actif.)*
+- Rapport hebdo Gaichel généré automatiquement le mercredi, PDF + Word, chapitres complets avec champs Traxxeo enrichis et totaux journée. ✅ *(Validé en réel le 15/07.)*
 - Nouveau chantier activable par configuration (procédure Fares = « Comment ça marche ? »).
 - Rapports déposés selon l'option retenue par Francis. *(Reste : décision + implémentation.)*
 - Envoi email opérationnel. *(Reste : SMTP.)*
