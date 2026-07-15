@@ -159,7 +159,7 @@ première des périodes non encore générées.
 | Compte assembleur requis dans chaque conversation | La découverte ne voit que les conversations dont `assembleur@dzconstruct.lu` est membre : une conversation créée sans lui est invisible | Règle d'usage à la création (voir `/guide`) ; ou bascule vers des canaux d'équipe Teams (lecture sans compte membre, ~quelques heures d'adaptation) — décision Francis |
 | Envoi SMTP bloqué | Railway bloque le SMTP sortant : timeout systématique, quelle que soit la config Gmail | Bascule vers Microsoft Graph `Mail.Send` (HTTPS, OAuth2, expéditeur DZ) — demande faite à CBC |
 | Secret Microsoft expirant | Le client_secret de l'app Graph a une date d'expiration fixée par CBC | Calendrier de renouvellement avec Benoît ; mise à jour ensuite dans les nœuds `Auth Microsoft` |
-| Traxxeo inactif | Accès API payant, offre en attente : chapitre 1 vide | Signature de l'offre, puis 2 minutes d'activation (voir §10 « Activations restantes ») |
+| Traxxeo pas encore branché | Offre signée le 15/07, drapeau actif, mais credential à sélectionner à la main : d'ici là, chapitre 1 vide avec statut Succès (échec silencieux) | Étape 2 de « Activations restantes » (§10) puis test Gaichel |
 | Comptes personnels | Railway, PDFShift, Gmail de test appartiennent à Vincent | Séquence de passation complète dans `CLAUDE.md`, section « Passation à DZ » |
 | Crédits PDFShift | Chaque PDF consomme des crédits payants | Surveiller le solde ; budgéter le backfill GAMMA |
 | Disque Postgres n8n | Les exécutions de test avec photos remplissent la base (crash « No space left on device » déjà vécu, volume agrandi à 5 GB) | Poser `EXECUTIONS_DATA_MAX_AGE=168` sur le service n8n (7 jours de rétention) — pas encore fait |
@@ -184,10 +184,12 @@ première des périodes non encore générées.
 
 ### Activations restantes (une fois, le moment venu)
 
-**Traxxeo, le jour où l'offre est signée (2 min)** :
-1. n8n → workflow « DZ — Générer rapport chantier » → nœud `Auth Traxxeo` → sélectionner le
-   credential Basic Auth existant du POC.
-2. Nœud `Config` → `traxxeo_actif` → `true` → sauvegarder → **publier**.
+**Traxxeo — offre signée le 15/07/2026, activation en cours** :
+1. ✅ `traxxeo_actif=true` dans `Config` (publié le 15/07).
+2. ⏳ n8n → workflow « DZ — Générer rapport chantier » → nœud `Auth Traxxeo` → champ Credential →
+   sélectionner « Unnamed credential » (le Basic Auth du POC, identifiants inchangés) → Save →
+   **republier**. Étape manuelle obligatoire : l'API de n8n refuse d'attacher ce type de credential.
+   ⚠️ Tant qu'elle n'est pas faite, l'échec Traxxeo est silencieux (chapitre 1 vide, statut Succès).
 3. Tester : Hub → Gaichel → « Générer le rapport » sur une semaine pointée → le chapitre 1 doit se
    remplir. ⚠️ Ne pas lancer le backfill GAMMA avant validation : chaque génération interroge l'API.
 
