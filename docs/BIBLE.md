@@ -57,7 +57,7 @@ redéploie automatiquement le service en ~30 secondes. Les workflows n8n, eux, v
 | Heures | API Traxxeo (ORDS, OAuth2 client_credentials) | Endpoint `person_hrd` : lignes de pointage par personne/jour/WBS | Contrat DZ–Traxxeo (Matthieu) — **actif depuis le 15/07/2026**, credential n8n « Traxxeo API » |
 | HTML → PDF | PDFShift (service SaaS) | Convertit le HTML du rapport en PDF fidèle | Clé du POC (compte Vincent), crédits payants |
 | HTML → Word | Librairie `html-to-docx` dans le Hub | Endpoint `POST /api/convert/docx`, icônes inlinées en base64 avant conversion | Aucun compte, tourne dans le Hub |
-| Email | Nœud SMTP n8n (bloqué) → bascule prévue Microsoft Graph `Mail.Send` | Envoi du rapport (liens + PDF joint) aux destinataires du chantier | Voir « Fragilités » |
+| Email | Nœud **Gmail** n8n en **OAuth2** (API Gmail, HTTPS) | Envoi du rapport (liens + PDF joint) aux destinataires du chantier | Credential « Gmail account » = `vincent@korr.lu` (**test**) ; cible DZ = Microsoft Graph `Mail.Send`. SMTP abandonné (Railway le bloque + fin des mots de passe d'app Google) |
 | Hébergement | Railway | Les deux services + volume persistant + Postgres n8n | Compte Vincent (passation prévue) |
 | Code source | GitHub `vincentrmn/dz` | Hub + docs + copie de référence du workflow générateur | Compte Vincent |
 
@@ -157,7 +157,7 @@ première des périodes non encore générées.
 | Fragilité | Détail | Parade |
 |---|---|---|
 | Compte assembleur requis dans chaque conversation | La découverte ne voit que les conversations dont `assembleur@dzconstruct.lu` est membre : une conversation créée sans lui est invisible | Règle d'usage à la création (voir `/guide`) ; ou bascule vers des canaux d'équipe Teams (lecture sans compte membre, ~quelques heures d'adaptation) — décision Francis |
-| Envoi SMTP bloqué | Railway bloque le SMTP sortant : timeout systématique, quelle que soit la config Gmail | Bascule vers Microsoft Graph `Mail.Send` (HTTPS, OAuth2, expéditeur DZ) — demande faite à CBC |
+| Email en compte perso (test) | L'envoi marche via l'API Gmail OAuth2, mais depuis le compte perso `vincent@korr.lu` | Basculer vers Microsoft Graph `Mail.Send` avec une boîte DZ (même logique OAuth2/HTTPS) — demande faite à CBC. NB : le SMTP est définitivement écarté (Railway le bloque + fin des mots de passe d'app Google) |
 | Secret Microsoft expirant | Le client_secret de l'app Graph a une date d'expiration fixée par CBC | Calendrier de renouvellement avec Benoît ; mise à jour ensuite dans les nœuds `Auth Microsoft` |
 | Échec Traxxeo silencieux | Si l'auth ou l'API Traxxeo échoue, le chapitre 1 sort vide avec un statut Succès (les nœuds absorbent l'erreur) | Surveiller « Traxxeo : N ligne(s) » dans les stats de la page Debug ; N=0 sur une semaine travaillée = anomalie |
 | Comptes personnels | Railway, PDFShift, Gmail de test appartiennent à Vincent | Séquence de passation complète dans `CLAUDE.md`, section « Passation à DZ » |
@@ -192,7 +192,16 @@ republier) ; un credential chiffré avec une ancienne encryptionKey est indéchi
 valeurs). Un échec Traxxeo reste **silencieux** (chapitre 1 vide, statut Succès quand même).
 ⚠️ Ne pas lancer le backfill GAMMA avant validation BETA : chaque génération interroge l'API.
 
-**Envoi email (après la bascule Microsoft Graph `Mail.Send`)** :
+**Envoi email — ✅ opérationnel via l'API Gmail OAuth2** (testé le 15/07 depuis `vincent@korr.lu`,
+mail reçu avec PDF joint). Le nœud `Envoyer rapport par Gmail` (type Gmail, credential « Gmail account »)
+remplace l'ancien SMTP. Config OAuth Google Cloud : écran de consentement Interne, ID client OAuth Web,
+redirect `https://n8n-production-8929d.up.railway.app/rest/oauth2-credential/callback`. Deux pièges à
+l'activation : le credential OAuth se **sélectionne à la main** sur le nœud (le MCP ne l'attache pas),
+et l'autorisation « Sign in with Google » doit être **complétée** jusqu'au vert « connected » (sinon
+« Unable to sign without access token »). Piège de topologie corrigé : le nœud email **et** la branche
+FALSE du IF « Envoi email ? » pointent vers `Journaliser fin` (sinon un run avec email reste « En cours »).
+
+**Bascule vers l'adresse DZ (Microsoft Graph `Mail.Send`)** — pour la prod :
 1. n8n → « DZ — Générer rapport chantier » → nœud `Config` : vérifier `mail_from` (l'expéditeur DZ
    choisi avec Francis) puis `mail_actif` → `true` → **publier**.
 2. Dans le Hub : activer le toggle « Envoyer par email » des chantiers concernés + cocher les
