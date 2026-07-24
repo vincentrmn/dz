@@ -82,16 +82,46 @@ app.post('/api/decouverte', (req, res) => proxyToN8n(res, 'POST', 'dz/decouverte
 // Conversion HTML -> Word (.docx) — appelée par le workflow n8n (Lot 2)
 // Corps attendu : { html: "<html…>", filename: "rapport.docx" }
 // ---------------------------------------------------------------------------
-// Remplace les URLs /icons/xxx.png par leur contenu en base64 (Word n'aime pas les images distantes)
-function inlinerIcones(html) {
-  return html.replace(/src="[^"]*\/icons\/(equipes|illustrations|materiel)\.png"/g, (m, nom) => {
+// Prépare le HTML du rapport pour la conversion Word.
+// html-to-docx ne comprend qu'un sous-ensemble du CSS (il ignore les <style> et
+// les classes) : le HTML est pensé pour PDFShift (vrai moteur navigateur). On
+// réécrit donc, pour le Word uniquement, ce que html-to-docx sait lire : des
+// styles EN LIGNE et des dimensions d'images en attributs.
+function htmlPourWord(html) {
+  let h = html;
+  // Icônes de chapitre : inliner en base64 + taille fixe (sinon Word les rend en pleine résolution → énormes)
+  h = h.replace(/<img class="ico"[^>]*\/icons\/(equipes|illustrations|materiel)\.png"[^>]*>/g, (m, nom) => {
     try {
       const b64 = fs.readFileSync(path.join(__dirname, 'public', 'icons', `${nom}.png`)).toString('base64');
-      return `src="data:image/png;base64,${b64}"`;
+      return `<img src="data:image/png;base64,${b64}" width="16" height="16" style="vertical-align:middle" />`;
     } catch {
       return m;
     }
   });
+  // Photos de chantier : borner la largeur (Word ignore le CSS max-width)
+  h = h.replace(/<div class="photos">([\s\S]*?)<\/div>/g, (m, inner) =>
+    '<div class="photos">' + inner.replace(/<img /g, '<img width="330" ') + '</div>');
+  // Tableaux « équipes » : styles en ligne (Word ignore les classes)
+  h = h.replace(/<table class="equipes">/g,
+    '<table style="width:100%;border-collapse:collapse;font-size:10px" border="0" cellspacing="0">');
+  h = h.replace(/<th style="text-align:right">/g,
+    '<th style="background:#f4f4f2;border-bottom:1px solid #bbb;padding:5px;text-align:right">');
+  h = h.replace(/<th>/g,
+    '<th style="background:#f4f4f2;border-bottom:1px solid #bbb;padding:5px;text-align:left">');
+  // Lignes de total (avant de styliser les td génériques)
+  h = h.replace(/<tr class="jourtotal"><td colspan="3">/g,
+    '<tr><td colspan="3" style="font-weight:bold;background:#f3ece7;border-top:2px solid #ff110b;border-bottom:2px solid #ff110b;padding:5px">');
+  h = h.replace(/<tr class="total"><td colspan="3">/g,
+    '<tr><td colspan="3" style="font-weight:bold;background:#faf7f7;border-bottom:2px solid #ccc;padding:5px">');
+  h = h.replace(/<td class="h">/g,
+    '<td style="text-align:right;white-space:nowrap;padding:5px;border-bottom:1px solid #eee;vertical-align:top">');
+  h = h.replace(/<td>/g,
+    '<td style="padding:5px;border-bottom:1px solid #eee;vertical-align:top">');
+  // Sous-lignes (qualification · catégorie · matricule ; commentaire libre)
+  h = h.replace(/<div class="sub">/g, '<div style="color:#8a8a81;font-size:8.5px">');
+  // Logo de garde (le seul <img> restant sans dimension) : largeur raisonnable
+  h = h.replace(/<img (src="data:image\/png;base64,[^"]+")>/g, '<img width="240" $1>');
+  return h;
 }
 
 app.post('/api/convert/docx', async (req, res) => {
@@ -99,12 +129,14 @@ app.post('/api/convert/docx', async (req, res) => {
   if (!html) return res.status(400).json({ erreur: 'champ "html" manquant' });
   try {
     const HTMLtoDOCX = (await import('html-to-docx')).default;
-    const buffer = await HTMLtoDOCX(inlinerIcones(html), null, {
-      table: { row: { cantSplit: true } },
-      footer: true,
-      pageNumber: true,
-      font: 'Calibri',
-    });
+    const nomFichier = String(filename || 'rapport.docx').replace(/\.docx$/i, '');
+    const piedWord = `<p style="font-size:8px;color:#9a9a92;margin:0">${nomFichier}</p>`;
+    const buffer = await HTMLtoDOCX(
+      htmlPourWord(html),
+      null,
+      { table: { row: { cantSplit: true } }, footer: true, pageNumber: true, font: 'Calibri' },
+      piedWord,
+    );
     res.set({
       'Content-Type': 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
       'Content-Disposition': `attachment; filename="${(filename || 'rapport.docx').replace(/[^\w.\-]/g, '_')}"`,
