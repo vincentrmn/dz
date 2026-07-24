@@ -126,6 +126,27 @@ function htmlPourWord(html) {
   return h;
 }
 
+// html-to-docx ne déclare pas de version Word dans les métadonnées : MS Word
+// ouvre alors le fichier en « mode de compatibilité » (et propose de le convertir).
+// On injecte le réglage compatibilityMode=15 (Word 2013+) dans settings.xml.
+async function forcerWordModerne(buffer) {
+  try {
+    const JSZip = (await import('jszip')).default;
+    const zip = await JSZip.loadAsync(buffer);
+    const chemin = 'word/settings.xml';
+    let xml = await zip.file(chemin).async('string');
+    if (!xml.includes('compatibilityMode')) {
+      const compat = '<w:compat><w:compatSetting w:name="compatibilityMode" w:uri="http://schemas.microsoft.com/office/word" w:val="15"/></w:compat>';
+      xml = xml.replace('</w:settings>', compat + '</w:settings>');
+      zip.file(chemin, xml);
+      return zip.generateAsync({ type: 'nodebuffer' });
+    }
+  } catch {
+    /* en cas d'échec, on renvoie le docx d'origine (fonctionnel, juste en mode compatibilité) */
+  }
+  return Buffer.from(buffer);
+}
+
 app.post('/api/convert/docx', async (req, res) => {
   const { html, filename } = req.body || {};
   if (!html) return res.status(400).json({ erreur: 'champ "html" manquant' });
@@ -133,12 +154,13 @@ app.post('/api/convert/docx', async (req, res) => {
     const HTMLtoDOCX = (await import('html-to-docx')).default;
     const nomFichier = String(filename || 'rapport.docx').replace(/\.docx$/i, '');
     const piedWord = `<p style="font-size:9.5px;color:#8a8a81;margin:0">${nomFichier}</p>`;
-    const buffer = await HTMLtoDOCX(
+    const brut = await HTMLtoDOCX(
       htmlPourWord(html),
       null,
       { table: { row: { cantSplit: true } }, footer: true, pageNumber: true, font: 'Calibri' },
       piedWord,
     );
+    const buffer = await forcerWordModerne(brut);
     res.set({
       'Content-Type': 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
       'Content-Disposition': `attachment; filename="${(filename || 'rapport.docx').replace(/[^\w.\-]/g, '_')}"`,
