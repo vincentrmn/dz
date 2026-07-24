@@ -132,7 +132,7 @@ app.post('/api/convert/docx', async (req, res) => {
   try {
     const HTMLtoDOCX = (await import('html-to-docx')).default;
     const nomFichier = String(filename || 'rapport.docx').replace(/\.docx$/i, '');
-    const piedWord = `<p style="font-size:8px;color:#9a9a92;margin:0">${nomFichier}</p>`;
+    const piedWord = `<p style="font-size:9.5px;color:#8a8a81;margin:0">${nomFichier}</p>`;
     const buffer = await HTMLtoDOCX(
       htmlPourWord(html),
       null,
