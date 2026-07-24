@@ -89,18 +89,20 @@ app.post('/api/decouverte', (req, res) => proxyToN8n(res, 'POST', 'dz/decouverte
 // styles EN LIGNE et des dimensions d'images en attributs.
 function htmlPourWord(html) {
   let h = html;
-  // Icônes de chapitre : inliner en base64 + taille fixe (sinon Word les rend en pleine résolution → énormes)
+  // Icônes de chapitre : inliner en base64 + taille fixe. ⚠️ html-to-docx IGNORE
+  // les attributs width/height des images (il prend la taille native, ici 96px) :
+  // seul le CSS EN LIGNE `style="width:…"` est respecté.
   h = h.replace(/<img class="ico"[^>]*\/icons\/(equipes|illustrations|materiel)\.png"[^>]*>/g, (m, nom) => {
     try {
       const b64 = fs.readFileSync(path.join(__dirname, 'public', 'icons', `${nom}.png`)).toString('base64');
-      return `<img src="data:image/png;base64,${b64}" width="16" height="16" style="vertical-align:middle" />`;
+      return `<img src="data:image/png;base64,${b64}" style="width:14px;height:14px;vertical-align:middle" />`;
     } catch {
       return m;
     }
   });
-  // Photos de chantier : borner la largeur (Word ignore le CSS max-width)
+  // Photos de chantier : largeur bornée en style (le ratio est conservé)
   h = h.replace(/<div class="photos">([\s\S]*?)<\/div>/g, (m, inner) =>
-    '<div class="photos">' + inner.replace(/<img /g, '<img width="330" ') + '</div>');
+    '<div class="photos">' + inner.replace(/<img /g, '<img style="width:330px" ') + '</div>');
   // Tableaux « équipes » : styles en ligne (Word ignore les classes)
   h = h.replace(/<table class="equipes">/g,
     '<table style="width:100%;border-collapse:collapse;font-size:10px" border="0" cellspacing="0">');
@@ -119,8 +121,8 @@ function htmlPourWord(html) {
     '<td style="padding:5px;border-bottom:1px solid #eee;vertical-align:top">');
   // Sous-lignes (qualification · catégorie · matricule ; commentaire libre)
   h = h.replace(/<div class="sub">/g, '<div style="color:#8a8a81;font-size:8.5px">');
-  // Logo de garde (le seul <img> restant sans dimension) : largeur raisonnable
-  h = h.replace(/<img (src="data:image\/png;base64,[^"]+")>/g, '<img width="240" $1>');
+  // Logo de garde : largeur raisonnable (cible directe pour ne pas dépendre de l'ordre)
+  h = h.replace(/(<div class="garde">\s*<img )src=/, '$1style="width:220px" src=');
   return h;
 }
 
