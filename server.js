@@ -206,6 +206,54 @@ app.get('/api/reports', (req, res) => {
   res.json(files);
 });
 
+// ---------------------------------------------------------------------------
+// Archives — un seul ZIP de tous les rapports MENSUELS, classés par chantier.
+// Les rapports vides (mois sans aucune donnée) sont écartés : ils pèsent
+// ≤ 91 Ko, les rapports avec contenu ≥ 92,5 Ko → seuil net à 92 000 octets.
+// Options : ?format=pdf pour n'inclure que les PDF (dossier plus léger).
+// ---------------------------------------------------------------------------
+const MOIS_RE = /^(.+)__(\d{4})-(\d{2})-01_\2-\3-(?:28|29|30|31)\.(pdf|docx)$/;
+const SEUIL_VIDE = 92000;
+
+app.get('/api/archives.zip', async (req, res) => {
+  try {
+    const archiver = (await import('archiver')).default;
+    const pdfSeul = req.query.format === 'pdf';
+    const files = fs.readdirSync(REPORTS_DIR);
+    // bases non vides : repérées via le PDF ≥ seuil
+    const nonVide = new Set();
+    for (const f of files) {
+      const m = f.match(MOIS_RE);
+      if (m && m[4] === 'pdf' && fs.statSync(path.join(REPORTS_DIR, f)).size >= SEUIL_VIDE) {
+        nonVide.add(`${m[1]}__${m[2]}-${m[3]}`);
+      }
+    }
+    const aInclure = files.filter((f) => {
+      const m = f.match(MOIS_RE);
+      if (!m) return false;
+      if (pdfSeul && m[4] !== 'pdf') return false;
+      return nonVide.has(`${m[1]}__${m[2]}-${m[3]}`);
+    });
+    if (!aInclure.length) return res.status(404).json({ erreur: 'aucun rapport mensuel à archiver' });
+
+    res.set({
+      'Content-Type': 'application/zip',
+      'Content-Disposition': 'attachment; filename="archives-rapports-DZ-2026.zip"',
+    });
+    const zip = archiver('zip', { store: true }); // pas de recompression (PDF/DOCX déjà compressés)
+    zip.on('error', (e) => { try { res.status(500); } catch {} res.end(String(e && e.message || e)); });
+    zip.pipe(res);
+    for (const f of aInclure) {
+      const m = f.match(MOIS_RE);
+      const chantier = m[1].replace(/_/g, ' ');
+      zip.file(path.join(REPORTS_DIR, f), { name: `${chantier}/${f}` });
+    }
+    zip.finalize();
+  } catch (e) {
+    res.status(500).json({ erreur: 'archive échouée', detail: String(e.message || e) });
+  }
+});
+
 app.get('/reports/:file', (req, res) => {
   const f = path.basename(req.params.file);
   const full = path.join(REPORTS_DIR, f);
