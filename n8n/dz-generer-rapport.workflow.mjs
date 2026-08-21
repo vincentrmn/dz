@@ -1,3 +1,19 @@
+/*
+ * ⚠️ INSTANTANÉ DATÉ — ne pas s'en servir comme référence de la production.
+ *
+ * Ce fichier est le squelette d'origine du sous-workflow (construction initiale).
+ * La version qui tourne réellement est dans n8n (workflow `qZG6Q5LnQSrloeXR`) et a
+ * beaucoup évolué depuis : champs Traxxeo enrichis, envoi email, nœud « Faire le bilan »,
+ * footer PDFShift, et — depuis le 21/08/2026 — le téléchargement des photos Teams
+ * **par lots avec pause** (nœuds `Lot images RT` / `Patienter RT` et leurs jumeaux BL&L).
+ *
+ * Ce dernier point n'est pas cosmétique : télécharger les `hostedContents` d'affilée
+ * fait répondre 429 à Microsoft Graph au-delà de ~18 requêtes par ~20 s, et les photos
+ * excédentaires disparaissent en silence. Voir docs/BIBLE.md §9.
+ *
+ * Pour repartir de la prod : n8n → workflow → ⋯ → Download.
+ */
+
 import { workflow, node, trigger, sticky, newCredential, ifElse, expr } from '@n8n/workflow-sdk';
 
 const execution = trigger({

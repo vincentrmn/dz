@@ -1,7 +1,7 @@
 # La Bible — Rapport Technique DZ Construct
 
 *Référence technique complète de l'outil : architecture, technologies, workflows, données, fragilités, exploitation.*
-*Version au 13/07/2026. Public : Vincent, un successeur technique, ou un lecteur curieux chez DZ/CBC.*
+*Version au 21/08/2026. Public : Vincent, un successeur technique, ou un lecteur curieux chez DZ/CBC.*
 
 Les autres documents : la page **`/guide`** du Hub (« Comment ça marche ? », la doc utilisateur,
 intégrée à l'outil) et **`CLAUDE.md`** (le pilotage du projet : roadmap, questions pour Francis,
@@ -77,8 +77,10 @@ Ce qui se passe le mercredi à 7 h (ou lors d'un clic sur « Générer le rappor
 4. **Journal « En cours ».** Le sous-workflow écrit immédiatement une ligne dans `dz_runs`
    (chantier, période, statut « En cours ») — c'est ce qu'affiche la page Debug.
 5. **Lecture Teams.** Authentification Graph (token applicatif), puis lecture **paginée** des messages
-   des deux conversations (BL&L et RT) sur la période, téléchargement des images hébergées
-   (`hostedContents`) et compression.
+   des deux conversations (BL&L et RT) sur la période, puis téléchargement des images hébergées
+   (`hostedContents`). Ce téléchargement se fait **par lots de 12 avec une pause de 15 s entre chaque
+   lot** (nœuds `Lot images RT` / `Patienter RT`, et leurs jumeaux BL&L) : Microsoft Graph plafonne les
+   `hostedContents` autour de 18 requêtes par ~20 s et rejette le reste en **429**. Voir §9.
 6. **Lecture Traxxeo** *(quand `traxxeo_actif=true`)*. Token OAuth2, puis `person_hrd` sur la période,
    filtré sur les WBS du chantier et sur `work_code_name = 'Heure travail'` (on exclut congés, trajets,
    jours fériés). Calcul des totaux par personne et par jour.
@@ -88,7 +90,9 @@ Ce qui se passe le mercredi à 7 h (ou lors d'un clic sur « Générer le rappor
    → Word). Les trois fichiers (aperçu HTML, PDF, Word) sont déposés sur le Hub via
    `POST /api/reports/upload` et stockés sur le **volume Railway `/app/data`** (persistant).
    Régénérer la même période **remplace** les fichiers (pas de doublon).
-9. **Bilan.** Statut final calculé : Succès / Succès partiel (une conversion a échoué) / Erreur.
+9. **Bilan.** Statut final calculé : Succès / Succès partiel / Erreur. « Succès partiel » couvre une
+   conversion en échec **et** des photos annoncées par Teams mais non téléchargées (`Assembler RT` /
+   `Assembler BLL` comparent `nbImagesAttendues` à `nbImages`).
 10. **Email éventuel.** Six conditions cumulatives : interrupteur général `mail_actif` (nœud Config)
     + toggle email du chantier + destinataires non vides + pas en mode démo + fichier produit
     + `envoyer=true` (cron hebdo ou demande explicite du Hub).
@@ -164,6 +168,7 @@ première des périodes non encore générées.
 | Crédits PDFShift | Chaque PDF consomme des crédits payants | Surveiller le solde ; budgéter le backfill GAMMA |
 | Disque Postgres n8n | Les exécutions de test avec photos remplissent la base (crash « No space left on device » déjà vécu, volume agrandi à 5 GB) | Poser `EXECUTIONS_DATA_MAX_AGE=168` sur le service n8n (7 jours de rétention) — pas encore fait |
 | Run bloqué « En cours » | Si un nœud plante « dur », la ligne `dz_runs` n'est jamais clôturée | Diagnostic via n8n → Executions ; amélioration possible (statut Échec automatique) non prioritaire |
+| Plafond Graph sur les photos | `hostedContents` est limité à ~18 requêtes par ~20 s **par application** : au-delà, Graph répond 429. Les nœuds de téléchargement absorbent l'erreur (`onError: continueRegularOutput`), donc une photo perdue disparaît sans bruit | Téléchargement **par lots de 12 avec pause de 15 s** (`Lot images RT` + `Patienter RT`, idem BL&L) ; et surtout **contrôle du compte** : si des photos manquent, le run passe en « Succès partiel » avec « N photo(s) RT non téléchargée(s) ». Ne jamais remettre ces nœuds en téléchargement direct |
 | Pagination Graph | Pièges connus (`$top` dans l'URL uniquement, pas d'autre nœud référencé dans les expressions de pagination) | Documenté dans CLAUDE.md « Pièges connus » — ne pas retoucher ces nœuds sans relire |
 
 ## 10. Exploitation courante

@@ -17,6 +17,21 @@ Pas de couche IA de reformulation : **passthrough strict** des textes et photos 
 
 **Email :** fonctionne via **API Gmail OAuth2** mais depuis un **compte de test** (`vincent@korr.lu`). PAS encore basculé sur une boîte DZ.
 
+**Correctif du 21/08 — photos Teams manquantes (résolu, validé en prod) :** des photos postées dans
+Teams n'apparaissaient pas dans le rapport, en silence. Cause : les nœuds `Télécharger images RT`/`BLL`
+téléchargeaient les `hostedContents` d'affilée et **Microsoft Graph répondait 429** au-delà d'environ
+18 requêtes par ~20 s ; comme ces nœuds sont en `onError: continueRegularOutput`, les photos perdues
+disparaissaient et le run restait « Succès ». Corrigé par un **téléchargement par lots de 12 avec pause
+de 15 s** (nouveaux nœuds `Lot images RT` + `Patienter RT`, et jumeaux BL&L) et par un **contrôle du
+compte** (`nbImagesAttendues` vs `nbImages` dans `Assembler RT`/`BLL` → « Succès partiel » + « N photo(s)
+RT non téléchargée(s) » dans le journal). Mesuré sur 25.07 Ecole-Brouch : semaine 22→28/06 passée de
+30 à **66/66 photos** ; quinzaine 15→30/06 de 28 à **106 photos RT + 26 BL&L**, sans perte.
+⚠️ **Conséquence à traiter** : les rapports s'alourdissent d'autant (l'aperçu HTML de la semaine
+22→28/06 passe de 10 à 22 Mo, le Word au-delà de 25 Mo) — au-dessus de la limite des pièces jointes
+email. Les photos sont inlinées en base64 **à leur résolution d'origine** (~200 Ko, 1500×2000 px) alors
+que le rapport les affiche en 84 mm : il y a un facteur ~4 à gagner en les redimensionnant (le cockpit
+pourrait le faire, il a déjà Node et la route de conversion Word). À faire avant d'allumer l'envoi auto.
+
 **3 chantiers ouverts, pour la prochaine session :**
 
 1. **Authentification Microsoft** (accès à tout compte `@dzconstruct.lu`) — **en attente de CBC**. Plan validé = **deux apps** : (a) **ajouter la permission `Mail.Send`** (application) + consentement admin sur l'app existante **`DZ-Teams-Extractor`** (celle du POC, déjà utilisée pour lire Teams), idéalement restreinte à `dzconstruct@dzconstruct.lu` (Application Access Policy) ; (b) **une nouvelle app « login »** : Web, single-tenant, redirect `https://cockpit-production-c3dc.up.railway.app/auth/callback`, permissions **déléguées** `openid`/`profile`/`email`/`User.Read`, + secret. Un collègue de Benoît a repris le sujet **sans le contexte** → mail de contexte + demande précise envoyé le 30/07. **À réception :** client_id + client_secret de l'app login (tenant déjà connu). Puis **coder le login OIDC dans le cockpit** (`server.js`, session, protéger toutes les pages, n'autoriser que le tenant dzconstruct.lu).
@@ -87,6 +102,11 @@ Pas de couche IA de reformulation : **passthrough strict** des textes et photos 
 - Convention de nommage **réelle** des conversations : `-BL&L-` (et non `-BLL-`) et `-RT-` dans le sujet du groupe.
 - Pagination messages : `?$top=50` **dans l'URL** (jamais en queryParameters : erreur 400 « $top specified more than once ») ; condition de fin `{{ !$response.body["@odata.nextLink"] }}` — ne référencer **aucun autre nœud** dans les expressions de pagination (échec silencieux).
 - Images de messages : `chats/{id}/messages/{msgId}/hostedContents/{hcId}/$value`.
+- **Throttling `hostedContents` (mesuré le 21/08)** : Graph plafonne à **~18 requêtes par ~20 s par
+  application** et renvoie **429** au-delà ; le quota se recharge tout seul en cours de run. Ralentir le
+  débit ne suffit pas (testé à 4/300 ms, 1/500 ms et 1/1500 ms : toujours ~30 photos récupérées sur 66).
+  Seule parade efficace : **lots de 12 + pause de 15 s** entre les lots (`splitInBatches` + `Wait`).
+  Débit soutenable observé ≈ 0,6 photo/s ; compter ~2 min pour 100 photos.
 - 15 chantiers découverts par scan ; 3 sans conversation RT (26.06 Maison-OMS, 26.07 MaisonFluhe, 99.02 Chantiers-Divers) ; la semaine testée, RT vide partout → **question posée à Francis** (pourquoi les RT ne sont pas alimentés) — pas un bug.
 
 ## Pièges connus (ne pas re-découvrir)
@@ -100,6 +120,12 @@ Pas de couche IA de reformulation : **passthrough strict** des textes et photos 
 - Expressions dans les params bruts : chaînes préfixées `=`.
 - Normaliser les clés de date avec `.substring(0, 10)` (contamination inter-jours sinon).
 - Semaine « lundi→dimanche » : calcul ISO propre (règle du 4 janvier) — un calcul naïf donne dimanche→samedi.
+- **`retryOnFail` est inopérant sur un nœud en `onError: continueRegularOutput`** : le nœud avale ses
+  erreurs, ne « tombe » jamais, donc n8n ne le rejoue pas. Pour réessayer, il faut une vraie boucle
+  (`splitInBatches` + `Wait`) — c'est ce qui est en place sur les téléchargements d'images.
+- Un nœud HTTP en `responseFormat: file` **conserve le json d'entrée** (c'est ce qui permet de retrouver
+  `date`/`url` sur chaque image) — mais **pas sur les items en échec**, dont le json est remplacé par
+  l'objet d'erreur. Ne jamais compter les photos en se fiant aux items de sortie seuls.
 - Les exécutions de test avec photos remplissent le Postgres n8n (crash « No space left on device » déjà vécu) : recommandé `EXECUTIONS_DATA_MAX_AGE=168` sur le service n8n (pas encore posé).
 
 ### PDFShift / rapport
