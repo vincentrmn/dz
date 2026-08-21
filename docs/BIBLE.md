@@ -72,8 +72,10 @@ Ce qui se passe le mercredi à 7 h (ou lors d'un clic sur « Générer le rappor
    période choisie et le drapeau `envoyer` (true seulement via « Générer et envoyer par email »).
 2. **Sélection des chantiers.** Lecture de `dz_chantiers` : tous les chantiers `actif=true` (cron) ou le
    chantier nommé (manuel). Les lignes `supprime=true` sont toujours exclues.
-3. **Lancement en parallèle.** Pour chaque chantier sélectionné, l'orchestrateur lance le sous-workflow
-   `DZ — Générer rapport chantier` sans attendre la fin (chaque chantier vit sa vie).
+3. **Lancement séquentiel.** L'orchestrateur lance le sous-workflow `DZ — Générer rapport chantier`
+   **un chantier après l'autre** (`waitForSubWorkflow: true`). Ne pas repasser en parallèle : le quota
+   Graph sur les photos est compté **par application**, donc des chantiers simultanés se le volent et
+   perdent des photos. Compter ~5 min pour 4 chantiers actifs.
 4. **Journal « En cours ».** Le sous-workflow écrit immédiatement une ligne dans `dz_runs`
    (chantier, période, statut « En cours ») — c'est ce qu'affiche la page Debug.
 5. **Lecture Teams.** Authentification Graph (token applicatif), puis lecture **paginée** des messages
@@ -81,6 +83,11 @@ Ce qui se passe le mercredi à 7 h (ou lors d'un clic sur « Générer le rappor
    (`hostedContents`). Ce téléchargement se fait **par lots de 12 avec une pause de 15 s entre chaque
    lot** (nœuds `Lot images RT` / `Patienter RT`, et leurs jumeaux BL&L) : Microsoft Graph plafonne les
    `hostedContents` autour de 18 requêtes par ~20 s et rejette le reste en **429**. Voir §9.
+   Chaque photo est ensuite **redimensionnée à 900 px** sur son grand côté, en JPEG qualité 78
+   (nœuds `Redimensionner images RT` / `BLL`). Le rapport les affiche en 84 mm de large, soit 272 dpi
+   à l'impression pour un besoin réel de 150–200 : aucune perte visible, et ~3,6× moins lourd
+   (211 Ko → 59 Ko par photo). Sans ça, une semaine chargée produit un Word de plus de 25 Mo,
+   au-dessus de la limite des pièces jointes email.
 6. **Lecture Traxxeo** *(quand `traxxeo_actif=true`)*. Token OAuth2, puis `person_hrd` sur la période,
    filtré sur les WBS du chantier et sur `work_code_name = 'Heure travail'` (on exclut congés, trajets,
    jours fériés). Calcul des totaux par personne et par jour.
@@ -169,6 +176,7 @@ première des périodes non encore générées.
 | Disque Postgres n8n | Les exécutions de test avec photos remplissent la base (crash « No space left on device » déjà vécu, volume agrandi à 5 GB) | Poser `EXECUTIONS_DATA_MAX_AGE=168` sur le service n8n (7 jours de rétention) — pas encore fait |
 | Run bloqué « En cours » | Si un nœud plante « dur », la ligne `dz_runs` n'est jamais clôturée | Diagnostic via n8n → Executions ; amélioration possible (statut Échec automatique) non prioritaire |
 | Plafond Graph sur les photos | `hostedContents` est limité à ~18 requêtes par ~20 s **par application** : au-delà, Graph répond 429. Les nœuds de téléchargement absorbent l'erreur (`onError: continueRegularOutput`), donc une photo perdue disparaît sans bruit | Téléchargement **par lots de 12 avec pause de 15 s** (`Lot images RT` + `Patienter RT`, idem BL&L) ; et surtout **contrôle du compte** : si des photos manquent, le run passe en « Succès partiel » avec « N photo(s) RT non téléchargée(s) ». Ne jamais remettre ces nœuds en téléchargement direct |
+| Poids des rapports | Les photos sont inlinées en base64 dans le HTML : sans redimensionnement, une semaine chargée dépasse 25 Mo en Word, au-dessus de la limite des pièces jointes email | Redimensionnement à 900 px / JPEG 78 dans le workflow (`Redimensionner images RT`/`BLL`). Surveiller le poids des fichiers sur la page Rapports quand une semaine est très fournie |
 | Pagination Graph | Pièges connus (`$top` dans l'URL uniquement, pas d'autre nœud référencé dans les expressions de pagination) | Documenté dans CLAUDE.md « Pièges connus » — ne pas retoucher ces nœuds sans relire |
 
 ## 10. Exploitation courante

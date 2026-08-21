@@ -26,11 +26,28 @@ de 15 s** (nouveaux nœuds `Lot images RT` + `Patienter RT`, et jumeaux BL&L) et
 compte** (`nbImagesAttendues` vs `nbImages` dans `Assembler RT`/`BLL` → « Succès partiel » + « N photo(s)
 RT non téléchargée(s) » dans le journal). Mesuré sur 25.07 Ecole-Brouch : semaine 22→28/06 passée de
 30 à **66/66 photos** ; quinzaine 15→30/06 de 28 à **106 photos RT + 26 BL&L**, sans perte.
-⚠️ **Conséquence à traiter** : les rapports s'alourdissent d'autant (l'aperçu HTML de la semaine
-22→28/06 passe de 10 à 22 Mo, le Word au-delà de 25 Mo) — au-dessus de la limite des pièces jointes
-email. Les photos sont inlinées en base64 **à leur résolution d'origine** (~200 Ko, 1500×2000 px) alors
-que le rapport les affiche en 84 mm : il y a un facteur ~4 à gagner en les redimensionnant (le cockpit
-pourrait le faire, il a déjà Node et la route de conversion Word). À faire avant d'allumer l'envoi auto.
+**Deux suites traitées dans la foulée (21/08) :**
+- **Poids des rapports** : récupérer toutes les photos faisait passer le Word au-delà de 25 Mo (limite
+  des pièces jointes email). Les photos étaient inlinées à leur résolution d'origine (~211 Ko,
+  1500×2000 px) alors que le rapport les affiche en 84 mm. Ajout des nœuds **`Redimensionner images RT`
+  / `BLL`** (Edit Image, 900 px sur le grand côté, JPEG 78) → **59 Ko par photo, 3,6× plus léger, 272 dpi
+  à l'impression** (le besoin réel est 150–200) : aucune perte visible. Mesuré sur 20 photos réelles ;
+  alternatives écartées : 1200 px (2× seulement, on reste près de la limite) et 800 px (5×, marge plus
+  courte que nécessaire).
+- **Run hebdo en parallèle** : le quota Graph étant compté **par application**, 4 chantiers simultanés
+  se le volaient. `Lancer génération` (workflow `DZ — Rapport hebdo`) est passé en
+  **`waitForSubWorkflow: true`** → chantiers traités **un par un**, ~5 min pour les 4 actifs
+  (linéaire ensuite : ~15 min si les 14 sont activés). **Ne jamais repasser en parallèle.**
+
+**Côté Microsoft Graph : rien à demander à CBC.** Le 429 sur `hostedContents` est une limite de service
+Microsoft, identique pour toute application, non réglable par tenant ; la réponse officielle est le
+backoff, ce qui est en place. Écartés : le `$batch` Graph (chaque requête interne compte quand même dans
+le quota) et une 2ᵉ app registration (contournement sale, complique la passation). À savoir : le quota
+est **par application**, donc le futur `Mail.Send` partagera celui de `DZ-Teams-Extractor` — sans
+conséquence (4 mails ne pèsent rien). Le seul levier structurel restant, **si un jour les régénérations
+ou les archives deviennent pénibles** : mettre en cache les photos sur le volume du cockpit (indexées par
+identifiant de photo) pour ne plus les retélécharger. ⚠️ Ça n'aide **pas** le run hebdo, dont les photos
+sont neuves par définition. Non fait, non prioritaire.
 
 **3 chantiers ouverts, pour la prochaine session :**
 
