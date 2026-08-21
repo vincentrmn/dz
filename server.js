@@ -23,6 +23,13 @@ const REPORTS_DIR = path.join(DATA_DIR, 'reports');
 fs.mkdirSync(REPORTS_DIR, { recursive: true });
 
 app.use(express.json({ limit: '50mb' }));
+
+// Authentification Microsoft. À monter AVANT express.static : sinon les pages HTML
+// sont servies directement par le middleware de fichiers statiques et échappent au
+// garde. Reste sans effet tant que les variables MS_* / SESSION_SECRET sont absentes.
+const auth = require('./auth');
+auth.monter(app);
+
 app.use(express.static(path.join(__dirname, 'public')));
 
 // ---------------------------------------------------------------------------
