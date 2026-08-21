@@ -11,6 +11,22 @@ Le rapport hebdo est généré **le mercredi de la semaine suivante** (créneau 
 
 Pas de couche IA de reformulation : **passthrough strict** des textes et photos (décision actée). Ne jamais inventer de contenu.
 
+## Point de situation — 30/07/2026 (à lire en premier)
+
+**Ce qui tourne en prod (validé en réel) :** rapport hebdo complet — Traxxeo **actif**, 3 chapitres, champs enrichis (qualif · catégorie · matricule ; activité + commentaire), **total du jour**, footer (nom de fichier gauche + `x/y` droite, remonté du bord), **PDF + Word propres** (Word sans « mode de compatibilité »). Cockpit : Dashboard, `/guide`, `/rapports`, `/configuration`, `/debug`, soft-delete, bouton scindé, favicon dz, nouvelle adresse DZ en pied. **Archives mensuelles janv→juil générées** (dossier ZIP unique : `GET /api/archives.zip`).
+
+**Email :** fonctionne via **API Gmail OAuth2** mais depuis un **compte de test** (`vincent@korr.lu`). PAS encore basculé sur une boîte DZ.
+
+**3 chantiers ouverts, pour la prochaine session :**
+
+1. **Authentification Microsoft** (accès à tout compte `@dzconstruct.lu`) — **en attente de CBC**. Plan validé = **deux apps** : (a) **ajouter la permission `Mail.Send`** (application) + consentement admin sur l'app existante **`DZ-Teams-Extractor`** (celle du POC, déjà utilisée pour lire Teams), idéalement restreinte à `dzconstruct@dzconstruct.lu` (Application Access Policy) ; (b) **une nouvelle app « login »** : Web, single-tenant, redirect `https://cockpit-production-c3dc.up.railway.app/auth/callback`, permissions **déléguées** `openid`/`profile`/`email`/`User.Read`, + secret. Un collègue de Benoît a repris le sujet **sans le contexte** → mail de contexte + demande précise envoyé le 30/07. **À réception :** client_id + client_secret de l'app login (tenant déjà connu). Puis **coder le login OIDC dans le cockpit** (`server.js`, session, protéger toutes les pages, n'autoriser que le tenant dzconstruct.lu).
+2. **Envoi hebdo par email — à finaliser une fois `Mail.Send` prêt** : basculer le nœud d'envoi de **Gmail (korr)** → **Microsoft Graph `Mail.Send` depuis `dzconstruct@dzconstruct.lu`** (émetteur = destinataire, c'est possible et voulu), et mettre **`dzconstruct@dzconstruct.lu` en destinataire** sur tous les chantiers actifs (décidé avec Francis : **1 mail = 1 chantier**, DZ trie ensuite).
+3. **Bugs remontés par Francis** — Vincent apportera la liste dans la nouvelle session, à traiter.
+
+**Décisions actées avec Francis (30/07) :** archives = 1 gros dossier **mensuel** janv→juil (✅ fait) ; envoi hebdo → **`dzconstruct@dzconstruct.lu`** (1 mail/chantier) ; auth = **tout `@dzconstruct.lu`** ; nouvelle adresse DZ = **195 Z.A.E. Wolser F, L-4026 Bettembourg** (✅ dans les pieds de page). **PDFShift** est passé en **forfait payant** (le gratuit 50/mois ne suffit pas : ~56 PDF/mois en régime hebdo).
+
+**⚠️ Environnement :** le conteneur peut être **recloné** entre sessions (working dir revenu à l'état initial constaté le 30/07) — le vrai état est sur le remote GitHub : au démarrage, `git fetch` puis `git checkout -B claude/roadmap-deployment-t1m07g origin/claude/roadmap-deployment-t1m07g`. Le **MCP n8n peut demander une ré-autorisation** (OAuth) en début de session.
+
 ## Architecture en production
 
 ### Cockpit web « Hub Rapport Technique »
@@ -20,12 +36,12 @@ Pas de couche IA de reformulation : **passthrough strict** des textes et photos 
 - Dashboard : bouton scindé sur chaque chantier — clic principal « Générer le rapport » = **sans** email ; la flèche (visible si le toggle email du chantier est actif) ouvre « Générer et envoyer par email » (`envoyer: true` dans le POST `dz/generer`).
 - Rapports stockés sur le **volume Railway monté sur `/app/data`** (persistant entre déploiements). Routes : upload `POST /api/reports/upload?chantier&periode&type=pdf|docx|html`, listing `GET /api/reports`, téléchargement `/reports/:file`, **archives** `GET /api/archives.zip` (un seul ZIP de tous les rapports **mensuels** non vides, classés par chantier ; `?format=pdf` pour PDF seuls ; seuil 92 Ko pour écarter les mois vides — dép. `archiver`).
 - **Archives GAMMA générées le 30/07** (one-shot) : rapports mensuels janv→juil pour les 14 chantiers via `scripts/archives.py` (98 générés, 54 avec données, 44 vides écartés du ZIP). Les rapports mensuels vivent sur le volume à côté des hebdo.
-- Conversion Word : `POST /api/convert/docx` (lib `html-to-docx` ; les icônes du HTML sont inlinées en base64 côté serveur par `inlinerIcones()` avant conversion).
+- Conversion Word : `POST /api/convert/docx` (lib `html-to-docx`). Le HTML est réécrit pour le Word par **`htmlPourWord()`** (styles inline sur les tableaux, images dimensionnées en CSS `style="width:…"`, icônes base64) ; pied = nom de fichier + n° de page ; le docx est ensuite passé à **`forcerWordModerne()`** (dép. `jszip`) qui injecte `compatibilityMode=15` pour supprimer le « mode de compatibilité » de MS-365.
 - Icônes des chapitres : fichiers PNG dans `public/icons/` (equipes, illustrations, materiel), référencés **par URL** dans le HTML du rapport.
 - Le reste des routes `/api/*` sont des **proxys vers les webhooks n8n** (chantiers, runs, generer, decouverte, contacts, reglages).
 
 ### Workflows n8n (IDs)
-- **`DZ — Générer rapport chantier`** (`qZG6Q5LnQSrloeXR`) : sous-workflow appelé par chantier. Chaîne : Config (drapeaux `graph_actif`, `traxxeo_actif`, `pdfshift_actif`, `mail_actif`, `mail_from`, `cockpit_url`) → journalisation début (dz_runs) → Auth Microsoft → lecture BL&L + RT (pagination) → téléchargement/compression images → Auth/Lire/Mapper Traxxeo (désactivé tant que l'offre n'est pas signée) → `Fusionner sources` → `Préparer rapport` (HTML) → dépôt HTML → PDFShift → dépôt PDF → conversion Word via cockpit → dépôt Word → bilan (Succès / Succès partiel / Erreur) → envoi email éventuel (nœud **Gmail OAuth2** `Envoyer rapport par Gmail`) → journalisation fin. Entrée booléenne `envoyer` : l'email ne part que si `envoyer=true` (cron hebdo, ou option explicite du cockpit) **en plus** des conditions mail_actif ×2 + destinataires + non-démo + fichier produit. ⚠️ Le nœud email **et** la branche « pas d'email » (sortie FALSE du IF) pointent tous deux vers `Journaliser fin` — sinon un run avec email reste bloqué « En cours / Démarrage » (bug corrigé le 15/07 quand l'email a enfin fonctionné).
+- **`DZ — Générer rapport chantier`** (`qZG6Q5LnQSrloeXR`) : sous-workflow appelé par chantier. Chaîne : Config (drapeaux `graph_actif`, `traxxeo_actif`, `pdfshift_actif`, `mail_actif`, `mail_from`, `cockpit_url`) → journalisation début (dz_runs) → Auth Microsoft → lecture BL&L + RT (pagination) → téléchargement/compression images → Auth/Lire/Mapper Traxxeo (**actif**, credential « Traxxeo API ») → `Fusionner sources` → `Préparer rapport` (HTML) → dépôt HTML → PDFShift → dépôt PDF → conversion Word via cockpit → dépôt Word → bilan (Succès / Succès partiel / Erreur) → envoi email éventuel (nœud **Gmail OAuth2** `Envoyer rapport par Gmail`) → journalisation fin. Entrée booléenne `envoyer` : l'email ne part que si `envoyer=true` (cron hebdo, ou option explicite du cockpit) **en plus** des conditions mail_actif ×2 + destinataires + non-démo + fichier produit. ⚠️ Le nœud email **et** la branche « pas d'email » (sortie FALSE du IF) pointent tous deux vers `Journaliser fin` — sinon un run avec email reste bloqué « En cours / Démarrage » (bug corrigé le 15/07 quand l'email a enfin fonctionné).
 - **`DZ — Rapport hebdo`** (`5su1DOeswBlCdakw`) : webhook `dz/generer` (génération à la demande) + **cron horaire** dont un nœud Code (Europe/Luxembourg) compare au créneau stocké dans `dz_reglages` (`run_hebdo`, défaut mercredi 7 h). Charge les chantiers actifs et lance le sous-workflow pour chacun (`waitForSubWorkflow=false`).
 - **`DZ — Découverte chantiers`** (`49okCW9O85lYsP3r`) : cron lundi 06:30 + webhook `dz/decouverte`. Scanne les conversations Teams du compte assembleur (regex `-\s*(BL&L|BLL|RT)\s*-`), normalise les codes (`CH:22-06 B` → `22.06 B`), **upsert** dans dz_chantiers en préservant nom/wbs/actif existants et en ne remplissant que les IDs de conversations manquants. Nouveautés créées en `actif=false` (validation humaine).
 - **`DZ — Cockpit API`** (`FCZLzT8cabm3s3GE`) : webhooks GET/POST `dz/api/chantiers` (suppression **soft** via `{id, supprimer:true}` → `supprime=true, actif=false` ; restauration via `{id, restaurer:true}`), GET `dz/api/runs`, GET/POST `dz/api/contacts`, GET/POST `dz/api/reglages`.
@@ -120,10 +136,10 @@ Pas de couche IA de reformulation : **passthrough strict** des textes et photos 
 | 1 — Champs Traxxeo enrichis | ✅ **Terminé le 15/07, validé en réel.** Les 8 champs de Francis sont dans le rapport : sous-ligne Personne « qualification · catégorie · mat. NNN », cellule Tâche « activité (FR seul, découpe sur " / ") + commentaire libre en sous-ligne ». Reste : confirmer avec Matthieu que `company_nr` = matricule paie |
 | 2 — Word (.docx) | ✅ Fait (html-to-docx via cockpit) |
 | 3 — Cockpit config + découverte auto | ✅ Fait (Data Tables + scan Teams ; Excel SharePoint abandonné au profit des Data Tables n8n) |
-| 4 — Dépôt des rapports | ⏳ Décision Francis en attente (voir roadmap « à demander à Francis ») |
+| 4 — Dépôt des rapports | ✅ **Tranché par Francis (30/07)** : les rapports hebdo partent par **email à `dzconstruct@dzconstruct.lu`** (1/chantier), DZ classe ensuite. Pas de dépôt SharePoint direct pour l'instant. Reste : bascule email Graph (attente CBC). |
 | 5 — Déclenchement | ✅ Fait (webhook à la demande + cron hebdo configurable) |
-| 6 — BETA Gaichel (démo Walter fin juillet) | **Prêt** (hors envoi email — bascule Graph en cours) |
-| 7 — GAMMA (backfill depuis janvier 2026) | ⏳ Après BETA validée (offre Traxxeo ✅ signée le 15/07) |
+| 6 — BETA Gaichel (démo Walter) | **Prêt** (hors envoi email DZ — bascule Graph en attente CBC) |
+| 7 — GAMMA (backfill) | ✅ **Fait le 30/07** : archives **mensuelles** janv→juil (ZIP `/api/archives.zip`). *(Format mensuel décidé avec Francis, pas hebdo.)* |
 
 ## Roadmap
 
@@ -134,15 +150,15 @@ Fait le 13/07 au soir (session « déploiement roadmap ») :
 - ✅ **Générer + envoyer en une action** — bouton scindé sur la carte chantier ; drapeau `envoyer` propagé webhook → orchestrateur → générateur (6e condition du IF « Envoi email ? »).
 - ✅ **Favicon** — `public/favicon.png` : le « dz » rouge seul.
 
-Reste, par priorité :
+Reste, par priorité (détail dans « Point de situation » en tête) :
 
-1. ✅ **Envoi email** — résolu le 15/07 via l'API Gmail OAuth2 (test sur `vincent@korr.lu`, mail reçu). Reste : basculer vers **Microsoft Graph `Mail.Send`** avec une boîte DZ pour la prod (demande à Benoît) — même logique OAuth2.
-2. **Relecture du guide `/guide`** par Vincent (et Francis ?) — ajuster le texte, puis en tirer le manuel PDF (point 5).
-3. **Authentification Microsoft** pour accéder à l'outil (login Entra ID / compte DZ, tenant géré par CBC — prévoir d'impliquer Benoît pour l'app registration). Aujourd'hui le cockpit est public : à traiter avant un usage large.
-4. **À demander à Francis** : voir la section dédiée « Pour Francis — questions & points fragiles » ci-dessous.
-5. **Manuel PDF** : le tirer du contenu de la page `/guide` quand le texte est validé (la page est la seule doc utilisateur depuis la suppression de MANUEL.md).
-6. **GAMMA** : backfill des rapports depuis début janvier 2026 après validation BETA + offre Traxxeo (attention volumétrie PDFShift ; les semaines sans usage Teams auront peu/pas de photos — attendu, ne pas « corriger »).
-7. *(Qualité, non bloquant)* Remplacer les secrets en clair des nœuds n8n (client_secret Graph dans les 2 `Auth Microsoft`, clé PDFShift dans `Convertir en PDF`) par des credentials n8n — à faire à la main dans l'UI (le MCP ne sait pas attacher un credential httpBasicAuth). Et poser `EXECUTIONS_DATA_MAX_AGE=168` sur le service n8n Railway.
+1. **Authentification Microsoft** + **bascule email vers Graph `Mail.Send`** (boîte `dzconstruct@dzconstruct.lu`) — **en attente des credentials CBC** (2 apps, cf. Point de situation). Une fois reçus : coder le login OIDC dans le cockpit, protéger les pages, et remplacer le nœud Gmail par un appel Graph `sendMail` (from = `dzconstruct@dzconstruct.lu`).
+2. **Bugs Francis** — à traiter dès que Vincent apporte la liste.
+3. **Config envoi hebdo** : mettre `dzconstruct@dzconstruct.lu` en destinataire sur les chantiers actifs + `mail_actif` (à faire au moment d'allumer l'envoi auto, après la bascule Graph).
+4. **Relecture du guide `/guide`** par Vincent (et Francis ?), puis en tirer un **manuel PDF** si demandé.
+5. *(Qualité, non bloquant)* Remplacer les secrets en clair des nœuds n8n (client_secret Graph dans les 2 `Auth Microsoft`, clé PDFShift dans `Convertir en PDF`) par des credentials n8n — à la main dans l'UI. Et poser `EXECUTIONS_DATA_MAX_AGE=168` (ou `EXECUTIONS_DATA_PRUNE`) sur le service n8n Railway (les archives du 30/07 ont été passées en **lots surveillés** sans toucher à la config, pour ne pas redémarrer n8n — mais le réglage reste souhaitable en production).
+
+**Fait récemment (au-delà du 13/07) :** Traxxeo actif + champs enrichis (15/07) ; email Gmail OAuth2 + fix topologie `Journaliser fin` (15/07) ; retouches rapport suite retours Francis (Word lisible, total du jour, footer nom+`x/y` agrandi/remonté, mode compatibilité Word levé) ; nouvelle adresse DZ ; contacts du guide complétés (CBC `support@cbc.lu`, Traxxeo helpdesk via Fares `dzconstruct@dzconstruct.lu`) ; **archives GAMMA mensuelles janv→juil générées + endpoint `/api/archives.zip`** (30/07).
 
 ### Hors périmètre (garder au chaud)
 - Bascule conversation Teams → canal : faisable (~mêmes endpoints Graph, quelques heures), uniquement si DZ fait évoluer son usage de Teams. Ne pas anticiper.
@@ -151,26 +167,25 @@ Reste, par priorité :
 
 À dérouler avec Francis (démo BETA fin juillet ou avant). Les réponses conditionnent la fin de la Phase 2.
 
-### Questions à poser
-1. **Dépôt des rapports (Lot 4)** : où doivent-ils atterrir ? Site/répertoire SharePoint précis, ou tampon secrétariat qui valide avant classement ? Aujourd'hui les rapports vivent dans le Hub (volume Railway), ça marche mais ce n'est pas le classement définitif DZ.
-2. **Adresse expéditrice des emails** : aujourd'hui un Gmail de test. Proposer une boîte DZ (`rapports@dzconstruct.lu` ou `assembleur@`) via Microsoft Graph (voir fragilité SMTP ci-dessous) — qui la crée, qui la relève ?
-3. **Conversations RT non alimentées** : sur la semaine testée, 0 message RT sur les 11 chantiers équipés (les BL&L sont actives : 57 messages, 61 photos). Les équipes savent-elles qu'elles doivent poster les explications techniques dans la conversation RT ? Et 3 chantiers n'ont pas de conversation RT du tout (26.06 Maison-OMS, 26.07 MaisonFluhe, 99.02 Chantiers-Divers) — faut-il les créer ?
-4. **Compte assembleur dans chaque conversation** : la découverte automatique ne voit que les conversations dont `assembleur@dzconstruct.lu` est membre. Deux options à lui proposer : (a) garder la règle « toujours inclure assembleur@ à la création » (simple, mais fragile : une conversation créée sans lui est invisible) ; (b) basculer vers des **canaux d'équipe Teams** (une équipe « Chantiers », un canal par chantier) — l'outil pourrait alors tout lire **sans** compte invité, la fragilité disparaît (~quelques heures d'adaptation, endpoints Graph similaires). À trancher selon l'usage Teams que DZ veut avoir.
-5. **Qui utilise l'outil chez DZ** : confirmer que c'est Fares (et qui d'autre ?) — nécessaire pour la liste d'accès de l'authentification Microsoft à venir.
+### Questions — réponses reçues le 30/07 ✅, et ce qui reste ouvert
+1. ✅ **Dépôt des rapports (Lot 4)** → **email à `dzconstruct@dzconstruct.lu`** (1/chantier), DZ classe ensuite. Pas de SharePoint direct.
+2. ✅ **Adresse expéditrice** → **`dzconstruct@dzconstruct.lu`** (émetteur = destinataire), via Microsoft Graph `Mail.Send`.
+5. ✅ **Accès à l'outil** → **tout compte `@dzconstruct.lu`** (auth Microsoft single-tenant).
+3. ⏳ **Conversations RT non alimentées** (encore ouvert) : semaine testée = 0 message RT sur les 11 chantiers équipés (BL&L actives). Les équipes savent-elles qu'elles doivent poster les explications techniques dans la conversation RT ? 3 chantiers sans conversation RT du tout (26.06 Maison-OMS, 26.07 MaisonFluhe, 99.02 Chantiers-Divers) — à créer ?
+4. ⏳ **Compte assembleur dans chaque conversation** (encore ouvert) : la découverte ne voit que les conversations dont `assembleur@dzconstruct.lu` est membre. Options : (a) règle « toujours inclure assembleur@ à la création » (simple mais fragile) ; (b) basculer vers des **canaux d'équipe Teams** → lecture sans compte invité (~quelques heures). À trancher selon l'usage Teams de DZ.
 
 ### Points fragiles à connaître (état au 13/07)
 - **Cockpit public** : pas encore d'authentification — ne pas diffuser l'URL largement avant le login Microsoft (roadmap n°3).
 - **Emails** : ✅ fonctionnent (API Gmail OAuth2, testé depuis `vincent@korr.lu`). Pour la prod DZ, bascule prévue vers Microsoft Graph `Mail.Send` avec une boîte DZ (demande faite à Benoît) — le compte Gmail korr n'est qu'un test.
 - **Secret Microsoft qui expire** : le client_secret de l'app « DZ-Teams-Extractor » a une date d'expiration fixée par CBC — à renouveler avant échéance sinon plus de lecture Teams (et prévenir Vincent pour la mise à jour dans n8n).
-- **Traxxeo inactif** : chapitre « Activité des équipes » vide tant que l'offre API n'est pas signée (Matthieu).
 - **Comptes personnels de Vincent** : Railway, PDFShift et le Gmail de test sont sur ses comptes — la passation vers des comptes DZ est décrite dans la section « Passation à DZ » ci-dessous.
-- **Crédits PDFShift** : chaque PDF consomme des crédits payants — le backfill GAMMA (6+ mois × 15 chantiers) devra être budgété.
+- **PDFShift** : ✅ **forfait payant** (le gratuit 50/mois ne suffit pas au régime hebdo ~56 PDF/mois). Chaque PDF = 1 crédit ; surveiller le solde. Option future si on veut supprimer ce coût/ce tiers : auto-héberger la conversion HTML→PDF (Chromium) dans le cockpit — non fait, à ne considérer que si la confidentialité des données RH devient un sujet chez DZ.
 
 ## Passation à DZ (séquence technique)
 
 Objectif : plus rien ne dépend des comptes personnels de Vincent. À dérouler dans cet ordre, le moment venu :
 
-1. **Comptes à créer côté DZ** (préalable) : un compte **Railway** avec facturation DZ ; un compte **PDFShift** ; une boîte d'envoi DZ (`rapports@dzconstruct.lu` via CBC) — le Microsoft, lui, est déjà chez DZ (tenant géré par CBC).
+1. **Comptes à créer côté DZ** (préalable) : un compte **Railway** avec facturation DZ ; un compte **PDFShift** — le Microsoft est déjà chez DZ (tenant CBC), et la boîte d'envoi retenue est **`dzconstruct@dzconstruct.lu`** (existe déjà).
 2. **GitHub** : transférer le repo `vincentrmn/dz` vers une organisation DZ (Settings → Danger Zone → Transfer ownership). Les URLs de clone changent, rien d'autre.
 3. **Railway — cockpit** : transférer le projet `dz` vers le workspace DZ (Project → Settings → Transfer project) — le **volume `/app/data` suit le projet** (les rapports sont conservés). Rebrancher ensuite le service sur le repo GitHub transféré (Settings du service → Source) et vérifier la variable `N8N_WEBHOOK_BASE`.
 4. **Railway — n8n** : transférer le projet `pacific-endurance` (n8n + Postgres, le volume suit aussi). Alternative propre si le transfert coince : réinstaller n8n chez DZ et réimporter (voir 5).
