@@ -148,25 +148,60 @@ première des périodes non encore générées.
   `/api/reports/upload`, `/api/reports` (listing), `/reports/:file` (téléchargement).
 - Front : HTML/CSS/JS vanilla, palette DZ (`--rouge:#ff110b`, `--gris:#8a8a81`), aucune dépendance
   front, favicon = le « dz » rouge.
-- Pages : `/` (Dashboard), `/rapports`, `/configuration`, `/guide`, `/debug`.
+- Pages : `/` (Dashboard), `/rapports`, `/configuration`, `/guide`, `/debug`, plus `/login`
+  (page de connexion) et les routes `/auth/*` de l'authentification Microsoft — voir §8.
+- `auth.js` : authentification Microsoft. Monté **avant** `express.static`, sinon les pages HTML
+  seraient servies par le middleware de fichiers statiques sans passer par le garde.
 
 ## 8. Sécurité et accès
 
-- **Le Hub est public** pour l'instant (pas de login) : ne pas diffuser l'URL. L'authentification
-  Microsoft (Entra ID, comptes DZ uniquement, liste d'utilisateurs assignés) est la priorité n°3 de la
-  roadmap ; l'app registration sera créée par CBC.
-- **Les secrets vivent dans n8n**, jamais dans le repo GitHub. (Chantier qualité en cours : déplacer
-  les derniers secrets en clair des nœuds vers des credentials n8n.)
+### Authentification Microsoft du Hub (depuis le 21/08/2026)
+
+Le Hub est fermé : il faut un compte **@dzconstruct.lu** pour entrer. Le code vit dans `auth.js`.
+
+- **Flux** : OpenID Connect « authorization code », client confidentiel, sur l'app Entra ID
+  **« DZ – Hub Rapport Technique (login) »** (single-tenant, créée par CBC). Permissions déléguées
+  `openid` / `profile` / `email` / `User.Read`, URI de redirection `…/auth/callback`.
+- **Contrôles à l'entrée** : émetteur, audience, tenant, expiration et nonce du jeton d'identité, puis
+  domaine de l'adresse. La signature du jeton n'est pas revérifiée car il est récupéré directement
+  auprès de Microsoft en HTTPS avec le secret client — OpenID Connect Core §3.1.3.7 l'autorise dans ce
+  cas précis (flux code, client confidentiel).
+- **Session** : cookie signé HMAC-SHA256, 8 heures, aucun stockage serveur. Le disque du service
+  Railway est éphémère et le service redéploie à chaque push : une session en mémoire serait perdue à
+  chaque déploiement.
+- **Interrupteur** : l'authentification ne s'active que si `MS_TENANT_ID`, `MS_CLIENT_ID`,
+  `MS_CLIENT_SECRET` et `SESSION_SECRET` sont toutes présentes dans les variables Railway. En retirer
+  une rouvre le Hub — c'est la porte de secours si on se verrouille dehors.
+- **Restent ouverts, et c'est voulu** : `/icons/` (PDFShift va chercher les icônes de chapitre PAR URL
+  au moment de fabriquer le PDF — les protéger viderait les rapports de leurs icônes),
+  `/api/convert/docx` et `/api/reports/upload` (appelés par n8n, n'exposent aucune donnée),
+  `/api/health`, et les ressources de la page de connexion.
+- **Jeton de service** : l'en-tête `X-Cockpit-Token` (variable `COCKPIT_TOKEN`) ouvre l'accès aux
+  appels machine. Utilisé par le nœud n8n `Télécharger rapport pour email`, qui récupère le PDF sur
+  `/reports/` pour le joindre à l'email hebdomadaire — sans lui, il ramènerait la page de connexion.
+- **Fichiers de rapports** : `/reports/` est protégé. Les emails portent le PDF en pièce jointe, les
+  liens ne sont qu'un confort. `RAPPORTS_PUBLICS=true` les rouvre si un partage externe devient
+  nécessaire.
+- **Déconnexion** : locale (le cookie du Hub est effacé). La session Microsoft du navigateur reste
+  ouverte — fermer la session côté Microsoft exigerait d'enregistrer une URI de post-déconnexion dans
+  l'app Entra ID.
+
+### Le reste
+
+- **Les secrets vivent dans n8n et dans les variables Railway**, jamais dans le repo GitHub. (Chantier
+  qualité en cours : déplacer les derniers secrets en clair des nœuds n8n vers des credentials.)
 - **Graph** : permissions applicatives de lecture seule Teams (Chat.Read.All, Files.Read.All,
-  Team.ReadBasic.All, Channel.ReadBasic.All) sur l'app « DZ-Teams-Extractor » ; `Mail.Send` en cours
-  d'ajout pour l'envoi d'emails.
-- **Data Tables** : accessibles via les webhooks `dz/api/*`, eux-mêmes publics — même remarque que pour
-  le Hub, l'authentification à venir fermera l'ensemble.
+  Team.ReadBasic.All, Channel.ReadBasic.All) sur l'app « DZ-Teams-Extractor », plus **`Mail.Send`**
+  (accordée par CBC le 17/08/2026) pour l'envoi des rapports.
+- **Data Tables** : accessibles via les webhooks `dz/api/*`, eux-mêmes publics. Le navigateur ne les
+  appelle plus qu'à travers le Hub, désormais fermé — mais les webhooks restent joignables en direct
+  si on connaît leur URL. Point à traiter si le sujet devient sensible.
 
 ## 9. Fragilités connues et parades
 
 | Fragilité | Détail | Parade |
 |---|---|---|
+| Se verrouiller hors du Hub | Une erreur de configuration Entra ID (secret expiré, URI de redirection modifiée) rendrait le Hub inaccessible à tout le monde | Retirer une des variables `MS_*` ou `SESSION_SECRET` dans Railway rouvre le Hub immédiatement. Le secret client de l'app login a une date d'expiration fixée par CBC : à renouveler comme celui de l'app Teams |
 | Compte assembleur requis dans chaque conversation | La découverte ne voit que les conversations dont `assembleur@dzconstruct.lu` est membre : une conversation créée sans lui est invisible | Règle d'usage à la création (voir `/guide`) ; ou bascule vers des canaux d'équipe Teams (lecture sans compte membre, ~quelques heures d'adaptation) — décision Francis |
 | Email en compte perso (test) | L'envoi marche via l'API Gmail OAuth2, mais depuis le compte perso `vincent@korr.lu` | Basculer vers Microsoft Graph `Mail.Send` avec une boîte DZ (même logique OAuth2/HTTPS) — demande faite à CBC. NB : le SMTP est définitivement écarté (Railway le bloque + fin des mots de passe d'app Google) |
 | Secret Microsoft expirant | Le client_secret de l'app Graph a une date d'expiration fixée par CBC | Calendrier de renouvellement avec Benoît ; mise à jour ensuite dans les nœuds `Auth Microsoft` |

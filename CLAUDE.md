@@ -51,8 +51,23 @@ sont neuves par définition. Non fait, non prioritaire.
 
 **3 chantiers ouverts, pour la prochaine session :**
 
-1. **Authentification Microsoft** (accès à tout compte `@dzconstruct.lu`) — **en attente de CBC**. Plan validé = **deux apps** : (a) **ajouter la permission `Mail.Send`** (application) + consentement admin sur l'app existante **`DZ-Teams-Extractor`** (celle du POC, déjà utilisée pour lire Teams), idéalement restreinte à `dzconstruct@dzconstruct.lu` (Application Access Policy) ; (b) **une nouvelle app « login »** : Web, single-tenant, redirect `https://cockpit-production-c3dc.up.railway.app/auth/callback`, permissions **déléguées** `openid`/`profile`/`email`/`User.Read`, + secret. Un collègue de Benoît a repris le sujet **sans le contexte** → mail de contexte + demande précise envoyé le 30/07. **À réception :** client_id + client_secret de l'app login (tenant déjà connu). Puis **coder le login OIDC dans le cockpit** (`server.js`, session, protéger toutes les pages, n'autoriser que le tenant dzconstruct.lu).
-2. **Envoi hebdo par email — à finaliser une fois `Mail.Send` prêt** : basculer le nœud d'envoi de **Gmail (korr)** → **Microsoft Graph `Mail.Send` depuis `dzconstruct@dzconstruct.lu`** (émetteur = destinataire, c'est possible et voulu), et mettre **`dzconstruct@dzconstruct.lu` en destinataire** sur tous les chantiers actifs (décidé avec Francis : **1 mail = 1 chantier**, DZ trie ensuite).
+1. ✅ **Authentification Microsoft — FAITE le 21/08.** CBC (Adrien Olivieri, 17/08) a accordé
+   `Mail.Send` sur `DZ-Teams-Extractor` et créé l'app **« DZ – Hub Rapport Technique (login) »**.
+   Le login OIDC est codé (`auth.js`), déployé et allumé : le Hub n'accepte plus que les comptes
+   `@dzconstruct.lu`. Détail complet dans `docs/BIBLE.md` §8. **Reste à faire par Vincent : le premier
+   vrai login avec un compte DZ** (je ne peux pas le tester, il faut des identifiants Microsoft).
+   ⚠️ Porte de secours si ça se verrouille : retirer une variable `MS_*` dans Railway rouvre le Hub.
+   ⚠️ Le secret client de l'app login **expire** (date fixée par CBC) — à renouveler comme celui de
+   l'app Teams. Et il a circulé par mail en clair : à régénérer une fois la config validée.
+2. **Envoi hebdo par email — le seul point Microsoft encore ouvert.** `Mail.Send` est accordé, il
+   reste à basculer le nœud d'envoi de **Gmail (korr)** → **Microsoft Graph `Mail.Send` depuis
+   `dzconstruct@dzconstruct.lu`** (émetteur = destinataire, c'est possible et voulu), et à mettre
+   **`dzconstruct@dzconstruct.lu` en destinataire** sur tous les chantiers actifs (décidé avec
+   Francis : **1 mail = 1 chantier**, DZ trie ensuite). Rien à attendre de CBC pour ça.
+   *Reste optionnel côté CBC : la restriction `New-ApplicationAccessPolicy` sur la boîte
+   `dzconstruct@dzconstruct.lu`. Adrien craignait qu'elle bride toute l'app — elle ne gouverne que les
+   ressources Exchange (Mail, Calendars, Contacts) et n'a aucun effet sur Teams : on peut la poser sur
+   `DZ-Teams-Extractor` sans risque, et une app dédiée au mail.send est inutile.*
 3. **Bugs remontés par Francis** — Vincent apportera la liste dans la nouvelle session, à traiter.
 
 **Décisions actées avec Francis (30/07) :** archives = 1 gros dossier **mensuel** janv→juil (✅ fait) ; envoi hebdo → **`dzconstruct@dzconstruct.lu`** (1 mail/chantier) ; auth = **tout `@dzconstruct.lu`** ; nouvelle adresse DZ = **195 Z.A.E. Wolser F, L-4026 Bettembourg** (✅ dans les pieds de page). **PDFShift** est passé en **forfait payant** (le gratuit 50/mois ne suffit pas : ~56 PDF/mois en régime hebdo).
@@ -160,6 +175,13 @@ sont neuves par définition. Non fait, non prioritaire.
 
 ### Cockpit / Railway
 - Disque du service éphémère : tout ce qui doit survivre à un déploiement va sur le volume `/app/data`.
+- **`auth.js` doit être monté AVANT `express.static`** : sinon les pages HTML sont servies directement
+  par le middleware de fichiers statiques et échappent au garde.
+- **Ne jamais protéger `/icons/`** : PDFShift va chercher les icônes de chapitre **par URL** pendant la
+  fabrication du PDF. Les fermer viderait les rapports de leurs icônes, en silence.
+- Variables Railway de l'authentification : `MS_TENANT_ID`, `MS_CLIENT_ID`, `MS_CLIENT_SECRET`,
+  `SESSION_SECRET`, `APP_URL`, `AUTH_DOMAINE`, `COCKPIT_TOKEN`. Elles se posent avec le MCP Railway
+  (`set-variables`) — chaque écriture déclenche un redéploiement.
 - Depuis l'environnement de dev distant, Chromium/Playwright **ne sort pas sur Internet** (proxy → ERR_CONNECTION_RESET) : pour vérifier l'UI, servir `public/` en local avec des stubs `/api/*` et capturer sur `127.0.0.1`. `curl` fonctionne normalement pour vérifier la prod.
 
 ### Fonctionnel
@@ -223,7 +245,7 @@ Reste, par priorité (détail dans « Point de situation » en tête) :
 4. ⏳ **Compte assembleur dans chaque conversation** (encore ouvert) : la découverte ne voit que les conversations dont `assembleur@dzconstruct.lu` est membre. Options : (a) règle « toujours inclure assembleur@ à la création » (simple mais fragile) ; (b) basculer vers des **canaux d'équipe Teams** → lecture sans compte invité (~quelques heures). À trancher selon l'usage Teams de DZ.
 
 ### Points fragiles à connaître (état au 13/07)
-- **Cockpit public** : pas encore d'authentification — ne pas diffuser l'URL largement avant le login Microsoft (roadmap n°3).
+- ✅ **Cockpit fermé** (21/08) : login Microsoft, comptes `@dzconstruct.lu` uniquement. L'URL peut être diffusée. Les fichiers de rapports (`/reports/`) sont protégés eux aussi ; n8n y accède avec un jeton de service (`X-Cockpit-Token`). Si un partage externe devient nécessaire, `RAPPORTS_PUBLICS=true` dans Railway les rouvre.
 - **Emails** : ✅ fonctionnent (API Gmail OAuth2, testé depuis `vincent@korr.lu`). Pour la prod DZ, bascule prévue vers Microsoft Graph `Mail.Send` avec une boîte DZ (demande faite à Benoît) — le compte Gmail korr n'est qu'un test.
 - **Secret Microsoft qui expire** : le client_secret de l'app « DZ-Teams-Extractor » a une date d'expiration fixée par CBC — à renouveler avant échéance sinon plus de lecture Teams (et prévenir Vincent pour la mise à jour dans n8n).
 - **Comptes personnels de Vincent** : Railway, PDFShift et le Gmail de test sont sur ses comptes — la passation vers des comptes DZ est décrite dans la section « Passation à DZ » ci-dessous.
