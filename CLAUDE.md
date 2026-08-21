@@ -150,6 +150,11 @@ sont neuves par définition. Non fait, non prioritaire.
 - CSS `running()` (logo répété par page) ne marche pas : logo première page uniquement.
 - **Footer courant de chaque page** (nom de fichier à gauche, `x/y` à droite) : via le paramètre `footer` de PDFShift = objet `{ source, height }`. Le `source` est construit dans `Préparer rapport` (champ `footerHtml`) avec les placeholders **littéraux** `{{page}}` / `{{total}}` que PDFShift remplace — les garder dans la DONNÉE du nœud, pas dans une expression n8n (sinon n8n tente d'évaluer les accolades). Le `.pied` unique de fin a été retiré au profit de ce footer courant.
 - **Word (.docx) via `html-to-docx`** : la lib ne comprend qu'un sous-ensemble du CSS (ignore `<style>` et les classes). Le cockpit (`htmlPourWord()` dans `server.js`) réécrit pour le Word : styles **en ligne** sur les tableaux (bordures/padding), et surtout **dimensions d'images en CSS `style="width:…"` — jamais en attributs `width=`/`height=`** (html-to-docx les ignore et prend la taille native : icônes 96px = énormes). Icônes 14px, photos 330px (ratio conservé via largeur seule), logo 220px. Pied Word = 4e argument `footerHTMLString` (nom de fichier) + `pageNumber:true` (numéro) ; le PDF garde le footer PDFShift complet.
+- **Saut de page Word entre les jours** : le PDF s'appuie sur `.jour { page-break-before: always }`
+  dans le `<style>`, que html-to-docx ignore. `htmlPourWord()` insère un `<div class="page-break"></div>`
+  devant chaque `<div class="jour">` — seule forme que la lib traduit en `<w:br w:type="page"/>`.
+  ⚠️ Ne **jamais** poser `page-break-after` en style sur le `<div class="jour">` lui-même : la lib
+  remplace alors le nœud entier par le saut de page et tout le contenu de la journée disparaît.
 - **Total du jour** : ligne `tr.jourtotal` (somme des heures de toutes les personnes) en bas du tableau équipes, en plus des « Total journée » par personne.
 - **Ne jamais transcrire du base64 à la main** (corruption systématique constatée) : les icônes sont des fichiers servis par le cockpit, inlinés par code pour le docx. Pour pousser le jsCode de `Préparer rapport` (gros logo base64), vérifier le **sha256** avant/après.
 
