@@ -89,6 +89,13 @@ app.post('/api/decouverte', (req, res) => proxyToN8n(res, 'POST', 'dz/decouverte
 // styles EN LIGNE et des dimensions d'images en attributs.
 function htmlPourWord(html) {
   let h = html;
+  // Saut de page avant chaque journée. Le PDF s'appuie sur `.jour { page-break-before }`
+  // dans le <style>, que html-to-docx ignore (il ne lit ni les <style> ni les classes de
+  // mise en forme). En revanche il génère un vrai saut de page Word quand il rencontre un
+  // <div class="page-break"></div>.
+  // ⚠️ Ne jamais poser `page-break-after` en style sur le <div class="jour"> lui-même :
+  // la lib remplace alors le nœud entier par le saut de page, et le contenu du jour disparaît.
+  h = h.replace(/<div class="jour">/g, '<div class="page-break"></div><div class="jour">');
   // Icônes de chapitre : inliner en base64 + taille fixe. ⚠️ html-to-docx IGNORE
   // les attributs width/height des images (il prend la taille native, ici 96px) :
   // seul le CSS EN LIGNE `style="width:…"` est respecté.
