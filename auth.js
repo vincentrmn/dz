@@ -32,6 +32,12 @@ const APP_URL = (process.env.APP_URL || 'https://cockpit-production-c3dc.up.rail
 // Passer RAPPORTS_PUBLICS=true pour rouvrir ces liens à tout porteur d'URL.
 const RAPPORTS_PUBLICS = process.env.RAPPORTS_PUBLICS === 'true';
 
+// Jeton de service, pour les appels machine qui ne peuvent pas se connecter avec un
+// compte Microsoft. Aujourd'hui : le nœud n8n « Télécharger rapport pour email », qui
+// récupère le PDF sur /reports/ pour le joindre à l'email hebdomadaire. Sans ce jeton,
+// il ramènerait la page de connexion à la place du rapport.
+const COCKPIT_TOKEN = process.env.COCKPIT_TOKEN || '';
+
 const actif = Boolean(TENANT && CLIENT_ID && CLIENT_SECRET && SESSION_SECRET);
 
 const AUTORITE = `https://login.microsoftonline.com/${TENANT}`;
@@ -170,6 +176,14 @@ const OUVERT_EXACT = new Set([
 ]);
 const OUVERT_PREFIXE = ['/auth/', '/icons/'];
 
+// Appel machine porteur du jeton de service (en-tête X-Cockpit-Token).
+function jetonDeService(req) {
+  if (!COCKPIT_TOKEN) return false;
+  const recu = Buffer.from(String(req.headers['x-cockpit-token'] || ''));
+  const ref = Buffer.from(COCKPIT_TOKEN);
+  return recu.length === ref.length && crypto.timingSafeEqual(recu, ref);
+}
+
 function estOuvert(chemin) {
   if (OUVERT_EXACT.has(chemin)) return true;
   if (OUVERT_PREFIXE.some((p) => chemin.startsWith(p))) return true;
@@ -287,6 +301,7 @@ function monter(app) {
   app.use((req, res, next) => {
     if (!actif) return next();
     if (estOuvert(req.path)) return next();
+    if (jetonDeService(req)) return next();
     const session = verifier(lireCookies(req)[COOKIE_SESSION]);
     if (session) {
       req.utilisateur = session;
