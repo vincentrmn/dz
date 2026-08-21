@@ -24,10 +24,10 @@ body {
 header {
   background: var(--blanc);
   border-bottom: 1px solid var(--bord);
-  padding: 0 32px;
+  padding: 0 24px;
   display: flex;
   align-items: center;
-  gap: 28px;
+  gap: 20px;
   height: 64px;
   position: sticky;
   top: 0;
@@ -42,22 +42,27 @@ header .titre {
   border-left: 1px solid var(--bord);
   padding-left: 24px;
 }
-nav { margin-left: auto; display: flex; gap: 4px; }
+nav { margin-left: auto; display: flex; gap: 2px; }
 nav a {
   color: var(--encre-2);
   text-decoration: none;
-  padding: 8px 14px;
+  padding: 8px 12px;
   border-radius: 6px;
   font-size: 14px;
+  white-space: nowrap;
 }
 nav a:hover { background: var(--fond); color: var(--encre); }
 nav a.actif { color: var(--rouge); font-weight: 600; }
 
-/* Bandeau de compte (authentification Microsoft) */
-.compte { display: flex; align-items: center; gap: 12px; margin-left: 20px; padding-left: 20px; border-left: 1px solid var(--bord); }
-.compte .compte-nom { color: var(--gris); font-size: 13px; white-space: nowrap; max-width: 180px; overflow: hidden; text-overflow: ellipsis; }
-.compte a { color: var(--encre-2); text-decoration: none; font-size: 13px; padding: 6px 10px; border-radius: 6px; }
+/* Bandeau de compte (authentification Microsoft).
+   Le bandeau prend de la place dans un en-tête déjà chargé : sans nowrap sur les
+   liens de navigation, « Comment ça marche ? » passe à la ligne et l'en-tête
+   double de hauteur. Sous 1240 px, le nom s'efface et seul « Déconnexion » reste. */
+.compte { display: flex; align-items: center; gap: 8px; margin-left: 16px; padding-left: 16px; border-left: 1px solid var(--bord); }
+.compte .compte-nom { color: var(--gris); font-size: 13px; white-space: nowrap; max-width: 150px; overflow: hidden; text-overflow: ellipsis; }
+.compte a { color: var(--encre-2); text-decoration: none; font-size: 13px; padding: 6px 10px; border-radius: 6px; white-space: nowrap; }
 .compte a:hover { background: var(--fond); color: var(--rouge); }
+@media (max-width: 1240px) { .compte .compte-nom { display: none; } }
 
 main { max-width: 1080px; margin: 0 auto; padding: 40px 32px 80px; }
 
