@@ -15,7 +15,7 @@ Pas de couche IA de reformulation : **passthrough strict** des textes et photos 
 
 **Ce qui tourne en prod (validé en réel) :** rapport hebdo complet — Traxxeo **actif**, 3 chapitres, champs enrichis (qualif · catégorie · matricule ; activité + commentaire), **total du jour**, footer (nom de fichier gauche + `x/y` droite, remonté du bord), **PDF + Word propres** (Word sans « mode de compatibilité »). Cockpit : Dashboard, `/guide`, `/rapports`, `/configuration`, `/debug`, soft-delete, bouton scindé, favicon dz, nouvelle adresse DZ en pied. **Archives mensuelles janv→juil générées** (dossier ZIP unique : `GET /api/archives.zip`).
 
-**Email :** basculé sur **Microsoft Graph `sendMail`** depuis `dzconstruct@dzconstruct.lu` (25/08). Le nœud Gmail (`vincent@korr.lu`) reste débranché comme repli. **Pas encore éprouvé par un envoi réel**, et `mail_actif` est à false sur tous les chantiers : rien ne part aujourd'hui.
+**Email :** basculé sur **Microsoft Graph `sendMail`** depuis `dzconstruct@dzconstruct.lu` (25/08). Le nœud Gmail (`vincent@korr.lu`) reste débranché comme repli. Éprouvé par deux envois réels le 25/08 (pièce jointe et repli sans pièce jointe). `mail_actif` est à false sur les 4 chantiers actifs : **rien ne part** tant que Vincent ne l'active pas.
 
 **Correctif du 21/08 — photos Teams manquantes (résolu, validé en prod) :** des photos postées dans
 Teams n'apparaissaient pas dans le rapport, en silence. Cause : les nœuds `Télécharger images RT`/`BLL`
@@ -59,15 +59,19 @@ sont neuves par définition. Non fait, non prioritaire.
    ⚠️ Porte de secours si ça se verrouille : retirer une variable `MS_*` dans Railway rouvre le Hub.
    ⚠️ Le secret client de l'app login **expire** (date fixée par CBC) — à renouveler comme celui de
    l'app Teams. Et il a circulé par mail en clair : à régénérer une fois la config validée.
-2. ✅ **Bascule email vers Graph — FAITE le 25/08, pas encore éprouvée par un envoi réel.**
+2. ✅ **Bascule email vers Graph — FAITE et ÉPROUVÉE le 25/08.** Deux envois réels vers
+   `v.romano57@gmail.com` depuis `dzconstruct@dzconstruct.lu` : un rapport léger (pièce jointe
+   incluse, journal propre) et le rapport Brouch de 4,9 Mo (liens seuls, journal : « email envoyé
+   sans pièce jointe : il pèse 4,9 Mo… »). Graph a répondu 202 dans les deux cas.
    Le nœud Gmail est remplacé par `Préparer email Graph` (Code) + `Envoyer rapport par Graph` (HTTP
    vers `users/dzconstruct@dzconstruct.lu/sendMail`). `Mail.Send` vérifié présent dans un vrai jeton
    Graph. Le nœud Gmail reste sur le canvas, désactivé et débranché, comme repli.
    ⚠️ **Graph plafonne `sendMail` à 4 Mo** : le rapport est joint sous 3 Mo, sinon le message bascule
    sur les liens seuls **en le disant**. 2 rapports hebdo sur 32 sont concernés.
-   **Reste à faire :** un envoi de test réel, puis mettre **`dzconstruct@dzconstruct.lu` en
+   **Reste à faire, et c'est une décision de Vincent :** mettre **`dzconstruct@dzconstruct.lu` en
    destinataire** sur les chantiers actifs et passer leur `mail_actif` à true (décidé avec Francis :
-   **1 mail = 1 chantier**, DZ trie ensuite).
+   **1 mail = 1 chantier**, DZ trie ensuite). Tant que ce n'est pas fait, `mail_actif` est à false
+   sur les 4 chantiers actifs et **rien ne part**, y compris au run du mercredi.
    *Reste optionnel côté CBC : la restriction `New-ApplicationAccessPolicy` sur la boîte
    `dzconstruct@dzconstruct.lu`. Adrien craignait qu'elle bride toute l'app — elle ne gouverne que les
    ressources Exchange (Mail, Calendars, Contacts) et n'a aucun effet sur Teams : on peut la poser sur
