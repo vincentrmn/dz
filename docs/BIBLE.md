@@ -57,7 +57,7 @@ redéploie automatiquement le service en ~30 secondes. Les workflows n8n, eux, v
 | Heures | API Traxxeo (ORDS, OAuth2 client_credentials) | Endpoint `person_hrd` : lignes de pointage par personne/jour/WBS | Contrat DZ–Traxxeo (Matthieu) — **actif depuis le 15/07/2026**, credential n8n « Traxxeo API » |
 | HTML → PDF | PDFShift (service SaaS) | Convertit le HTML du rapport en PDF fidèle | Clé du POC (compte Vincent), crédits payants |
 | HTML → Word | Librairie `html-to-docx` dans le Hub | Endpoint `POST /api/convert/docx`, icônes inlinées en base64 avant conversion | Aucun compte, tourne dans le Hub |
-| Email | Nœud **Gmail** n8n en **OAuth2** (API Gmail, HTTPS) | Envoi du rapport (liens + PDF joint) aux destinataires du chantier | Credential « Gmail account » = `vincent@korr.lu` (**test**) ; cible DZ = Microsoft Graph `Mail.Send`. SMTP abandonné (Railway le bloque + fin des mots de passe d'app Google) |
+| Email | **Microsoft Graph `sendMail`** (permission applicative `Mail.Send`) | Envoi du rapport (liens + fichier joint) aux destinataires du chantier, depuis `dzconstruct@dzconstruct.lu` | App « DZ-Teams-Extractor », `Mail.Send` accordée par CBC le 17/08/2026. Le nœud Gmail (compte `vincent@korr.lu`) reste sur le canvas, **désactivé et débranché**, comme repli. SMTP définitivement écarté (Railway le bloque + fin des mots de passe d'app Google) |
 | Hébergement | Railway | Les deux services + volume persistant + Postgres n8n | Compte Vincent (passation prévue) |
 | Code source | GitHub `vincentrmn/dz` | Hub + docs + copie de référence du workflow générateur | Compte Vincent |
 
@@ -102,7 +102,15 @@ Ce qui se passe le mercredi à 7 h (ou lors d'un clic sur « Générer le rappor
    `Assembler BLL` comparent `nbImagesAttendues` à `nbImages`).
 10. **Email éventuel.** Six conditions cumulatives : interrupteur général `mail_actif` (nœud Config)
     + toggle email du chantier + destinataires non vides + pas en mode démo + fichier produit
-    + `envoyer=true` (cron hebdo ou demande explicite du Hub).
+    + `envoyer=true` (cron hebdo ou demande explicite du Hub). L'envoi passe par **Microsoft Graph
+    `sendMail`** depuis la boîte `dzconstruct@dzconstruct.lu` (`Config.mail_from`), avec le jeton
+    applicatif de `DZ-Teams-Extractor`.
+    ⚠️ **Graph plafonne `sendMail` à 4 Mo, pièce jointe encodée comprise.** Le nœud
+    `Préparer email Graph` joint donc le rapport quand il tient sous 3 Mo, et bascule sinon sur les
+    seuls liens **en le disant dans le message**. Sur 32 rapports hebdo mesurés, la médiane est à
+    0,07 Mo et 2 dépassent la limite : les chantiers les plus actifs. Joindre systématiquement
+    exigerait une session d'envoi en plusieurs morceaux (brouillon + upload par tranches + envoi),
+    bien plus lourde — à faire seulement si DZ juge la pièce jointe indispensable partout.
 11. **Journal final.** La ligne `dz_runs` est complétée : statut, étape, URLs PDF/Word, statistiques
     (« BLL : 5 message(s), 11 photo(s)… »).
 
@@ -212,7 +220,7 @@ Le Hub est fermé : il faut un compte **@dzconstruct.lu** pour entrer. Le code v
 |---|---|---|
 | Se verrouiller hors du Hub | Une erreur de configuration Entra ID (secret expiré, URI de redirection modifiée) rendrait le Hub inaccessible à tout le monde | Retirer une des variables `MS_*` ou `SESSION_SECRET` dans Railway rouvre le Hub immédiatement. Le secret client de l'app login a une date d'expiration fixée par CBC : à renouveler comme celui de l'app Teams |
 | Compte assembleur requis dans chaque conversation | La découverte ne voit que les conversations dont `assembleur@dzconstruct.lu` est membre : une conversation créée sans lui est invisible | Règle d'usage à la création (voir `/guide`) ; ou bascule vers des canaux d'équipe Teams (lecture sans compte membre, ~quelques heures d'adaptation) — décision Francis |
-| Email en compte perso (test) | L'envoi marche via l'API Gmail OAuth2, mais depuis le compte perso `vincent@korr.lu` | Basculer vers Microsoft Graph `Mail.Send` avec une boîte DZ (même logique OAuth2/HTTPS) — demande faite à CBC. NB : le SMTP est définitivement écarté (Railway le bloque + fin des mots de passe d'app Google) |
+| Pièce jointe absente sur les gros rapports | Graph refuse un `sendMail` au-delà de 4 Mo : les semaines très fournies partent avec les liens seuls | Le message le dit explicitement, et le journal `dz_runs` note « email envoyé sans pièce jointe ». Si la pièce jointe devient indispensable partout : session d'envoi en plusieurs morceaux |
 | Secret Microsoft expirant | Le client_secret de l'app Graph a une date d'expiration fixée par CBC | Calendrier de renouvellement avec Benoît ; mise à jour ensuite dans les nœuds `Auth Microsoft` |
 | Échec Traxxeo silencieux | Si l'auth ou l'API Traxxeo échoue, le chapitre 1 sort vide avec un statut Succès (les nœuds absorbent l'erreur) | Surveiller « Traxxeo : N ligne(s) » dans les stats de la page Debug ; N=0 sur une semaine travaillée = anomalie |
 | Comptes personnels | Railway, PDFShift, Gmail de test appartiennent à Vincent | Séquence de passation complète dans `CLAUDE.md`, section « Passation à DZ » |

@@ -59,11 +59,15 @@ sont neuves par définition. Non fait, non prioritaire.
    ⚠️ Porte de secours si ça se verrouille : retirer une variable `MS_*` dans Railway rouvre le Hub.
    ⚠️ Le secret client de l'app login **expire** (date fixée par CBC) — à renouveler comme celui de
    l'app Teams. Et il a circulé par mail en clair : à régénérer une fois la config validée.
-2. **Envoi hebdo par email — le seul point Microsoft encore ouvert.** `Mail.Send` est accordé, il
-   reste à basculer le nœud d'envoi de **Gmail (korr)** → **Microsoft Graph `Mail.Send` depuis
-   `dzconstruct@dzconstruct.lu`** (émetteur = destinataire, c'est possible et voulu), et à mettre
-   **`dzconstruct@dzconstruct.lu` en destinataire** sur tous les chantiers actifs (décidé avec
-   Francis : **1 mail = 1 chantier**, DZ trie ensuite). Rien à attendre de CBC pour ça.
+2. ✅ **Bascule email vers Graph — FAITE le 25/08, pas encore éprouvée par un envoi réel.**
+   Le nœud Gmail est remplacé par `Préparer email Graph` (Code) + `Envoyer rapport par Graph` (HTTP
+   vers `users/dzconstruct@dzconstruct.lu/sendMail`). `Mail.Send` vérifié présent dans un vrai jeton
+   Graph. Le nœud Gmail reste sur le canvas, désactivé et débranché, comme repli.
+   ⚠️ **Graph plafonne `sendMail` à 4 Mo** : le rapport est joint sous 3 Mo, sinon le message bascule
+   sur les liens seuls **en le disant**. 2 rapports hebdo sur 32 sont concernés.
+   **Reste à faire :** un envoi de test réel, puis mettre **`dzconstruct@dzconstruct.lu` en
+   destinataire** sur les chantiers actifs et passer leur `mail_actif` à true (décidé avec Francis :
+   **1 mail = 1 chantier**, DZ trie ensuite).
    *Reste optionnel côté CBC : la restriction `New-ApplicationAccessPolicy` sur la boîte
    `dzconstruct@dzconstruct.lu`. Adrien craignait qu'elle bride toute l'app — elle ne gouverne que les
    ressources Exchange (Mail, Calendars, Contacts) et n'a aucun effet sur Teams : on peut la poser sur
@@ -247,7 +251,7 @@ Reste, par priorité (détail dans « Point de situation » en tête) :
 
 ### Points fragiles à connaître (état au 13/07)
 - ✅ **Cockpit fermé** (21/08) : login Microsoft, comptes `@dzconstruct.lu` uniquement. L'URL peut être diffusée. Les fichiers de rapports (`/reports/`) sont protégés eux aussi ; n8n y accède avec un jeton de service (`X-Cockpit-Token`). Si un partage externe devient nécessaire, `RAPPORTS_PUBLICS=true` dans Railway les rouvre.
-- **Emails** : ✅ fonctionnent (API Gmail OAuth2, testé depuis `vincent@korr.lu`). Pour la prod DZ, bascule prévue vers Microsoft Graph `Mail.Send` avec une boîte DZ (demande faite à Benoît) — le compte Gmail korr n'est qu'un test.
+- **Emails** : bascule sur **Microsoft Graph `sendMail`** depuis `dzconstruct@dzconstruct.lu` (25/08). Le nœud Gmail reste débranché comme repli. ⚠️ Limite Graph de 4 Mo : au-delà, le rapport part sans pièce jointe, avec mention dans le message et dans le journal.
 - **Secret Microsoft qui expire** : le client_secret de l'app « DZ-Teams-Extractor » a une date d'expiration fixée par CBC — à renouveler avant échéance sinon plus de lecture Teams (et prévenir Vincent pour la mise à jour dans n8n).
 - **Comptes personnels de Vincent** : Railway, PDFShift et le Gmail de test sont sur ses comptes — la passation vers des comptes DZ est décrite dans la section « Passation à DZ » ci-dessous.
 - **PDFShift** : ✅ **forfait payant** (le gratuit 50/mois ne suffit pas au régime hebdo ~56 PDF/mois). Chaque PDF = 1 crédit ; surveiller le solde. Option future si on veut supprimer ce coût/ce tiers : auto-héberger la conversion HTML→PDF (Chromium) dans le cockpit — non fait, à ne considérer que si la confidentialité des données RH devient un sujet chez DZ.
