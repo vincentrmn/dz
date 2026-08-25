@@ -15,7 +15,7 @@ Pas de couche IA de reformulation : **passthrough strict** des textes et photos 
 
 **Ce qui tourne en prod (validé en réel) :** rapport hebdo complet — Traxxeo **actif**, 3 chapitres, champs enrichis (qualif · catégorie · matricule ; activité + commentaire), **total du jour**, footer (nom de fichier gauche + `x/y` droite, remonté du bord), **PDF + Word propres** (Word sans « mode de compatibilité »). Cockpit : Dashboard, `/guide`, `/rapports`, `/configuration`, `/debug`, soft-delete, bouton scindé, favicon dz, nouvelle adresse DZ en pied. **Archives mensuelles janv→juil générées** (dossier ZIP unique : `GET /api/archives.zip`).
 
-**Email :** fonctionne via **API Gmail OAuth2** mais depuis un **compte de test** (`vincent@korr.lu`). PAS encore basculé sur une boîte DZ.
+**Email :** basculé sur **Microsoft Graph `sendMail`** depuis `dzconstruct@dzconstruct.lu` (25/08). Le nœud Gmail (`vincent@korr.lu`) reste débranché comme repli. **Pas encore éprouvé par un envoi réel**, et `mail_actif` est à false sur tous les chantiers : rien ne part aujourd'hui.
 
 **Correctif du 21/08 — photos Teams manquantes (résolu, validé en prod) :** des photos postées dans
 Teams n'apparaissaient pas dans le rapport, en silence. Cause : les nœuds `Télécharger images RT`/`BLL`
@@ -76,7 +76,7 @@ sont neuves par définition. Non fait, non prioritaire.
 
 **Décisions actées avec Francis (30/07) :** archives = 1 gros dossier **mensuel** janv→juil (✅ fait) ; envoi hebdo → **`dzconstruct@dzconstruct.lu`** (1 mail/chantier) ; auth = **tout `@dzconstruct.lu`** ; nouvelle adresse DZ = **195 Z.A.E. Wolser F, L-4026 Bettembourg** (✅ dans les pieds de page). **PDFShift** est passé en **forfait payant** (le gratuit 50/mois ne suffit pas : ~56 PDF/mois en régime hebdo).
 
-**⚠️ Environnement :** le conteneur peut être **recloné** entre sessions (working dir revenu à l'état initial constaté le 30/07) — le vrai état est sur le remote GitHub : au démarrage, `git fetch` puis `git checkout -B claude/roadmap-deployment-t1m07g origin/claude/roadmap-deployment-t1m07g`. Le **MCP n8n peut demander une ré-autorisation** (OAuth) en début de session.
+**⚠️ Environnement :** le conteneur peut être **recloné** entre sessions (working dir revenu à l'état initial constaté le 30/07) — le vrai état est sur le remote GitHub : au démarrage, `git fetch origin main` puis `git checkout -B main origin/main` (tout est fusionné sur `main` depuis le 21/08). Le **MCP n8n peut demander une ré-autorisation** (OAuth) en début de session.
 
 ## Architecture en production
 
