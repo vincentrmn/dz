@@ -18,6 +18,7 @@
  */
 
 const crypto = require('crypto');
+const express = require('express');
 
 const TENANT = process.env.MS_TENANT_ID || '';
 const CLIENT_ID = process.env.MS_CLIENT_ID || '';
@@ -37,6 +38,13 @@ const RAPPORTS_PUBLICS = process.env.RAPPORTS_PUBLICS === 'true';
 // récupère le PDF sur /reports/ pour le joindre à l'email hebdomadaire. Sans ce jeton,
 // il ramènerait la page de connexion à la place du rapport.
 const COCKPIT_TOKEN = process.env.COCKPIT_TOKEN || '';
+
+// Accès de secours par code, pour qui n'a pas de compte dans le tenant DZ — Vincent
+// en premier lieu, dont l'adresse korr.lu est extérieure à dzconstruct.lu et serait
+// donc refusée par Microsoft en amont, avant même nos contrôles.
+// Ne s'affiche et ne fonctionne que si ACCES_SECOURS est posée. Retirer la variable
+// referme cette porte.
+const ACCES_SECOURS = process.env.ACCES_SECOURS || '';
 
 const actif = Boolean(TENANT && CLIENT_ID && CLIENT_SECRET && SESSION_SECRET);
 
@@ -123,7 +131,8 @@ function chargeIdToken(idToken) {
 // ---------------------------------------------------------------------------
 const esc = (s) => String(s || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
 
-function pageLogin(message) {
+function pageLogin(message, suite) {
+  const dest = suite && suite.startsWith('/') && !suite.startsWith('//') ? suite : '/';
   return `<!DOCTYPE html><html lang="fr"><head><meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Connexion — Hub Rapport Technique</title>
@@ -144,16 +153,61 @@ function pageLogin(message) {
   .erreur { background: #fdf2f2; border: 1px solid #f3c9c9; color: #c62821; font-size: 13.5px;
             border-radius: 6px; padding: 12px 14px; margin-bottom: 22px; text-align: left; }
   .pied { color: #8a8a81; font-size: 12px; margin: 26px 0 0; }
+  .secours { border-top: 1px solid #e8e8e4; margin-top: 28px; padding-top: 20px; }
+  .secours summary { color: #8a8a81; font-size: 13px; cursor: pointer; list-style: none; }
+  .secours summary::-webkit-details-marker { display: none; }
+  .secours summary:hover { color: #55554f; }
+  .secours form { display: flex; gap: 8px; margin-top: 14px; }
+  .secours input { flex: 1; border: 1px solid #e8e8e4; border-radius: 6px; padding: 10px 12px;
+                   font-size: 14px; font-family: inherit; min-width: 0; }
+  .secours input:focus { outline: none; border-color: #8a8a81; }
+  .secours button { border: 1px solid #e8e8e4; background: #fafaf8; color: #55554f; border-radius: 6px;
+                    padding: 10px 16px; font-size: 14px; font-family: inherit; cursor: pointer; }
+  .secours button:hover { background: #f0f0ec; color: #1c1c1a; }
 </style></head><body>
   <div class="carte">
     <img src="/logo-dz.png" alt="DZ Construct">
     <h1>Hub Rapport Technique</h1>
     ${message ? `<div class="erreur">${message}</div>` : ''}
     <p>L'accès est réservé aux comptes <strong>@${esc(DOMAINE)}</strong>.</p>
-    <a class="bouton" href="/auth/login">Se connecter avec Microsoft</a>
+    <a class="bouton" href="/auth/login?suite=${encodeURIComponent(dest)}">Se connecter avec Microsoft</a>
+    ${ACCES_SECOURS ? `<details class="secours">
+      <summary>Vous n'avez pas de compte ${esc(DOMAINE)} ?</summary>
+      <form method="post" action="/auth/code">
+        <input type="hidden" name="suite" value="${esc(dest)}">
+        <input type="password" name="code" placeholder="Code d'accès" autocomplete="off" autofocus>
+        <button type="submit">Entrer</button>
+      </form>
+    </details>` : ''}
     <p class="pied">DZ Construct — 195 Z.A.E. Wolser F, L-4026 Bettembourg</p>
   </div>
 </body></html>`;
+}
+
+// ---------------------------------------------------------------------------
+// Limitation des tentatives sur l'accès de secours
+// ---------------------------------------------------------------------------
+// En mémoire : remis à zéro à chaque déploiement, ce qui est acceptable pour une
+// porte de secours. Le but est d'écarter le forçage automatisé, pas de tenir un
+// registre.
+const tentatives = new Map();
+const MAX_TENTATIVES = 8;
+const FENETRE = 15 * 60 * 1000;
+
+function tropDeTentatives(ip) {
+  const t = tentatives.get(ip);
+  if (!t || Date.now() > t.jusqua) return false;
+  return t.n >= MAX_TENTATIVES;
+}
+
+function noterEchec(ip) {
+  const t = tentatives.get(ip);
+  if (!t || Date.now() > t.jusqua) tentatives.set(ip, { n: 1, jusqua: Date.now() + FENETRE });
+  else t.n++;
+  // Purge opportuniste : la table ne doit pas grossir indéfiniment.
+  if (tentatives.size > 500) {
+    for (const [cle, v] of tentatives) if (Date.now() > v.jusqua) tentatives.delete(cle);
+  }
 }
 
 // ---------------------------------------------------------------------------
@@ -195,7 +249,35 @@ function estOuvert(chemin) {
 // Montage
 // ---------------------------------------------------------------------------
 function monter(app) {
-  app.get('/login', (req, res) => res.send(pageLogin('')));
+  app.get('/login', (req, res) => res.send(pageLogin('', String(req.query.suite || '/'))));
+
+  // Accès de secours par code. Pose la même session signée que le login Microsoft :
+  // tout ce qui est en aval fonctionne à l'identique.
+  app.post('/auth/code', express.urlencoded({ extended: false }), (req, res) => {
+    const suite = String((req.body && req.body.suite) || '/');
+    if (!actif || !ACCES_SECOURS) return res.redirect('/login');
+
+    const ip = req.headers['x-forwarded-for'] ? String(req.headers['x-forwarded-for']).split(',')[0].trim() : req.ip;
+    if (tropDeTentatives(ip)) {
+      return res.status(429).send(pageLogin('Trop de tentatives. Réessayez dans un quart d\'heure.', suite));
+    }
+
+    const fourni = Buffer.from(String((req.body && req.body.code) || ''));
+    const attendu = Buffer.from(ACCES_SECOURS);
+    const bon = fourni.length === attendu.length && crypto.timingSafeEqual(fourni, attendu);
+    if (!bon) {
+      noterEchec(ip);
+      return res.status(401).send(pageLogin('Code incorrect.', suite));
+    }
+
+    poserCookie(
+      res,
+      COOKIE_SESSION,
+      signer({ email: 'acces-par-code', nom: 'Accès par code', exp: Math.floor(Date.now() / 1000) + DUREE_SESSION }),
+      DUREE_SESSION,
+    );
+    res.redirect(suite.startsWith('/') && !suite.startsWith('//') ? suite : '/');
+  });
 
   // Qui suis-je ? Utilisé par le bandeau du header (public/auth-ui.js).
   app.get('/auth/moi', (req, res) => {
@@ -234,10 +316,10 @@ function monter(app) {
     poserCookie(res, COOKIE_TRANSACTION, '', 0);
 
     if (req.query.error) {
-      return res.status(400).send(pageLogin(`Microsoft a refusé la connexion : ${esc(req.query.error_description || req.query.error)}`));
+      return res.status(400).send(pageLogin(`Microsoft a refusé la connexion : ${esc(req.query.error_description || req.query.error)}`, transaction && transaction.suite));
     }
     if (!transaction || !req.query.code || req.query.state !== transaction.etat) {
-      return res.status(400).send(pageLogin('Session de connexion expirée ou invalide. Réessayez.'));
+      return res.status(400).send(pageLogin('Session de connexion expirée ou invalide. Réessayez.', transaction && transaction.suite));
     }
 
     try {
@@ -273,6 +355,7 @@ function monter(app) {
       if (!email.endsWith(`@${DOMAINE}`)) {
         return res.status(403).send(pageLogin(
           `Le compte ${esc(email) || 'utilisé'} n'appartient pas à ${esc(DOMAINE)}. L'accès au Hub est réservé aux comptes DZ Construct.`,
+          transaction.suite,
         ));
       }
 
@@ -284,7 +367,7 @@ function monter(app) {
       );
       res.redirect(transaction.suite || '/');
     } catch (e) {
-      res.status(500).send(pageLogin(`La connexion a échoué : ${esc(e.message || e)}`));
+      res.status(500).send(pageLogin(`La connexion a échoué : ${esc(e.message || e)}`, transaction && transaction.suite));
     }
   });
 
@@ -308,7 +391,10 @@ function monter(app) {
       return next();
     }
     if (req.path.startsWith('/api/')) return res.status(401).json({ erreur: 'non authentifié' });
-    return res.redirect(`/auth/login?suite=${encodeURIComponent(req.originalUrl || '/')}`);
+    // Vers NOTRE page de connexion, pas directement chez Microsoft : sinon le
+    // visiteur atterrit sur un écran Microsoft sans comprendre où il est, et
+    // l'accès de secours par code devient invisible.
+    return res.redirect(`/login?suite=${encodeURIComponent(req.originalUrl || '/')}`);
   });
 }
 
