@@ -15,7 +15,7 @@ Pas de couche IA de reformulation : **passthrough strict** des textes et photos 
 
 **Ce qui tourne en prod (validé en réel) :** rapport hebdo complet — Traxxeo **actif**, 3 chapitres, champs enrichis (qualif · catégorie · matricule ; activité + commentaire), **total du jour**, footer (nom de fichier gauche + `x/y` droite, remonté du bord), **PDF + Word propres** (Word sans « mode de compatibilité »). Cockpit : Dashboard, `/guide`, `/rapports`, `/configuration`, `/debug`, soft-delete, bouton scindé, favicon dz, nouvelle adresse DZ en pied. **Archives mensuelles janv→juil générées** (dossier ZIP unique : `GET /api/archives.zip`).
 
-**Email :** basculé sur **Microsoft Graph `sendMail`** depuis `dzconstruct@dzconstruct.lu` (25/08). Le nœud Gmail (`vincent@korr.lu`) reste débranché comme repli. Éprouvé par deux envois réels le 25/08 (pièce jointe et repli sans pièce jointe). `mail_actif` est à false sur les 4 chantiers actifs : **rien ne part** tant que Vincent ne l'active pas.
+**Email :** basculé sur **Microsoft Graph `sendMail`** depuis `dzconstruct@dzconstruct.lu` (25/08). Le nœud Gmail (`vincent@korr.lu`) reste débranché comme repli. Éprouvé par deux envois réels le 25/08. **Envoi allumé le 25/08** vers `dzconstruct@dzconstruct.lu` sur les 4 chantiers actifs (1 mail = 1 chantier) : le premier envoi automatique part au run du mercredi.
 
 **Correctif du 21/08 — photos Teams manquantes (résolu, validé en prod) :** des photos postées dans
 Teams n'apparaissaient pas dans le rapport, en silence. Cause : les nœuds `Télécharger images RT`/`BLL`
@@ -68,10 +68,12 @@ sont neuves par définition. Non fait, non prioritaire.
    Graph. Le nœud Gmail reste sur le canvas, désactivé et débranché, comme repli.
    ⚠️ **Graph plafonne `sendMail` à 4 Mo** : le rapport est joint sous 3 Mo, sinon le message bascule
    sur les liens seuls **en le disant**. 2 rapports hebdo sur 32 sont concernés.
-   **Reste à faire, et c'est une décision de Vincent :** mettre **`dzconstruct@dzconstruct.lu` en
-   destinataire** sur les chantiers actifs et passer leur `mail_actif` à true (décidé avec Francis :
-   **1 mail = 1 chantier**, DZ trie ensuite). Tant que ce n'est pas fait, `mail_actif` est à false
-   sur les 4 chantiers actifs et **rien ne part**, y compris au run du mercredi.
+   ✅ **Envoi allumé le 25/08** : les 4 chantiers actifs (Gaichel, Bettembourg, Frisange-Ecole,
+   Ecole-Brouch) ont `dzconstruct@dzconstruct.lu` en destinataire unique et `mail_actif` à true —
+   **1 mail = 1 chantier**, comme décidé avec Francis. Le premier envoi automatique part au run du
+   mercredi. Les 10 chantiers inactifs n'envoient rien.
+   Pour tout couper : passer `mail_actif` à false sur les chantiers, ou l'interrupteur général
+   `mail_actif` du nœud `Config`.
    *Reste optionnel côté CBC : la restriction `New-ApplicationAccessPolicy` sur la boîte
    `dzconstruct@dzconstruct.lu`. Adrien craignait qu'elle bride toute l'app — elle ne gouverne que les
    ressources Exchange (Mail, Calendars, Contacts) et n'a aucun effet sur Teams : on peut la poser sur
