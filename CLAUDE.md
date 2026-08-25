@@ -180,7 +180,8 @@ sont neuves par définition. Non fait, non prioritaire.
 - **Ne jamais protéger `/icons/`** : PDFShift va chercher les icônes de chapitre **par URL** pendant la
   fabrication du PDF. Les fermer viderait les rapports de leurs icônes, en silence.
 - Variables Railway de l'authentification : `MS_TENANT_ID`, `MS_CLIENT_ID`, `MS_CLIENT_SECRET`,
-  `SESSION_SECRET`, `APP_URL`, `AUTH_DOMAINE`, `COCKPIT_TOKEN`. Elles se posent avec le MCP Railway
+  `SESSION_SECRET`, `APP_URL`, `AUTH_DOMAINE`, `COCKPIT_TOKEN`, `ACCES_SECOURS` (porte de secours par
+  code, celle de Vincent — la retirer la referme) et `ACCES_SECOURS_NOM`. Elles se posent avec le MCP Railway
   (`set-variables`) — chaque écriture déclenche un redéploiement.
 - Depuis l'environnement de dev distant, Chromium/Playwright **ne sort pas sur Internet** (proxy → ERR_CONNECTION_RESET) : pour vérifier l'UI, servir `public/` en local avec des stubs `/api/*` et capturer sur `127.0.0.1`. `curl` fonctionne normalement pour vérifier la prod.
 

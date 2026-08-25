@@ -45,6 +45,9 @@ const COCKPIT_TOKEN = process.env.COCKPIT_TOKEN || '';
 // Ne s'affiche et ne fonctionne que si ACCES_SECOURS est posée. Retirer la variable
 // referme cette porte.
 const ACCES_SECOURS = process.env.ACCES_SECOURS || '';
+// Sous quel nom apparaît la session ouverte par ce code, dans l'en-tête et dans le
+// journal. Posé dans Railway pour ne pas inscrire d'identité en dur dans le repo.
+const ACCES_SECOURS_NOM = process.env.ACCES_SECOURS_NOM || 'Accès direct';
 
 const actif = Boolean(TENANT && CLIENT_ID && CLIENT_SECRET && SESSION_SECRET);
 
@@ -273,7 +276,7 @@ function monter(app) {
     poserCookie(
       res,
       COOKIE_SESSION,
-      signer({ email: 'acces-par-code', nom: 'Accès par code', exp: Math.floor(Date.now() / 1000) + DUREE_SESSION }),
+      signer({ email: 'acces-par-code', nom: ACCES_SECOURS_NOM, exp: Math.floor(Date.now() / 1000) + DUREE_SESSION }),
       DUREE_SESSION,
     );
     res.redirect(suite.startsWith('/') && !suite.startsWith('//') ? suite : '/');

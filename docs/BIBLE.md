@@ -182,6 +182,15 @@ Le Hub est fermé : il faut un compte **@dzconstruct.lu** pour entrer. Le code v
 - **Fichiers de rapports** : `/reports/` est protégé. Les emails portent le PDF en pièce jointe, les
   liens ne sont qu'un confort. `RAPPORTS_PUBLICS=true` les rouvre si un partage externe devient
   nécessaire.
+- **Accès de secours par code** : la page de connexion propose, sous le bouton Microsoft, un champ
+  « code d'accès ». Il ouvre exactement la même session signée. Il existe parce qu'une adresse
+  extérieure au tenant DZ — celle de Vincent, en `korr.lu` — est refusée par Microsoft **en amont**,
+  avant tout contrôle de notre côté : aucune liste d'exceptions dans le cockpit n'y changerait rien.
+  Le code vit dans `ACCES_SECOURS` (et le nom affiché dans `ACCES_SECOURS_NOM`) ; **retirer la
+  variable referme la porte** et la fait disparaître de la page. Comparaison à temps constant, et 8
+  tentatives par quart d'heure et par IP au maximum. C'est une porte de service, pas un mode d'accès
+  normal : un code partagé ne vaut pas un compte nominatif. À retirer le jour où Vincent est invité
+  dans le tenant DZ, ou à la passation.
 - **Déconnexion** : locale (le cookie du Hub est effacé). La session Microsoft du navigateur reste
   ouverte — fermer la session côté Microsoft exigerait d'enregistrer une URI de post-déconnexion dans
   l'app Entra ID.
