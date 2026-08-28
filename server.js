@@ -52,6 +52,13 @@ app.get('/api/health', async (req, res) => {
   });
 });
 
+// Contrôle du secret client Microsoft. Protégé (le chemin n'est pas dans la liste
+// ouverte de auth.js), et sur une route à part pour ne pas appeler Microsoft à
+// chaque rafraîchissement de la page Debug.
+app.get('/api/health/microsoft', async (req, res) => {
+  res.json({ secret_microsoft: await auth.verifierSecret() });
+});
+
 // ---------------------------------------------------------------------------
 // Proxy vers les webhooks n8n (chantiers, runs, génération, découverte)
 // ---------------------------------------------------------------------------

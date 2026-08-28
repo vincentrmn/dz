@@ -401,4 +401,35 @@ function monter(app) {
   });
 }
 
-module.exports = { monter, actif };
+// Contrôle du secret client : demande un jeton applicatif à Microsoft et rapporte
+// si le secret est encore accepté. Sert de garde-fou avant son expiration (date
+// fixée par CBC) : sans ça, la panne se découvre par un utilisateur bloqué devant
+// un message AADSTS incompréhensible, comme le 28/08/2026.
+async function verifierSecret() {
+  if (!actif) return 'authentification inactive';
+  try {
+    const corps = new URLSearchParams({
+      client_id: CLIENT_ID,
+      client_secret: CLIENT_SECRET,
+      grant_type: 'client_credentials',
+      scope: 'https://graph.microsoft.com/.default',
+    });
+    const r = await fetch(`${AUTORITE}/oauth2/v2.0/token`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+      body: corps,
+      signal: AbortSignal.timeout(10000),
+    });
+    const j = await r.json().catch(() => ({}));
+    if (r.ok && j.access_token) return 'ok';
+    const desc = String(j.error_description || '');
+    if (desc.includes('AADSTS7000215')) return 'refusé : secret invalide';
+    if (desc.includes('AADSTS7000222')) return 'refusé : secret expiré';
+    const code = (desc.match(/AADSTS\d+/) || ['sans code'])[0];
+    return `refusé (${code})`;
+  } catch (e) {
+    return 'Microsoft injoignable';
+  }
+}
+
+module.exports = { monter, actif, verifierSecret };
