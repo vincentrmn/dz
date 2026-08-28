@@ -59,6 +59,11 @@ sont neuves par définition. Non fait, non prioritaire.
    ⚠️ Porte de secours si ça se verrouille : retirer une variable `MS_*` dans Railway rouvre le Hub.
    ⚠️ Le secret client de l'app login **expire** (date fixée par CBC) — à renouveler comme celui de
    l'app Teams. Et il a circulé par mail en clair : à régénérer une fois la config validée.
+   **Incident du 28/08, résolu :** le secret posé le 21/08 était faux (transcrit depuis une capture
+   d'écran, `I` majuscule au lieu de `l` minuscule). Francis et Fares ont eu `AADSTS7000215` en
+   essayant de se connecter. Corrigé le 28/08 avec la valeur en texte, validée auprès de Microsoft
+   avant d'être posée. `GET /api/health/microsoft` contrôle désormais ce secret et répond « ok »,
+   « refusé : secret invalide », « refusé : secret expiré » ou le code AADSTS.
 2. ✅ **Bascule email vers Graph — FAITE et ÉPROUVÉE le 25/08.** Deux envois réels vers
    `v.romano57@gmail.com` depuis `dzconstruct@dzconstruct.lu` : un rapport léger (pièce jointe
    incluse, journal propre) et le rapport Brouch de 4,9 Mo (liens seuls, journal : « email envoyé
@@ -187,6 +192,13 @@ sont neuves par définition. Non fait, non prioritaire.
 - Disque du service éphémère : tout ce qui doit survivre à un déploiement va sur le volume `/app/data`.
 - **`auth.js` doit être monté AVANT `express.static`** : sinon les pages HTML sont servies directement
   par le middleware de fichiers statiques et échappent au garde.
+- **Ne jamais recopier un secret depuis une capture d'écran.** Le 21/08, le client_secret de l'app
+  login a été transcrit depuis une image : un `I` majuscule lu à la place d'un `l` minuscule. Personne
+  ne s'en est aperçu avant que Francis et Fares tombent sur `AADSTS7000215: Invalid client secret`
+  une semaine plus tard. Toujours demander la valeur **en texte**, et la **valider avant de la poser** :
+  requête `client_credentials` sur `https://login.microsoftonline.com/{tenant}/oauth2/v2.0/token`
+  (un jeton renvoyé = secret bon ; `AADSTS7000215` = secret refusé). En prod, `GET /api/health/microsoft`
+  fait ce contrôle (route protégée).
 - **Ne jamais protéger `/icons/`** : PDFShift va chercher les icônes de chapitre **par URL** pendant la
   fabrication du PDF. Les fermer viderait les rapports de leurs icônes, en silence.
 - Variables Railway de l'authentification : `MS_TENANT_ID`, `MS_CLIENT_ID`, `MS_CLIENT_SECRET`,

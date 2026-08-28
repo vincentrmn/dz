@@ -199,6 +199,11 @@ Le Hub est fermé : il faut un compte **@dzconstruct.lu** pour entrer. Le code v
   tentatives par quart d'heure et par IP au maximum. C'est une porte de service, pas un mode d'accès
   normal : un code partagé ne vaut pas un compte nominatif. À retirer le jour où Vincent est invité
   dans le tenant DZ, ou à la passation.
+- **Contrôle du secret** : `GET /api/health/microsoft` (route protégée) demande un jeton applicatif à
+  Microsoft et répond « ok », « refusé : secret invalide », « refusé : secret expiré », ou le code
+  AADSTS renvoyé. Le secret de l'app login a une date d'expiration fixée par CBC : sans ce contrôle,
+  la panne se découvre par un utilisateur bloqué devant un message AADSTS, ce qui est arrivé le
+  28/08/2026.
 - **Déconnexion** : locale (le cookie du Hub est effacé). La session Microsoft du navigateur reste
   ouverte — fermer la session côté Microsoft exigerait d'enregistrer une URI de post-déconnexion dans
   l'app Entra ID.
