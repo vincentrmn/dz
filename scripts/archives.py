@@ -1,30 +1,63 @@
 #!/usr/bin/env python3
 """
-Archives — génère les rapports MENSUELS (un one-shot au démarrage).
+Archives — génère les rapports MENSUELS (one-shot).
 
 Pour chaque mois de la période (par défaut janvier→juillet 2026) et chaque
-chantier détecté (non supprimé), déclenche une génération sur le mois entier.
-Aucun email (envoyer=false). Les mois/chantiers sans aucune donnée sont écartés
-du dossier final au moment du packaging (voir --bilan).
+chantier non supprimé, déclenche une génération sur le mois entier, sans email.
+Les mois sans donnée sont écartés du dossier final au moment du packaging
+(`GET /api/archives.zip`, seuil de 92 000 octets sur le PDF).
+
+⚠️ Deux règles à ne pas perdre de vue, apprises à l'usage :
+
+1. **Une génération à la fois.** Le script attend la fin de chaque rapport avant
+   de lancer le suivant. Microsoft Graph plafonne le téléchargement des photos
+   Teams à ~18 requêtes par ~20 s **par application** : deux générations en
+   parallèle se volent le quota et perdent des photos, en silence. C'est
+   exactement ce que ce batch est censé réparer.
+
+2. **Le cockpit est fermé depuis le 21/08.** Les routes `/api/*` exigent une
+   session Microsoft ou le jeton de service. Le jeton se passe par la variable
+   d'environnement COCKPIT_TOKEN, jamais en dur dans ce fichier.
 
 Usage :
-  python3 archives.py                       # simulation (dry-run)
-  python3 archives.py --go                  # lance la génération
-  python3 archives.py --go --lot 4          # lance par lots de 4 (pause entre lots)
-  python3 archives.py --bilan               # après coup : liste les rapports NON vides (pour le ZIP)
+  export COCKPIT_TOKEN='…'
+  python3 archives.py                  # simulation (dry-run)
+  python3 archives.py --go             # lance la génération, une à la fois
+  python3 archives.py --go --reprendre # reprend où le batch s'était arrêté
+  python3 archives.py --bilan          # ce que contiendrait le ZIP aujourd'hui
 """
 import argparse
 import datetime as dt
 import json
+import os
+import re
 import sys
 import time
+import urllib.error
 import urllib.request
 
-BASE = "https://cockpit-production-c3dc.up.railway.app"
-PAUSE = 6            # secondes entre deux générations
-PAUSE_LOT = 25      # secondes entre deux lots
+BASE = os.environ.get("COCKPIT_URL", "https://cockpit-production-c3dc.up.railway.app")
+TOKEN = os.environ.get("COCKPIT_TOKEN", "")
 ANNEE = 2026
-MOIS = list(range(1, 8))   # janvier..juillet
+MOIS = list(range(1, 8))          # janvier..juillet
+PAUSE = 5                          # secondes entre deux générations
+ATTENTE_MAX = 30 * 60              # abandon d'un rapport au-delà de 30 min
+SONDAGE = 15                       # secondes entre deux relevés d'état
+SEUIL_VIDE = 92000                 # même seuil que /api/archives.zip
+JOURNAL = os.path.join(os.path.dirname(os.path.abspath(__file__)), ".archives-faits.txt")
+
+MOIS_RE = re.compile(r"^(.+)__(\d{4})-(\d{2})-01_\2-\3-(?:28|29|30|31)\.(pdf|docx)$")
+
+
+def appeler(chemin, methode="GET", corps=None):
+    donnees = json.dumps(corps).encode() if corps is not None else None
+    entetes = {"Content-Type": "application/json"}
+    if TOKEN:
+        entetes["X-Cockpit-Token"] = TOKEN
+    req = urllib.request.Request(f"{BASE}{chemin}", data=donnees, headers=entetes, method=methode)
+    with urllib.request.urlopen(req, timeout=60) as r:
+        brut = r.read().decode()
+    return json.loads(brut) if brut.strip().startswith(("{", "[")) else brut
 
 
 def bornes_mois(annee, mois):
@@ -34,39 +67,67 @@ def bornes_mois(annee, mois):
 
 
 def get_chantiers():
-    with urllib.request.urlopen(f"{BASE}/api/chantiers", timeout=30) as r:
-        return [c for c in json.load(r).get("chantiers", []) if not c.get("supprime")]
+    d = appeler("/api/chantiers")
+    return [c for c in d.get("chantiers", []) if not c.get("supprime")]
 
 
 def get_runs():
-    with urllib.request.urlopen(f"{BASE}/api/runs", timeout=30) as r:
-        return json.load(r).get("runs", [])
+    d = appeler("/api/runs")
+    return d if isinstance(d, list) else d.get("runs", [])
 
 
-def generer(nom, debut, fin):
-    body = json.dumps({"chantier": nom, "date_debut": debut, "date_fin": fin,
-                       "envoyer": False, "declenchement": "archives"}).encode()
-    req = urllib.request.Request(f"{BASE}/api/generer", data=body,
-                                 headers={"Content-Type": "application/json"})
-    with urllib.request.urlopen(req, timeout=60) as r:
-        return r.status
+def dernier_id():
+    runs = get_runs()
+    return max((r.get("id", 0) for r in runs), default=0)
 
 
-def est_vide(stats):
-    """Un run est vide si Traxxeo 0 ET RT 0 ET BLL 0 (ou source inactive partout)."""
-    s = stats or ""
-    import re
-    nums = [int(x) for x in re.findall(r"(\d+)\s*(?:ligne|message|photo)", s)]
-    return sum(nums) == 0
+def attendre_fin(depuis_id, nom, debut):
+    """Attend qu'un run postérieur à depuis_id, pour ce chantier et ce mois, se termine."""
+    limite = time.time() + ATTENTE_MAX
+    while time.time() < limite:
+        time.sleep(SONDAGE)
+        try:
+            candidats = [
+                r for r in get_runs()
+                if r.get("id", 0) > depuis_id
+                and r.get("chantier") == nom
+                and r.get("periode_debut") == debut
+            ]
+        except Exception:
+            continue  # cockpit momentanément indisponible : on repasse
+        if candidats:
+            r = max(candidats, key=lambda x: x["id"])
+            if r.get("etape") == "Terminé":
+                return r
+    return None
+
+
+def lus_faits():
+    if not os.path.exists(JOURNAL):
+        return set()
+    with open(JOURNAL, encoding="utf-8") as f:
+        return {l.strip() for l in f if l.strip()}
+
+
+def noter_fait(cle):
+    with open(JOURNAL, "a", encoding="utf-8") as f:
+        f.write(cle + "\n")
 
 
 def cmd_bilan():
-    runs = [r for r in get_runs() if r.get("declenchement") == "archives"]
-    pleins = [r for r in runs if not est_vide(r.get("stats"))]
-    vides = [r for r in runs if est_vide(r.get("stats"))]
-    print(f"Runs archives : {len(runs)} — avec données : {len(pleins)} — vides (écartés) : {len(vides)}")
-    for r in sorted(pleins, key=lambda x: (x.get("chantier"), x.get("periode_debut"))):
-        print(f"  ✓ {r.get('chantier')}  {r.get('periode_debut')}→{r.get('periode_fin')}  | {r.get('stats')}")
+    """Ce que le ZIP contiendrait aujourd'hui : mêmes règles que /api/archives.zip."""
+    rapports = appeler("/api/reports")
+    mensuels = [r for r in rapports if MOIS_RE.match(r["fichier"])]
+    pdf = [r for r in mensuels if r["type"] == "pdf"]
+    pleins = sorted([r for r in pdf if r["taille"] >= SEUIL_VIDE],
+                    key=lambda x: (x["chantier"], x["periode"]))
+    vides = [r for r in pdf if r["taille"] < SEUIL_VIDE]
+    print(f"Rapports mensuels : {len(pdf)} — avec données : {len(pleins)} — vides (écartés) : {len(vides)}")
+    total = 0
+    for r in pleins:
+        total += r["taille"]
+        print(f"  ✓ {r['chantier']:32} {r['periode'][:7]}  {r['taille']/1048576:6.2f} Mo")
+    print(f"\nPoids des PDF retenus : {total/1048576:.0f} Mo (le ZIP contient aussi les Word)")
     return pleins
 
 
@@ -74,9 +135,13 @@ def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--go", action="store_true")
     ap.add_argument("--bilan", action="store_true")
-    ap.add_argument("--lot", type=int, default=0, help="taille de lot (0 = flux continu)")
+    ap.add_argument("--reprendre", action="store_true", help="sauter ce qui est déjà fait")
     ap.add_argument("--pause", type=float, default=PAUSE)
     args = ap.parse_args()
+
+    if not TOKEN:
+        print("COCKPIT_TOKEN absent : les routes /api/* du cockpit sont fermées depuis le 21/08.")
+        sys.exit(1)
 
     if args.bilan:
         cmd_bilan()
@@ -84,26 +149,59 @@ def main():
 
     chantiers = get_chantiers()
     taches = [(c["nom"], *bornes_mois(ANNEE, m)) for m in MOIS for c in chantiers]
-    print(f"{len(chantiers)} chantiers × {len(MOIS)} mois = {len(taches)} générations (≈ crédits PDFShift)")
+    faits = lus_faits() if args.reprendre else set()
+    restantes = [t for t in taches if f"{t[0]}|{t[1]}" not in faits]
+
+    print(f"{len(chantiers)} chantiers × {len(MOIS)} mois = {len(taches)} générations "
+          f"(≈ autant de crédits PDFShift)")
+    if faits:
+        print(f"déjà faites : {len(taches) - len(restantes)} — restantes : {len(restantes)}")
     if not args.go:
-        print("(dry-run — --go pour lancer)")
+        print("(simulation — --go pour lancer)")
         for c in chantiers:
             print(" -", c["nom"])
         return
 
-    n = 0
-    for nom, d, f in taches:
-        n += 1
+    debut_batch = time.time()
+    partiels, echecs = [], []
+    for n, (nom, d, f) in enumerate(restantes, 1):
+        avant = dernier_id()
         try:
-            generer(nom, d, f)
-            print(f"[{n}/{len(taches)}] {nom} {d[:7]}  ok", flush=True)
+            appeler("/api/generer", "POST", {
+                "chantier": nom, "date_debut": d, "date_fin": f,
+                "envoyer": False, "declenchement": "archives",
+            })
         except Exception as e:
-            print(f"[{n}/{len(taches)}] {nom} {d[:7]}  ÉCHEC : {e}", flush=True)
+            print(f"[{n}/{len(restantes)}] {nom} {d[:7]} — lancement en ÉCHEC : {e}", flush=True)
+            echecs.append((nom, d, str(e)))
+            continue
+
+        r = attendre_fin(avant, nom, d)
+        ecoule = time.time() - debut_batch
+        if r is None:
+            print(f"[{n}/{len(restantes)}] {nom} {d[:7]} — pas terminé après {ATTENTE_MAX//60} min", flush=True)
+            echecs.append((nom, d, "délai dépassé"))
+            continue
+
+        statut = r.get("statut", "?")
+        marque = "!" if statut != "Succès" else " "
+        print(f"[{n}/{len(restantes)}]{marque}{nom} {d[:7]} — {statut} — {r.get('stats','')} "
+              f"[{ecoule/60:.0f} min écoulées]", flush=True)
+        if statut != "Succès":
+            partiels.append((nom, d, statut, r.get("message", "")))
+        noter_fait(f"{nom}|{d}")
         time.sleep(args.pause)
-        if args.lot and n % args.lot == 0 and n < len(taches):
-            print(f"  …pause de lot ({PAUSE_LOT}s)…", flush=True)
-            time.sleep(PAUSE_LOT)
-    print("Terminé. Lance `python3 archives.py --bilan` puis le packaging ZIP.")
+
+    print(f"\nTerminé en {(time.time()-debut_batch)/60:.0f} min.")
+    if partiels:
+        print(f"\n{len(partiels)} rapport(s) non parfaits — à regarder :")
+        for nom, d, s, m in partiels:
+            print(f"  {nom} {d[:7]} — {s} — {m}")
+    if echecs:
+        print(f"\n{len(echecs)} échec(s) de lancement :")
+        for nom, d, e in echecs:
+            print(f"  {nom} {d[:7]} — {e}")
+    print("\nEnsuite : python3 archives.py --bilan, puis GET /api/archives.zip")
 
 
 if __name__ == "__main__":
