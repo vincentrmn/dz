@@ -88,6 +88,14 @@ Ce qui se passe le mercredi à 7 h (ou lors d'un clic sur « Générer le rappor
    à l'impression pour un besoin réel de 150–200 : aucune perte visible, et ~3,6× moins lourd
    (211 Ko → 59 Ko par photo). Sans ça, une semaine chargée produit un Word de plus de 25 Mo,
    au-dessus de la limite des pièces jointes email.
+   ⚠️ Les **vidéos** postées dans Teams arrivent par ce même canal `hostedContents`. Elles sont
+   **écartées à l'extraction** (`Extraire images RT` / `BLL`) : l'identifiant du contenu, encodé en
+   base64, décode en `…/views/imgo` pour une photo et `…/views/video` pour une vidéo. Sans ce filtre
+   elles étaient comptées comme photos attendues, se téléchargeaient, puis faisaient échouer le
+   redimensionnement (« No decode delegate for this image format ») — le rapport basculait en
+   « Succès partiel » à chaque run, sans que rien ne soit jamais récupérable. Elles sont désormais
+   signalées dans le journal (« N vidéo(s) RT non reprise(s) dans le rapport ») sans dégrader le
+   statut. Un rapport imprimable ne peut pas reproduire une vidéo.
 6. **Lecture Traxxeo** *(quand `traxxeo_actif=true`)*. Token OAuth2, puis `person_hrd` sur la période,
    filtré sur les WBS du chantier et sur `work_code_name = 'Heure travail'` (on exclut congés, trajets,
    jours fériés). Calcul des totaux par personne et par jour.
@@ -233,6 +241,7 @@ Le Hub est fermé : il faut un compte **@dzconstruct.lu** pour entrer. Le code v
 | Disque Postgres n8n | Les exécutions de test avec photos remplissent la base (crash « No space left on device » déjà vécu, volume agrandi à 5 GB) | Poser `EXECUTIONS_DATA_MAX_AGE=168` sur le service n8n (7 jours de rétention) — pas encore fait |
 | Run bloqué « En cours » | Si un nœud plante « dur », la ligne `dz_runs` n'est jamais clôturée | Diagnostic via n8n → Executions ; amélioration possible (statut Échec automatique) non prioritaire |
 | Plafond Graph sur les photos | `hostedContents` est limité à ~18 requêtes par ~20 s **par application** : au-delà, Graph répond 429. Les nœuds de téléchargement absorbent l'erreur (`onError: continueRegularOutput`), donc une photo perdue disparaît sans bruit | Téléchargement **par lots de 12 avec pause de 15 s** (`Lot images RT` + `Patienter RT`, idem BL&L) ; et surtout **contrôle du compte** : si des photos manquent, le run passe en « Succès partiel » avec « N photo(s) RT non téléchargée(s) ». Ne jamais remettre ces nœuds en téléchargement direct |
+| Vidéos postées dans Teams | Une vidéo passe par le même canal `hostedContents` qu'une photo : elle se télécharge, puis GraphicsMagick la refuse au redimensionnement. Comptée comme photo attendue, elle faisait basculer le rapport en « Succès partiel » indéfiniment | **Écartée à l'extraction** sur la vue `…/views/video` (`Extraire images RT`/`BLL`), et signalée pour information dans le journal du run. Ne pas la compter comme une perte : il n'y a rien à récupérer |
 | Poids des rapports | Les photos sont inlinées en base64 dans le HTML : sans redimensionnement, une semaine chargée dépasse 25 Mo en Word, au-dessus de la limite des pièces jointes email | Redimensionnement à 900 px / JPEG 78 dans le workflow (`Redimensionner images RT`/`BLL`). Surveiller le poids des fichiers sur la page Rapports quand une semaine est très fournie |
 | Pagination Graph | Pièges connus (`$top` dans l'URL uniquement, pas d'autre nœud référencé dans les expressions de pagination) | Documenté dans CLAUDE.md « Pièges connus » — ne pas retoucher ces nœuds sans relire |
 

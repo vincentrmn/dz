@@ -26,6 +26,22 @@ de 15 s** (nouveaux nœuds `Lot images RT` + `Patienter RT`, et jumeaux BL&L) et
 compte** (`nbImagesAttendues` vs `nbImages` dans `Assembler RT`/`BLL` → « Succès partiel » + « N photo(s)
 RT non téléchargée(s) » dans le journal). Mesuré sur 25.07 Ecole-Brouch : semaine 22→28/06 passée de
 30 à **66/66 photos** ; quinzaine 15→30/06 de 28 à **106 photos RT + 26 BL&L**, sans perte.
+**Correctif du 02/09 — vidéos Teams comptées comme photos (résolu, testé en prod) :** cinq rapports
+du batch d'archives restaient bloqués en « Succès partiel » avec exactement le même compte sur deux
+passes indépendantes. Diagnostic : deux causes distinctes, aucune réparable par un nouvel essai.
+(1) **Des vidéos** — postées dans Teams, elles passent par le même canal `hostedContents` que les
+photos, se téléchargent très bien (`video/mp4`, 1,4 à 2 Mo), puis `Redimensionner images` les refuse
+(`gm identify: No decode delegate for this image format`). Comptées comme photos attendues, elles
+faisaient basculer le rapport à chaque run, indéfiniment. (2) **Des contenus supprimés côté Teams** —
+Graph répond **404 NotFound** : il n'y a plus rien à récupérer. Corrigé pour (1) en écartant les
+vidéos **à l'extraction** (`Extraire images RT`/`BLL`) : l'identifiant du contenu, encodé en base64,
+décode en `…/views/imgo` pour une photo et `…/views/video` pour une vidéo. Elles ne sont plus comptées,
+plus téléchargées (quota Graph économisé), et sont **signalées dans le journal** (« N vidéo(s) RT non
+reprise(s) dans le rapport ») sans dégrader le statut. ⚠️ Le filtre est volontairement **étroit** : une
+vue inconnue ou un identifiant illisible reste traité comme une photo, pour ne jamais perdre une photo
+par excès de zèle. Testé en prod sur les 3 cas vidéo (tous passés en « Succès ») et en non-régression
+sur un rapport de 110 photos : **PDF et Word identiques à l'octet près** avant/après.
+
 **Deux suites traitées dans la foulée (21/08) :**
 - **Poids des rapports** : récupérer toutes les photos faisait passer le Word au-delà de 25 Mo (limite
   des pièces jointes email). Les photos étaient inlinées à leur résolution d'origine (~211 Ko,
@@ -173,6 +189,9 @@ sont neuves par définition. Non fait, non prioritaire.
 - Un nœud HTTP en `responseFormat: file` **conserve le json d'entrée** (c'est ce qui permet de retrouver
   `date`/`url` sur chaque image) — mais **pas sur les items en échec**, dont le json est remplacé par
   l'objet d'erreur. Ne jamais compter les photos en se fiant aux items de sortie seuls.
+- Une **vidéo** postée dans Teams arrive par le même `hostedContents` qu'une photo, et casse le
+  redimensionnement (GraphicsMagick n'a pas de décodeur vidéo). Elle est écartée à l'extraction sur
+  la vue `…/views/video` — ne pas supprimer ce filtre, sinon retour du « Succès partiel » perpétuel.
 - Les exécutions de test avec photos remplissent le Postgres n8n (crash « No space left on device » déjà vécu) : recommandé `EXECUTIONS_DATA_MAX_AGE=168` sur le service n8n (pas encore posé).
 
 ### PDFShift / rapport
