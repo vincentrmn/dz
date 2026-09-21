@@ -95,7 +95,7 @@
       <li>Nommer chacune avec <strong>le code du chantier</strong>, puis <code>-BL&amp;L-</code> ou <code>-RT-</code>, puis le nom du chantier.</li>
     </ol>
     <div class="exemple">
-      <div class="ex-ok">✓ <code>22.06-BL&amp;L-Gaichel-Maisons</code> &nbsp;et&nbsp; <code>22.06-RT-Gaichel-Maisons</code></div>
+      <div class="ex-ok">✓ <code>22.06A-BL&amp;L-Gaichel-Maisons</code> &nbsp;et&nbsp; <code>22.06A-RT-Gaichel-Maisons</code></div>
       <div class="ex-ko">✗ <code>Gaichel bons de livraison</code> : sans code chantier ni repère BL&amp;L/RT, la conversation ne sera pas détectée.</div>
     </div>
     <p>
@@ -103,12 +103,19 @@
       mais l'ordre <em>code · repère · nom</em> est la convention à suivre. Le code chantier (ex. <code>22.06</code>)
       doit correspondre aux codes WBS utilisés dans Traxxeo pour que les heures soient rattachées au bon chantier.
     </p>
+    <p>
+      Quand un chantier est <strong>divisé en plusieurs parties</strong> (A, B, C…), chaque partie a son propre rapport :
+      créez deux conversations par partie et <strong>collez la lettre au code</strong>, sans espace, dans Teams comme dans
+      Traxxeo : <code>22.06A</code>, <code>22.06B</code>, <code>22.06C</code>. L'outil tolère un espace (<code>22.06 A</code>)
+      ou une minuscule, mais la lettre collée est la règle : c'est elle qui apparaît dans le nom du rapport et l'objet du mail.
+      Un code sans lettre (<code>22.06</code>) reste un chantier à part entière, distinct de <code>22.06A</code>.
+    </p>
 
     <h2 id="activer">Activer un nouveau chantier</h2>
     <ol class="liste-pas">
       <li>Créez les deux conversations Teams comme expliqué ci-dessus.</li>
       <li>Sur le Dashboard, cliquez sur <strong>« Scan des nouveaux chantiers »</strong> (sinon, le scan tourne de toute façon chaque lundi matin). Le chantier apparaît alors dans la liste, <strong>inactif</strong>, avec ses conversations préremplies.</li>
-      <li>Ouvrez sa <strong>Configuration des sources</strong> : vérifiez le nom et les <strong>codes WBS Traxxeo</strong>. Le scan préremplit le code déduit du nom Teams (ex. <code>22.06</code>), mais certains chantiers sont découpés en plusieurs lots dans Traxxeo : dans ce cas, indiquez tous les codes séparés par <code>;</code> (ex. <code>22.06 A;22.06 B</code>). Ce préremplissage deviendra entièrement automatique quand l'accès à l'API Traxxeo sera actif.</li>
+      <li>Ouvrez sa <strong>Configuration des sources</strong> : vérifiez le nom et les <strong>codes WBS Traxxeo</strong>. Le scan préremplit le code déduit du nom Teams (ex. <code>22.06A</code> pour une partie de chantier, lettre collée). Si un même rapport doit couvrir plusieurs codes Traxxeo, indiquez-les séparés par <code>;</code> (ex. <code>25.07;25.08</code>). Ce préremplissage deviendra entièrement automatique quand l'accès à l'API Traxxeo sera actif.</li>
       <li>Cliquez sur <strong>Enregistrer les modifications</strong>, puis passez l'interrupteur du chantier sur <strong>actif</strong>.</li>
     </ol>
     <p>C'est tout : dès le mercredi suivant, le chantier aura son rapport hebdomadaire. Vous pouvez aussi générer un rapport immédiatement avec le bouton « Générer le rapport » pour vérifier.</p>
