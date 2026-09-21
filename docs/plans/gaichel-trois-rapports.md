@@ -86,7 +86,7 @@ Chaque critère démarre à « échec » et ne passe à « réussi » qu'avec un
 
 | # | Critère | Preuve attendue | État |
 |---|---|---|---|
-| 1 | La normalisation rend égaux `22.06A`, `22.06 A`, `22.06 a`, ` 22.06 A `, et distincts `22.06`/`22.06A` et `22.06A`/`22.06B` | Fonction extraite du jsCode dans le scratchpad, `node -e` sur les huit couples sort 0 | échec |
+| 1 | La normalisation rend égaux `22.06A`, `22.06 A`, `22.06 a`, ` 22.06 A `, et distincts `22.06`/`22.06A` et `22.06A`/`22.06B` | Fonction extraite du jsCode dans le scratchpad, `node -e` sur les huit couples sort 0 | réussi : `normaliserCode = s => String(s ?? '').replace(/\s+/g, '').toUpperCase()` ; `node test-normaliser.js` (21/09) → « 8 couples, 0 écart », exit 0 |
 | 2 | Le nœud vivant `Mapper activité Traxxeo` porte la normalisation, workflow publié, `Lancer génération` toujours en `waitForSubWorkflow: true` | `get_workflow` `qZG6Q5LnQSrloeXR` (jsCode) + réponse `publish_workflow` ; `get_workflow` `5su1DOeswBlCdakw` | échec |
 | 3 | Non-régression : fiche 1 (wbs inchangé) régénérée sur W donne le même « Traxxeo : N ligne(s) » avant et après le changement du nœud | Deux lignes `GET /api/runs` fiche 1, période W, même N, statut Succès | échec |
 | 4 | Trois fiches distinctes et complètes | `GET /api/chantiers` : noms contenant `22.06A`, `22.06B`, `22.06C`, six IDs de conversation non vides et tous différents, wbs `22.06A`/`22.06B`/`22.06C`, `actif=true`, `mail_actif=true`, emails `dzconstruct@dzconstruct.lu` | échec |
