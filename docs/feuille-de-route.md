@@ -3,10 +3,10 @@
 À faire, prochaine étape, ce qui attend l'humain. Mis à jour en fin de session.
 
 ## Prochaine étape
-- Lot 1 du plan `docs/plans/gaichel-trois-rapports.md` fait, PR #3 ouverte
-  (https://github.com/vincentrmn/dz/pull/3). Reste le lot 2 (découverte : normalisation de la clé
-  et lettre collée, guide, BIBLE, CLAUDE.md, communication à Francis) avant le scan du lundi
-  28/09 06:30.
+- PR #3 livrée le 21/09 (merge `9321b28`, déploiement Railway SUCCESS, smoke en ligne PASS). Reste
+  le lot 2 (découverte : normalisation de la clé et lettre collée, guide, BIBLE, CLAUDE.md,
+  communication à Francis) avant le scan du lundi 28/09 06:30 : session neuve avec
+  `/construire docs/plans/gaichel-trois-rapports.md` lot 2.
 
 ## À faire
 - [ ] Saisir dans le Dashboard les IDs des conversations Teams `22.06A-…` et `22.06C-…` (RT et
@@ -26,10 +26,12 @@
 - [ ] Protéger `main` sur GitHub : Settings, Branches, « Require status checks to pass », choisir `check`.
 - [ ] Décider d'un staging Railway pour le cockpit (aujourd'hui : un seul service, déploiement
       direct de `main`).
+- [ ] Vérifier en session connectée (login Microsoft) le Dashboard (quatre cartes Gaichel : trois
+      actives A/B/C, une inactive) et la page Rapports (rapports A/B/C du 14→20/09) sur la prod.
 
 ## Fait
-- 21/09 : lot 1 Gaichel (normalisation WBS publiée, fiches 22.06A/B/C, fiche 1 désactivée, chapitre 1
-  de Gaichel rétabli après un mois à 0 ligne).
+- 21/09 : lot 1 Gaichel livré (PR #3, normalisation WBS publiée, fiches 22.06A/B/C, fiche 1
+  désactivée, chapitre 1 de Gaichel rétabli après un mois à 0 ligne).
 - 21/09 : plan Gaichel A/B/C validé et fusionné ; workflow korr installé (agents, skills, portiques,
   CI, check, règles, mémoire rangée).
 - 02/09 : vidéos Teams écartées à l'extraction. 25/08 : email par Graph allumé sur les chantiers

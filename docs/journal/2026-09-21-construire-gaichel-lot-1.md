@@ -94,10 +94,35 @@ Suite de `docs/journal/2026-09-21-cadrage-gaichel-trois-rapports.md` et de
 - Le jeton cockpit a été fourni en chat et gardé hors du dépôt : `.verif/` est désormais dans
   `.gitignore` pour que rien de ce dossier de preuves ne parte au commit.
 
+## Livraison
+- État de la PR #3 vérifié par les outils GitHub avant merge : CI `check` verte sur le dernier
+  commit (`2f8e66f`), `mergeable_state: clean`, aucun fil de relecture ni commentaire en attente.
+  Pas de staging pour ce projet (déploiement direct de `main`), donc aucun retour de Vincent sur
+  staging à intégrer.
+- Squash-merge vers `main` à 11:07 UTC, commit `9321b28`, titre « Gaichel en trois rapports hebdo,
+  lot 1 : normalisation des WBS, fiches 22.06A/B/C, fiche 1 désactivée (#3) ».
+- Déploiement Railway automatique du service cockpit : déploiement `9d843a26`, statut `SUCCESS` à
+  11:07:56 UTC, 37 secondes après le merge.
+- Smoke en ligne par le sous-agent vérificateur à 11:10 UTC, verdict PASS :
+  - `GET https://cockpit-production-c3dc.up.railway.app/api/health` → 200, corps
+    `{"cockpit":"ok","n8n":"ok","stockage":"ok","rapports":477,"version":"2.2.0"}` (critère 11 du
+    plan, volet déploiement, désormais réussi).
+  - Routes gardées sans session : `/`, `/rapports`, `/configuration`, `/guide` → 302 vers
+    `/login?suite=…` ; `/api/chantiers`, `/api/reports` → 401 JSON. Aucun 500, aucune page blanche.
+  - `/icons/equipes.png` et `/icons/illustrations.png` → 200 sans authentification (PDFShift les
+    lit par URL).
+  - Webhook public `dz/api/chantiers` → 200 : `22.06-Gaichel-Maisons` `actif=false` ; `22.06A`,
+    `22.06B`, `22.06C Gaichel-Maisons` `actif=true`.
+  - Webhook public `dz/api/runs` → 200 : run 314 fiche 1 0 ligne, 315 fiche 1 31 lignes, 316 B
+    23 lignes, 317 A 8 lignes, 318 C 0 ligne, tous « Succès ».
+- Non vérifié : le rendu des pages en session connectée (login Microsoft), que seul Vincent peut
+  voir ; aucune route testée avec le jeton `X-Cockpit-Token` à ce stade de la livraison.
+
 ## Prochaine étape
-PR du lot 1 vers `main`. Puis, dans une nouvelle session, lot 2 (découverte : normalisation de la
-clé et lettre collée, guide, BIBLE, CLAUDE.md, communication à Francis) à publier avant le scan du
-lundi 28/09 06:30. Dès que Francis a ajouté le compte assembleur aux conversations `22.06A-…` et
-`22.06C-…`, saisir leurs quatre IDs de conversation dans le Dashboard. Le run hebdo du mercredi
-23/09 partira avec trois mails Gaichel (A et C avec le chapitre 1 seul) et plus de mail pour la
-fiche 1.
+Dans une nouvelle session : `/construire docs/plans/gaichel-trois-rapports.md` lot 2 (découverte :
+normalisation de la clé et lettre collée, guide, BIBLE, CLAUDE.md, communication à Francis) à
+publier avant le scan du lundi 28/09 06:30. Dès que Francis a ajouté le compte assembleur aux
+conversations `22.06A-…` et `22.06C-…`, saisir leurs quatre IDs de conversation dans le Dashboard.
+Le run hebdo du mercredi 23/09 partira avec trois mails Gaichel (A et C avec le chapitre 1 seul) et
+plus de mail pour la fiche 1. Vincent : vérifier en session connectée le Dashboard (quatre cartes
+Gaichel) et la page Rapports (rapports A/B/C du 14→20/09) sur la prod.
