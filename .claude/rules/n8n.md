@@ -44,7 +44,11 @@ Contexte : `docs/contexte/traxxeo.md`, `docs/contexte/microsoft-graph-teams.md`,
 - Pagination Graph : `?$top=50` dans l'URL (jamais en queryParameters) ; fin sur
   `{{ !$response.body["@odata.nextLink"] }}` sans référencer d'autre nœud (échec silencieux).
 - L'échec Traxxeo est silencieux (chapitre 1 vide, statut Succès) : surveiller « Traxxeo : N ligne(s) »
-  dans le journal ; un WBS mal orthographié dans la fiche vide aussi le chapitre 1.
+  dans le journal ; un WBS mal orthographié dans la fiche vide aussi le chapitre 1. Depuis le 21/09,
+  `Mapper activité Traxxeo` compare le WBS de la fiche et `wbs_ref_number` après normalisation
+  (espaces retirés, majuscules) : un chapitre 1 à 0 ligne sur un chantier actif reste un signal, pas
+  une donnée (Gaichel est resté vide un mois parce que Traxxeo était passé de `22.06 A` à `22.06A`) —
+  vérifier le WBS Traxxeo brut dans l'exécution n8n avant de conclure à une semaine sans pointage.
 - PDFShift : body en « Using Fields Below », jamais `JSON.stringify` en mode JSON (« Rogue field ») ;
   `sandbox=false` en prod ; `running()` CSS ne marche pas (logo première page seulement).
 - Pour pousser le jsCode de `Préparer rapport` (gros logo base64) : vérifier le sha256 avant/après.
