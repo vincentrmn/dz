@@ -115,8 +115,8 @@ donc toujours la solution la plus simple qui remplit le besoin, rien de spécula
 ## 8. Où on en est (21/09/2026)
 
 Tout tourne en prod : rapport hebdo complet, Traxxeo actif, login Microsoft, email par Graph allumé,
-archives mensuelles janv→juil. Huit chantiers actifs, dont Gaichel en trois fiches `22.06A`/`22.06B`/`22.06C`
-(plan `docs/plans/gaichel-trois-rapports.md` : lot 1 livré le 21/09, lot 2 en PR). Codes chantier :
+archives mensuelles janv→juil. Dix chantiers actifs, dont Gaichel en trois fiches `22.06A`/`22.06B`/`22.06C`
+(plan `docs/plans/gaichel-trois-rapports.md`, deux lots construits le 21/09). Codes chantier :
 lettre collée (`22.06A`), comparés après normalisation dans le générateur et la découverte. Reste :
 saisir les conversations Teams de A et C dès que Francis a ajouté le compte assembleur ; bugs
 remontés par Francis (liste à venir) ; premier vrai login DZ ; relecture du guide. Workflow korr
