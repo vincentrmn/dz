@@ -74,6 +74,21 @@ Francis).
   identique sur `origin/main` : préexistant, hors périmètre de ce lot, déjà constaté sur le Dashboard
   au lot 1.
 - Le rendu en session connectée (login Microsoft) : impossible à tester depuis ici.
+- Après la livraison : le contenu de `/guide` en ligne (présence de `22.06A`) ; le MCP Railway masque
+  les valeurs des variables, donc pas de jeton `X-Cockpit-Token` disponible depuis ici pour tester une
+  route protégée. À confirmer par Vincent en session connectée, ou avec le jeton donné en chat.
+
+### Constat après livraison
+Francis dit que le compte `assembleur@dzconstruct.lu` est déjà membre de toutes les conversations
+Gaichel, mais la liste complète renvoyée par Graph pour ce compte lors du scan de découverte 9769
+(232 conversations, 6 pages, relue intégralement) ne contient que `22.06B-BL&L-Gaichel-Maisons` et
+`22.06B-RT-Gaichel-Maisons` (renommées le 04/09 à 06:20), aucune `22.06A-…` ni `22.06C-…`, aucune
+conversation de groupe créée depuis le 04/09 hormis `HUB-DZconstruct`, et les six groupes sans nom
+datent de 2025. Hypothèse la plus probable : les conversations A et C sont des canaux dans une équipe
+Teams (que `/chats` ne liste pas), pas des conversations de groupe. Question posée à Vincent, à
+transmettre à Francis : où voit-il ces conversations (onglet « Conversation » ou une équipe) ? Deux
+issues possibles : recréer A et C en conversations de groupe, ou faire évoluer l'outil pour lire les
+canaux (hors périmètre du plan, décision à prendre).
 
 ## Leçons durables (reportées dans les règles ou les skills)
 - `.claude/rules/n8n.md` (section « Pièges vérifiés ») : dans `Rapprocher découvertes`, le code
@@ -84,7 +99,30 @@ Francis).
   semaines de scans. Tester le jsCode en local avec un stub de `$()` et les fiches réelles avant
   `update_workflow`.
 
+## Livraison
+- État de la PR #5 vérifié avant merge : CI `check` verte sur le dernier commit (`2341179`),
+  `mergeable_state: clean`, aucun fil de relecture ni commentaire en attente. Pas de staging pour ce
+  projet.
+- Squash-merge vers `main` à 18:29 UTC, commit `17def40`, titre « Gaichel en trois rapports hebdo,
+  lot 2 : découverte à lettre collée, guide, BIBLE, CLAUDE.md (#5) ».
+- Déploiement Railway automatique du service cockpit : déploiement `39b2c671`, statut `SUCCESS` à
+  18:30:31 UTC.
+- Smoke en ligne par le sous-agent vérificateur, verdict PASS :
+  - `GET https://cockpit-production-c3dc.up.railway.app/api/health` → 200, corps
+    `{"cockpit":"ok","n8n":"ok","stockage":"ok","rapports":477,"version":"2.2.0"}`.
+  - Routes gardées sans session : `/`, `/rapports`, `/configuration`, `/guide` → 302 vers
+    `/login?suite=…` ; `/api/chantiers`, `/api/reports` → 401.
+  - `/icons/equipes.png` et `/icons/illustrations.png` → 200 sans authentification.
+  - Webhook public `dz/api/chantiers` → 200 : 18 fiches, `22.06A/B/C Gaichel-Maisons` actives,
+    `22.06-Gaichel-Maisons` inactive, 0 différence avec le relevé d'après scan.
+- Non vérifié : le contenu de `/guide` en ligne (présence de `22.06A`), faute de jeton
+  `X-Cockpit-Token` disponible depuis ici (le MCP Railway masque les valeurs des variables) ; à
+  confirmer par Vincent en session connectée, ou avec le jeton donné en chat. Rendu connecté non
+  testable depuis ici. Voir aussi le constat sur les conversations A/C ci-dessus.
+
 ## Prochaine étape
-`/livrer <PR>` (déploiement auto, smoke : `/api/health`, `curl …/guide` avec jeton contient
-`22.06A`), puis saisie des IDs de conversation A et C dans le Dashboard dès que Francis a ajouté le
-compte assembleur ; le run du mercredi 23/09 partira avec trois mails Gaichel.
+Lot 2 livré, plan Gaichel terminé côté outil. Prochaine étape : trancher avec Francis le cas des
+conversations `22.06A-…` et `22.06C-…` (conversations de groupe à recréer, ou canaux d'équipe Teams
+à faire lire par l'outil), puis saisir leurs IDs dans le Dashboard. Le scan de découverte suivant
+(lundi 28/09 06:30, ou manuel) ne complétera les fiches A et C que si le compte assembleur devient
+membre de conversations de groupe visibles par `/chats`.
