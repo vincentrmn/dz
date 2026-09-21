@@ -1,0 +1,20 @@
+# CI du Hub Rapport Technique (modèle korr-workflow, ci/ci.yml). Lance
+# `npm run check` (syntaxe, lint, tests) sur chaque PR et sur main. Aucun
+# secret : check ne touche ni n8n, ni Railway, ni Microsoft.
+name: check
+on:
+  pull_request:
+  push:
+    branches: [main]
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci --no-audit --no-fund
+      - run: npm run check
