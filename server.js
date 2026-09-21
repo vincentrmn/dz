@@ -290,8 +290,14 @@ app.get('/guide', (req, res) => res.sendFile(path.join(__dirname, 'public', 'gui
 app.get('/rapports', (req, res) => res.sendFile(path.join(__dirname, 'public', 'rapports.html')));
 app.get('/configuration', (req, res) => res.sendFile(path.join(__dirname, 'public', 'configuration.html')));
 
-app.listen(PORT, () => {
-  console.log(`Hub Rapport Technique DZ — port ${PORT}`);
-  console.log(`Webhooks n8n : ${N8N_WEBHOOK_BASE}`);
-  console.log(`Rapports : ${REPORTS_DIR}`);
-});
+// Lancé directement (`node server.js`, Railway) : on écoute. Chargé par un test
+// (`require('../server')`) : on n'écoute pas, on expose les fonctions pures.
+if (require.main === module) {
+  app.listen(PORT, () => {
+    console.log(`Hub Rapport Technique DZ — port ${PORT}`);
+    console.log(`Webhooks n8n : ${N8N_WEBHOOK_BASE}`);
+    console.log(`Rapports : ${REPORTS_DIR}`);
+  });
+}
+
+module.exports = { app, htmlPourWord, forcerWordModerne, MOIS_RE, SEUIL_VIDE };
