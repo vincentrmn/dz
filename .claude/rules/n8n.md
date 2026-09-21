@@ -54,3 +54,9 @@ Contexte : `docs/contexte/traxxeo.md`, `docs/contexte/microsoft-graph-teams.md`,
 - Pour pousser le jsCode de `Préparer rapport` (gros logo base64) : vérifier le sha256 avant/après.
 - Les exécutions de test avec photos remplissent le Postgres n8n (« No space left on device » déjà
   vécu) : `EXECUTIONS_DATA_MAX_AGE=168` reste à poser sur le service n8n.
+- Dans `Rapprocher découvertes` (`DZ — Découverte chantiers`), le code chantier est dérivé du nom
+  Teams par une regex ; une lettre de partie n'est reconnue que si la regex l'accepte collée ET
+  espacée (`\s*([A-Z])?` avec un lookahead qui refuse une lettre suivie d'une autre lettre, sinon
+  `22.06 Gaichel` donnerait `22.06G`). L'ancien code (`(\s+[A-Z])?`) rabattait `22.06A-…` sur `22.06`
+  en silence : aucune fiche A/C créée malgré des semaines de scans (cas Gaichel, 21/09). Tester le
+  jsCode en local avec un stub de `$()` et les fiches réelles avant `update_workflow`.
