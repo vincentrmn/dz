@@ -98,7 +98,12 @@ Ce qui se passe le mercredi à 7 h (ou lors d'un clic sur « Générer le rappor
    statut. Un rapport imprimable ne peut pas reproduire une vidéo.
 6. **Lecture Traxxeo** *(quand `traxxeo_actif=true`)*. Token OAuth2, puis `person_hrd` sur la période,
    filtré sur les WBS du chantier et sur `work_code_name = 'Heure travail'` (on exclut congés, trajets,
-   jours fériés). Calcul des totaux par personne et par jour.
+   jours fériés). Calcul des totaux par personne et par jour. Depuis le 21/09/2026, le nœud
+   `Mapper activité Traxxeo` compare les codes de la fiche (`wbs`, séparés par `;`) et le
+   `wbs_ref_number` de chaque ligne **après normalisation** (espaces retirés, majuscules) : `22.06A`,
+   `22.06 A` et `22.06 a` sont le même code, `22.06` et `22.06A` restent distincts (égalité stricte,
+   pas de préfixe). Un chantier divisé en parties (Gaichel `22.06A`/`22.06B`/`22.06C`) a une fiche
+   par partie, donc un rapport et un mail par partie.
 7. **Assemblage.** Le nœud `Fusionner sources` regroupe tout par jour ; `Préparer rapport` génère le
    HTML final (logo, page de garde, icônes de chapitres servies par le Hub, tableaux d'heures, photos).
 8. **Conversions et dépôt.** Le HTML part chez PDFShift (→ PDF) et vers le Hub (`/api/convert/docx`,
@@ -128,7 +133,7 @@ Ce qui se passe le mercredi à 7 h (ou lors d'un clic sur « Générer le rappor
 |---|---|---|---|
 | DZ — Rapport hebdo | `5su1DOeswBlCdakw` | Webhook `dz/generer` + cron horaire (créneau configurable) | Orchestrateur : calcule la période, sélectionne les chantiers, lance le générateur pour chacun |
 | DZ — Générer rapport chantier | `qZG6Q5LnQSrloeXR` | Appelé par l'orchestrateur (sous-workflow) | Toute la chaîne du §4, étapes 4 à 11 |
-| DZ — Découverte chantiers | `49okCW9O85lYsP3r` | Cron lundi 06:30 + webhook `dz/decouverte` (bouton Scan) | Parcourt les conversations Teams du compte assembleur, repère `-BL&L-`/`-BLL-`/`-RT-` dans les noms, normalise les codes chantier (`CH:22-06 B` → `22.06 B`), crée les nouveaux chantiers **inactifs**, complète les IDs manquants des existants, ignore les supprimés |
+| DZ — Découverte chantiers | `49okCW9O85lYsP3r` | Cron lundi 06:30 + webhook `dz/decouverte` (bouton Scan) | Parcourt les conversations Teams du compte assembleur, repère `-BL&L-`/`-BLL-`/`-RT-` dans les noms, normalise les codes chantier avec la lettre collée en majuscule (`CH:22-06 B`, `22.06 B` et `22.06b` → `22.06B`, distinct de `22.06`), rattache chaque conversation à la fiche dont le nom (sinon le WBS) porte ce code, crée les nouveaux chantiers **inactifs** (nom `22.06B-Gaichel-Maisons`, wbs `22.06B`), complète les IDs manquants des existants, ignore les supprimés (jamais recréés) |
 | DZ — Cockpit API | `FCZLzT8cabm3s3GE` | 7 webhooks `dz/api/*` | Le « backend » du Hub : lecture/écriture des chantiers (dont suppression soft et restauration), journal des runs, contacts, réglages |
 
 Règle d'or n8n : après toute modification d'un workflow, **le publier** (sinon la modif n'est pas active).
@@ -235,7 +240,7 @@ Le Hub est fermé : il faut un compte **@dzconstruct.lu** pour entrer. Le code v
 | Compte assembleur requis dans chaque conversation | La découverte ne voit que les conversations dont `assembleur@dzconstruct.lu` est membre : une conversation créée sans lui est invisible | Règle d'usage à la création (voir `/guide`) ; ou bascule vers des canaux d'équipe Teams (lecture sans compte membre, ~quelques heures d'adaptation) — décision Francis |
 | Pièce jointe absente sur les gros rapports | Graph refuse un `sendMail` au-delà de 4 Mo : les semaines très fournies partent avec les liens seuls | Le message le dit explicitement, et le journal `dz_runs` note « email envoyé sans pièce jointe ». Si la pièce jointe devient indispensable partout : session d'envoi en plusieurs morceaux |
 | Secret Microsoft expirant | Le client_secret de l'app Graph a une date d'expiration fixée par CBC | Calendrier de renouvellement avec Benoît ; mise à jour ensuite dans les nœuds `Auth Microsoft` |
-| Échec Traxxeo silencieux | Si l'auth ou l'API Traxxeo échoue, le chapitre 1 sort vide avec un statut Succès (les nœuds absorbent l'erreur) | Surveiller « Traxxeo : N ligne(s) » dans les stats de la page Debug ; N=0 sur une semaine travaillée = anomalie |
+| Échec Traxxeo silencieux | Si l'auth ou l'API Traxxeo échoue, le chapitre 1 sort vide avec un statut Succès (les nœuds absorbent l'erreur). Même symptôme si le WBS de la fiche ne correspond pas au code renvoyé par Traxxeo : Gaichel est resté à 0 ligne un mois (fin août → 21/09/2026) parce que Traxxeo était passé de `22.06 A` à `22.06A` | Surveiller « Traxxeo : N ligne(s) » dans les stats de la page Debug ; N=0 sur une semaine travaillée = anomalie. Depuis le 21/09/2026 la comparaison est normalisée (espaces, casse) ; avant de conclure à une semaine sans pointage, lire le `wbs_ref_number` brut dans l'exécution n8n du générateur |
 | Comptes personnels | Railway, PDFShift, Gmail de test appartiennent à Vincent | Séquence de passation complète dans `CLAUDE.md`, section « Passation à DZ » |
 | Crédits PDFShift | Chaque PDF consomme des crédits payants | Surveiller le solde ; budgéter le backfill GAMMA |
 | Disque Postgres n8n | Les exécutions de test avec photos remplissent la base (crash « No space left on device » déjà vécu, volume agrandi à 5 GB) | Poser `EXECUTIONS_DATA_MAX_AGE=168` sur le service n8n (7 jours de rétention) — pas encore fait |
@@ -302,7 +307,7 @@ après BETA, manuel PDF final.
 | **Workflow** | Un enchaînement d'étapes automatisées dans n8n (lire, transformer, envoyer…) |
 | **Webhook** | Une URL qui déclenche un workflow quand on l'appelle |
 | **Cron** | Un déclencheur qui se réveille à heure fixe |
-| **WBS** | Le code de découpage d'un chantier dans Traxxeo (ex. `22.06 A`) |
+| **WBS** | Le code de découpage d'un chantier dans Traxxeo (ex. `22.06A` : chantier `22.06`, partie A, lettre collée ; l'outil tolère `22.06 A`) |
 | **Graph** | L'API de Microsoft pour lire Teams (et bientôt envoyer les emails) |
 | **Data Table** | Une petite table de données intégrée à n8n (notre configuration et notre journal) |
 | **Volume** | Le disque persistant attaché au service Railway (nos rapports) |
