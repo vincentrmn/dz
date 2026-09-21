@@ -3,11 +3,14 @@
 À faire, prochaine étape, ce qui attend l'humain. Mis à jour en fin de session.
 
 ## Prochaine étape
-- Session neuve : `/construire docs/plans/gaichel-trois-rapports.md`. Lot 1 (trois rapports Gaichel
-  A/B/C, normalisation WBS, ancienne fiche désactivée) avant le mercredi 23/09 7 h ; lot 2
-  (découverte, guide, BIBLE, texte de communication à Francis) avant le scan du lundi 28/09 06:30.
+- Lot 1 du plan `docs/plans/gaichel-trois-rapports.md` fait, PR #3 ouverte
+  (https://github.com/vincentrmn/dz/pull/3). Reste le lot 2 (découverte : normalisation de la clé
+  et lettre collée, guide, BIBLE, CLAUDE.md, communication à Francis) avant le scan du lundi
+  28/09 06:30.
 
 ## À faire
+- [ ] Saisir dans le Dashboard les IDs des conversations Teams `22.06A-…` et `22.06C-…` (RT et
+      BL&L) dès que Francis a ajouté `assembleur@dzconstruct.lu` (demande faite le 21/09).
 - [ ] Bugs remontés par Francis : Vincent apporte la liste, à traiter.
 - [ ] Premier vrai login avec un compte DZ (Vincent ne peut pas le tester) ; puis régénérer le
       secret client de l'app login (il a circulé en clair) et noter sa date d'expiration.
@@ -25,6 +28,8 @@
       direct de `main`).
 
 ## Fait
+- 21/09 : lot 1 Gaichel (normalisation WBS publiée, fiches 22.06A/B/C, fiche 1 désactivée, chapitre 1
+  de Gaichel rétabli après un mois à 0 ligne).
 - 21/09 : plan Gaichel A/B/C validé et fusionné ; workflow korr installé (agents, skills, portiques,
   CI, check, règles, mémoire rangée).
 - 02/09 : vidéos Teams écartées à l'extraction. 25/08 : email par Graph allumé sur les chantiers
