@@ -8,3 +8,4 @@ dans `docs/journal/`. On n'y revient pas sans une raison nouvelle.
 - **21/09** Convention de nommage : lettre collée au code (`22.06A`) dans Teams et Traxxeo ; l'outil tolère l'espace (`22.06 A` = `22.06A` après normalisation, égalité stricte, jamais de préfixe) pour ne pas vider le chapitre 1 en silence pendant la transition.
 - **21/09** Nom des trois nouvelles fiches = celui produit par la découverte (`22.06A Gaichel-Maisons`), comme pour les autres chantiers.
 - **21/09** Trois mails Gaichel le mercredi acceptés : la règle du 30/07 « 1 mail = 1 chantier » ne change pas.
+- **21/09** A et C sont activées sans conversations Teams plutôt que d'attendre : chapitre 1 seul en attendant l'ajout du compte assembleur, plutôt qu'un rapport agrégé qui perdrait les heures de C.
