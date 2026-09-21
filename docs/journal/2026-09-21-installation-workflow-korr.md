@@ -3,7 +3,7 @@
 ## Ce qui a été décidé
 - Workflow korr installé dans dz (agents, skills, portiques, CI, mémoire rangée) : la méthode commune s'applique désormais ici, `/construire` exécute les plans.
 - `npm run check` = syntaxe (`node --check` via `scripts/syntaxe.sh`) + `eslint` (règles recommandées, quatre nuances de style désactivées pour ne pas retoucher le code existant éprouvé en prod : catch vides, erreurs attrapées non lues, échappements superflus, réaffectations inutiles) + `node --test tests/*.test.js` : le projet n'a pas de TypeScript, le check reste honnête et rapide.
-- L'ancien `CLAUDE.md` (321 lignes) est rangé verbatim dans `docs/contexte/` et `docs/journal/2026-09-02-etat-avant-workflow-korr.md`, vérifié ligne à ligne ; le nouveau fait 100 lignes environ.
+- L'ancien `CLAUDE.md` (321 lignes) est rangé verbatim dans `docs/contexte/` et `docs/journal/2026-09-02-etat-avant-workflow-korr.md`, vérifié ligne à ligne ; le nouveau fait 121 lignes.
 
 ## Ce qui a été fait
 - Clone de `vincentrmn/korr-workflow` (commit c5a7ef3) dans le bac à sable ; `scripts/installer.sh` lancé sur dz : 18 fichiers communs recopiés (5 agents, 6 skills cadrer/construire/livrer/journal/installer/staging, 5 portiques), `.claude/settings.json` et `.github/workflows/ci.yml` créés, `docs/decisions.md` laissé tel quel, gabarits `.gabarit.md` de plan et de journal posés, version notée dans `.claude/workflow-version`.
@@ -14,7 +14,7 @@
 - `server.js` : seul changement de code de la session, `app.listen` mis sous `require.main === module` et export de `app`, `htmlPourWord`, `forcerWordModerne`, `MOIS_RE`, `SEUIL_VIDE`, pour rendre le fichier testable sans le démarrer.
 - `.gitignore` : ajout de `.verif/`, `.verif-check.log`.
 - Deux règles par chemin créées : `.claude/rules/cockpit.md` (`server.js`, `auth.js`, `public/**`, `tests/**`) et `.claude/rules/n8n.md` (`n8n/**`, `scripts/**`), tirées des « Pièges connus » de l'ancien CLAUDE.md.
-- Ancien `CLAUDE.md` découpé verbatim en `docs/contexte/architecture.md`, `docs/contexte/traxxeo.md`, `docs/contexte/microsoft-graph-teams.md`, `docs/contexte/pieges.md`, `docs/contexte/conventions-francis-passation.md`, et copié intégralement dans `docs/journal/2026-09-02-etat-avant-workflow-korr.md`.
+- Ancien `CLAUDE.md` découpé verbatim en `docs/contexte/architecture.md`, `docs/contexte/traxxeo.md`, `docs/contexte/microsoft-graph-teams.md`, `docs/contexte/pieges.md`, `docs/contexte/conventions-francis-passation.md` ; la partie récit (point de situation, état des lots, roadmap) va dans `docs/journal/2026-09-02-etat-avant-workflow-korr.md`.
 - Nouveau `CLAUDE.md` écrit (huit sections du gabarit korr).
 - `docs/feuille-de-route.md` créée.
 
