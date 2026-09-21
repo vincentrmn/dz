@@ -1,6 +1,6 @@
 # Plan : Gaichel en trois rapports hebdo (22.06A, 22.06B, 22.06C)
 
-Écrit le 21/09/2026 par `/cadrer`, validé par Vincent le <à compléter>.
+Écrit le 21/09/2026 par `/cadrer`, validé par Vincent le 21/09/2026.
 Un plan tient sur une page. Il dit ce qu'on construit, ce qu'on ne construit
 pas, et comment on saura que c'est fini. Rien ici n'est du code.
 
@@ -65,6 +65,8 @@ fiches donnent déjà.
 - `docs/BIBLE.md` (§4 étape 6, §5 découverte, §9 « Échec Traxxeo silencieux », §12 WBS) et
   `CLAUDE.md` (ligne pilote caduque, acquis « Gaichel = 22.06 A + 22.06 B » remplacé, piège
   « comparaison WBS normalisée »).
+- Un texte de communication à Francis (dans le compte rendu de fin de lot 2, pas dans le dépôt),
+  que Vincent envoie lui-même : voir les points listés en fin de plan.
 
 ## Hors périmètre
 
@@ -107,8 +109,9 @@ Chaque critère démarre à « échec » et ne passe à « réussi » qu'avec un
    et création des trois fiches par « Ajouter un chantier » ; WBS, destinataire, activation ;
    désactivation de la fiche 1 ; trois générations sans email ; captures. À finir avant le mercredi
    23/09 7 h, sinon le run hebdo produit encore l'ancien rapport agrégé (acceptable, à dire à Vincent).
-2. **Lot 2, découverte et documentation** : critères 8, 9, 10, 11 (déploiement). À publier avant le
-   scan du lundi 28/09 06:30 : sinon le scan pourrait recréer des doublons inactifs des fiches du lot 1.
+2. **Lot 2, découverte et documentation** : critères 8, 9, 10, 11 (déploiement), puis le texte de
+   communication à Francis. À publier avant le scan du lundi 28/09 06:30 : sinon le scan pourrait
+   recréer des doublons inactifs des fiches du lot 1.
 
 ## Vérification de bout en bout
 
@@ -121,13 +124,12 @@ l'accès de secours, peut refaire une génération à la demande ; la validation
 
 ## Questions ouvertes
 
-- Nom des trois fiches : celui que produit la découverte (vraisemblablement `22.06A Gaichel-Maisons`,
-  comme `25.07 Ecole-Brouch-E/A`), qui fixe le nom des fichiers et l'objet des mails, ou le style du
-  pilote `22.06A-Gaichel-Maisons` ? Par défaut : ce que produit la découverte.
-- Semaine cible W et bascule : les nouvelles conversations viennent d'être créées. Par défaut
-  W = semaine du 14 au 20/09, générée sur les quatre fiches avant désactivation de la fiche 1.
-- Anciennes conversations `22.06-RT-…` et `22.06-BL&L-…` : ce qui y sera posté après la
-  désactivation n'apparaîtra dans aucun rapport. Vincent le dit-il à Francis (archiver ou renommer
-  côté DZ) ? Le plan ne touche pas Teams.
-- Réponse à Francis sur la consigne Traxxeo : la rigueur « lettre collée » devient la règle, mais
-  l'outil tolère l'espace ; Fares peut donc modifier Traxxeo quand il veut, sans coupure.
+Aucune. Tranchées par Vincent le 21/09 :
+
+- Nom des trois fiches : celui que produit la découverte, sur le modèle des autres chantiers
+  (`22.06A Gaichel-Maisons`), qui fixe le nom des fichiers et l'objet des mails.
+- Semaine cible W = du 14 au 20/09, générée sur les quatre fiches avant désactivation de la fiche 1.
+- Communication à Francis, préparée par Claude à la fin du lot 2 et envoyée par Vincent : la règle
+  « lettre collée » dans Teams et Traxxeo, la tolérance à l'espace (Fares modifie Traxxeo quand il
+  veut, sans coupure), les trois mails Gaichel du mercredi, et le sort des anciennes conversations
+  `22.06-RT-…` / `22.06-BL&L-…` (plus lues après la bascule : à archiver ou renommer côté DZ).
