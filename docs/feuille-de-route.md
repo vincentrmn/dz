@@ -3,26 +3,15 @@
 À faire, prochaine étape, ce qui attend l'humain. Mis à jour en fin de session.
 
 ## Prochaine étape
-- PR #3 (lot 1) livrée le 21/09 (merge `9321b28`, déploiement Railway SUCCESS, smoke en ligne PASS).
-  PR #5 (lot 2) livrée le 21/09 (merge `17def40`, déploiement Railway `39b2c671` SUCCESS, smoke en
-  ligne PASS) : plan Gaichel terminé côté outil. Prochaine étape : trancher avec Francis si les
-  conversations `22.06A-…` et `22.06C-…` sont des conversations de groupe (à recréer, le compte
-  assembleur n'y étant vu dans aucune) ou des canaux d'une équipe Teams (l'outil ne lit que les
-  conversations de groupe aujourd'hui, décision à prendre pour y ajouter le support) ; voir le
-  constat du 21/09 dans `docs/journal/2026-09-21-construire-gaichel-lot-2.md`. Ensuite seulement,
-  saisir leurs IDs dans le Dashboard.
+- Plan Gaichel terminé (PR #3 et #5 livrées le 21/09). Le 22/09, après un premier message posté par
+  DZ dans les conversations `22.06A-…` et `22.06C-…` (Teams ne les crée côté serveur qu'à ce
+  moment-là), le scan 10006 a complété les fiches A et C : six conversations distinctes sur A/B/C.
+  Le run du mercredi 23/09 7 h produira trois rapports Gaichel complets. Prochaine étape : les bugs
+  remontés par Francis (liste à venir) et la vérification connectée du Dashboard et de `/guide`.
 
 ## À faire
-- [ ] Envoyer à Francis le texte préparé le 21/09 (lettre collée, tolérance à l'espace, trois mails
-      Gaichel le mercredi, ajout du compte assembleur aux conversations `22.06A-…`/`22.06C-…`, anciennes
-      conversations `22.06-RT-…`/`22.06-BL&L-…` déjà renommées en B, rien à archiver) et, avec ce
-      texte, la question du constat du 21/09 : où Francis voit-il ces conversations (onglet
-      « Conversation » ou une équipe Teams) ? Le scan 9769 ne trouve, pour le compte assembleur,
-      aucune conversation de groupe `22.06A-…` ni `22.06C-…`.
-- [ ] Saisir dans le Dashboard les IDs des conversations Teams `22.06A-…` et `22.06C-…` (RT et
-      BL&L) une fois le cas groupe/canaux tranché avec Francis.
-- [ ] Vérifier après la première saisie de ces IDs que le scan de découverte suivant (lundi 28/09
-      06:30, ou manuel) complète les fiches 19 et 21 sans créer de doublon.
+- [ ] Nouvelle fiche `26.05-Logements-Leudelange` (id 22) créée inactive par le scan du 22/09 :
+      DZ vérifie le nom et le WBS, puis l'active si le chantier doit avoir son rapport.
 - [ ] Bugs remontés par Francis : Vincent apporte la liste, à traiter.
 - [ ] Premier vrai login avec un compte DZ (Vincent ne peut pas le tester) ; puis régénérer le
       secret client de l'app login (il a circulé en clair) et noter sa date d'expiration.
@@ -44,6 +33,9 @@
       bien les exemples `22.06A-…` (non testé depuis ici, le MCP Railway masque les variables).
 
 ## Fait
+- 22/09 : conversations A et C rattachées par le scan 10006 après le premier message posté par DZ
+  (cause du blocage : une conversation Teams sans message n'existe pas encore pour Graph) ; plan
+  Gaichel terminé de bout en bout ; fiche `26.05-Logements-Leudelange` découverte, inactive.
 - 21/09 : lot 2 Gaichel livré (PR #5, `17def40`, déploiement Railway `39b2c671` SUCCESS, smoke en
   ligne PASS) : découverte n8n corrigée pour la lettre collée, guide, BIBLE, CLAUDE.md, texte à
   Francis rédigé. Reste ouvert : le compte assembleur n'est vu dans aucune conversation de groupe
