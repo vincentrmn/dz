@@ -12,3 +12,7 @@ dans `docs/journal/`. On n'y revient pas sans une raison nouvelle.
 - **21/09** Workflow korr installé dans dz (agents, skills, portiques, CI, mémoire rangée) : la méthode commune s'applique désormais ici, `/construire` exécute les plans.
 - **21/09** `npm run check` = syntaxe (`node --check` via `scripts/syntaxe.sh`) + `eslint` (règles recommandées, quatre nuances de style désactivées pour ne pas retoucher le code existant éprouvé en prod : catch vides, erreurs attrapées non lues, échappements superflus, réaffectations inutiles) + `node --test tests/*.test.js` : le projet n'a pas de TypeScript, le check reste honnête et rapide.
 - **21/09** L'ancien `CLAUDE.md` (321 lignes) est rangé verbatim dans `docs/contexte/` et `docs/journal/2026-09-02-etat-avant-workflow-korr.md`, vérifié ligne à ligne ; le nouveau fait 121 lignes.
+- **25/09** Chaque run note « email envoyé à … » ou « email NON envoyé : <raison> » ; un envoi demandé (cron ou « Générer et envoyer ») qui ne part pas passe le run en « Succès partiel » : un « Succès » ne doit plus pouvoir cacher un mail non parti.
+- **25/09** Tout chantier reçoit `dzconstruct@dzconstruct.lu` par défaut (fiches vides remplies, découverte, bouton « Ajouter un chantier ») ; la règle du 30/07 « 1 mail = 1 chantier » ne change pas.
+- **25/09** 26.07 MaisonFluhe : envoi mail rallumé (`mail_actif` repassé à true), coupé par erreur.
+- **25/09** Écartés par Vincent : alerte rouge sur la carte chantier sans adresse, récapitulatif envoyé à Vincent, Vincent en copie cachée des mails.
