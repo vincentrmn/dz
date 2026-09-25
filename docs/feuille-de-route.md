@@ -3,15 +3,17 @@
 À faire, prochaine étape, ce qui attend l'humain. Mis à jour en fin de session.
 
 ## Prochaine étape
-- Plan Gaichel terminé (PR #3 et #5 livrées le 21/09). Le 22/09, après un premier message posté par
-  DZ dans les conversations `22.06A-…` et `22.06C-…` (Teams ne les crée côté serveur qu'à ce
-  moment-là), le scan 10006 a complété les fiches A et C : six conversations distinctes sur A/B/C.
-  Le run du mercredi 23/09 7 h produira trois rapports Gaichel complets. Prochaine étape : les bugs
-  remontés par Francis (liste à venir) et la vérification connectée du Dashboard et de `/guide`.
+DZ dit ne pas recevoir les rapports du mercredi. Diagnostic du 25/09 : six chantiers actifs sans
+destinataire (jamais de mail, sans trace) et cinq envoyés sans preuve de réception (n8n ne garde
+pas les exécutions). Plan écrit et validé : `docs/plans/mails-rapports-traces.md`. Exécuter
+`/construire docs/plans/mails-rapports-traces.md`, lot 1 en urgence (traçabilité des envois,
+adresses par défaut, Fluhe rallumé, rattrapage du 14 au 20/09), puis lot 2 (visibilité cockpit,
+prévention).
 
 ## À faire
-- [ ] Nouvelle fiche `26.05-Logements-Leudelange` (id 22) créée inactive par le scan du 22/09 :
-      DZ vérifie le nom et le WBS, puis l'active si le chantier doit avoir son rapport.
+- [x] Nouvelle fiche `26.05-Logements-Leudelange` (id 22) créée inactive par le scan du 22/09 :
+      la fiche est maintenant active, sans destinataire ; couverte par le plan mails
+      (`docs/plans/mails-rapports-traces.md`, lot 1).
 - [ ] Bugs remontés par Francis : Vincent apporte la liste, à traiter.
 - [ ] Premier vrai login avec un compte DZ (Vincent ne peut pas le tester) ; puis régénérer le
       secret client de l'app login (il a circulé en clair) et noter sa date d'expiration.
@@ -22,6 +24,11 @@
 - [ ] Optionnel côté CBC : `New-ApplicationAccessPolicy` sur `dzconstruct@dzconstruct.lu`.
 - [ ] Questions ouvertes à Francis : conversations RT non alimentées ; compte assembleur dans chaque
       conversation (ou canaux d'équipe Teams).
+
+## Ce qui attend Vincent (mails rapports, 25/09)
+- [ ] Envoyer à Fares et Francis la demande de recherche de « Rapport technique » dans la boîte
+      `dzconstruct@dzconstruct.lu` (Autres, envoyés, indésirables).
+- [ ] Si rien n'est trouvé alors que Graph a accepté l'envoi, demander à CBC un suivi des messages.
 
 ## Ce qui attend Vincent (workflow korr, 21/09)
 - [ ] Protéger `main` sur GitHub : Settings, Branches, « Require status checks to pass », choisir `check`.
