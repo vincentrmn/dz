@@ -58,7 +58,7 @@ Vincent : l'alerte rouge sur la carte, le récapitulatif envoyé à Vincent, Vin
 
 | # | Critère | Preuve attendue | État |
 |---|---|---|---|
-| 1 | Aucune fiche active sans destinataire | `GET /webhook/dz/api/chantiers` : 0 fiche `actif` à `emails` vide | échec |
+| 1 | Aucune fiche active sans destinataire | `GET /webhook/dz/api/chantiers` : 0 fiche `actif` à `emails` vide | réussi : 25/09, `GET /webhook/dz/api/chantiers` → `{"actifs":11,"sans_email":0,"mail_coupe":0}` ; 26.01, 26.02, 26.04, 26.05, 26.06, 26.07 portent `dzconstruct@dzconstruct.lu`, Fluhe (26.07) `mail_actif` true (corrigé avant le début du lot, constaté ici) |
 | 2 | Générateur modifié et publié | `publish_workflow` sur `qZG6Q5LnQSrloeXR` ; `get_workflow_details` montre `Bilan email` → `Journaliser fin` | réussi : 25/09, `update_workflow` (9 opérations) + `publish_workflow` → version active `e8bc88ae` ; `get_workflow_details` : `Envoi email ?` [faux] → `Bilan email`, `Envoyer rapport par Graph` → `Bilan email` → `Journaliser fin` (statut et message lus dans `Bilan email`) ; jsCode déployé identique au fichier testé (sha256 `efba2ba6…`), neuf cas testés en local avec un stub de `$()` |
 | 3 | Une génération simple note le non-envoi sans dégrader le statut | `GET /webhook/dz/api/runs` : « email NON envoyé : génération sans envoi demandé », statut « Succès » | échec |
 | 4 | Un envoi demandé mais impossible est une anomalie | « Générer et envoyer » sur une fiche au toggle coupé : « email NON envoyé : toggle chantier coupé », « Succès partiel » | échec |
