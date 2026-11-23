@@ -71,7 +71,7 @@ semaine côté Hub (pas de garde journalière, Word à refaire).
 
 | # | Critère | Preuve attendue | État |
 |---|---|---|---|
-| 1 | Un jour est rattaché à sa semaine, un jour isolé reste seul, le ZIP ignore les jours | `npm test` : tests nommés de `tests/rapports.test.js`, dont `MOIS_RE` sur `…__2026-11-18_2026-11-18.pdf` | échec |
+| 1 | Un jour est rattaché à sa semaine, un jour isolé reste seul, le ZIP ignore les jours | `npm test` : tests nommés de `tests/rapports.test.js`, dont `MOIS_RE` sur `…__2026-11-18_2026-11-18.pdf` | réussi : `npm test` 9/9 ; `tests/rapports.test.js` : « chaque jour est rattaché à sa semaine lundi → dimanche », « un jour isolé reste seul », « la semaine lundi → dimanche passe avant une période libre », « le ZIP ignore les rapports du jour » (`MOIS_RE` faux sur `__2026-11-18_2026-11-18.pdf`, le 01 et le 30 aussi) |
 | 2 | Page Rapports : la semaine et son repli, sans scroll horizontal | captures `rapports-jours-1440.png`, `-390.png` (stubs locaux) | échec |
 | 3 | Dashboard : une ligne par semaine avec « + N rapports du jour » | captures `dashboard-jours-1440.png`, `-390.png` (stubs locaux) | échec |
 | 4 | `Préparer rapport` rend le bon nombre de documents | jsCode en local avec un stub de `$()`, sort 0. Résultats attendus : semaine du 16 au 22/11 avec samedi actif = 1+6 ; un jour = 1 (garde journalière) ; 31 jours = 1 ; démo = 1 | échec |
