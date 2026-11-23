@@ -407,8 +407,15 @@ async function chargerRapports() {
       zone.innerHTML = '<div class="vide">Aucun rapport pour l’instant. Lancez une génération (ou une démo) depuis un chantier.</div>';
       return;
     }
+    // Un rapport du jour rattaché à sa semaine (champ `semaine`) n'a pas sa ligne :
+    // il est compté sur celle de la semaine. Un jour sans semaine garde la sienne.
     const parCle = {};
+    const joursParSemaine = {};
     fichiers.forEach((f) => {
+      if (f.semaine) {
+        (joursParSemaine[`${f.chantier}__${f.semaine}`] = joursParSemaine[`${f.chantier}__${f.semaine}`] || new Set()).add(f.periode);
+        return;
+      }
       const cle = `${f.chantier}__${f.periode}`;
       (parCle[cle] = parCle[cle] || { chantier: f.chantier, periode: f.periode, modifie: f.modifie, formats: [] }).formats.push(f);
     });
@@ -423,7 +430,9 @@ async function chargerRapports() {
         .sort((a, b) => a.type.localeCompare(b.type))
         .map((f) => `<a href="${f.url}" ${f.type === 'html' ? 'target="_blank" rel="noopener"' : ''} title="${octets(f.taille)}">${f.type === 'html' ? 'Aperçu' : f.type.toUpperCase()}</a>`)
         .join('');
-      tr.innerHTML = `<td></td><td>${l.periode.replace(/_/g, ' → ')}</td>
+      const n = (joursParSemaine[`${l.chantier}__${l.periode}`] || new Set()).size;
+      const jours = n ? `<div class="detail">+ ${n} rapport${n > 1 ? 's' : ''} du jour</div>` : '';
+      tr.innerHTML = `<td></td><td>${l.periode.replace(/_/g, ' → ')}${jours}</td>
         <td class="detail">${new Date(l.modifie).toLocaleString('fr-FR')}</td>
         <td><div class="liens-rapport">${liens}</div></td>`;
       tr.children[0].textContent = l.chantier;
