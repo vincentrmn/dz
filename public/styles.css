@@ -293,6 +293,15 @@ details.repli summary::before { content: "▸"; font-size: 17px; line-height: 1;
 details.repli[open] summary::before { transform: rotate(90deg); }
 details.repli summary::-webkit-details-marker { display: none; }
 
+/* Page Rapports : repli « N rapports du jour » sous la ligne de sa semaine. */
+tr.avec-jours td { border-bottom: none; padding-bottom: 4px; }
+tr.jours-semaine td { padding-top: 0; }
+details.repli-jours { margin-top: 0; border-top: none; padding-top: 0; }
+.liste-jours { list-style: none; margin: 8px 0 2px 6px; padding-left: 14px; border-left: 2px solid var(--bord); }
+.liste-jours li { display: flex; align-items: center; flex-wrap: wrap; gap: 6px 16px; padding: 5px 0; }
+.liste-jours .nom-jour { display: inline-block; min-width: 150px; font-size: 13px; color: var(--encre-2); }
+.liste-jours .nom-jour::first-letter { text-transform: uppercase; }
+
 /* Zone de danger (suppression d'un chantier) */
 .zone-danger {
   margin-top: 16px; border: 1px solid #f3c9c6; background: #fff8f7;
@@ -386,6 +395,17 @@ button.danger:disabled:hover { background: var(--blanc); border-color: #e5aeaa; 
 @media (max-width: 760px) {
   .promo-guide { flex-wrap: wrap; }
   .pg-bouton { margin-left: 58px; }
+}
+
+/* Téléphone : l'en-tête et ses liens passent à la ligne, les tableaux se
+   resserrent : la page ne défile jamais à l'horizontale. */
+@media (max-width: 760px) {
+  header { flex-wrap: wrap; height: auto; padding: 10px 16px 6px; gap: 4px 16px; }
+  header .titre { border-left: none; padding-left: 0; }
+  header nav { margin-left: -12px; width: calc(100% + 12px); flex-wrap: wrap; }
+  main { padding: 24px 16px 60px; }
+  th, td { padding: 9px 6px; }
+  th { letter-spacing: 0.04em; }
 }
 
 /* Bouton scindé « Générer » (flèche visible quand l'email du chantier est actif) */
