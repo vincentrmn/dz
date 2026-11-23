@@ -38,7 +38,7 @@ function ligneJours(jours) {
   const n = jours.length;
   tr.innerHTML = `<td colspan="3"><details class="repli repli-jours">
       <summary>${n} rapport${n > 1 ? 's' : ''} du jour</summary>
-      <ul class="liste-jours">${jours.map((j) => `<li><span class="nom-jour">${jourLisible(j.periode)}</span>
+      <ul class="liste-jours">${jours.map((j) => `<li><span class="nom-jour" title="Généré le ${new Date(j.modifie).toLocaleString('fr-FR')}">${jourLisible(j.periode)}</span>
         <div class="liens-rapport">${liensRapport(j.formats)}</div></li>`).join('')}</ul>
     </details></td>`;
   return tr;

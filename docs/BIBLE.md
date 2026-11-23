@@ -152,9 +152,11 @@ conversion PDF d'un jour échoue : le Word part à sa place et le run passe en �
 
 **Retour arrière des rapports du jour.** Republier la version `e8bc88ae-bdf7-48ea-a068-a4d106f4ef8d`
 du générateur `DZ — Générer rapport chantier` (active du 25/09 au passage aux rapports du jour) : le
-mercredi repart avec le seul rapport de la semaine. Le Hub n'a rien à défaire : sans rapport du jour,
-il affiche les semaines comme avant ; les rapports du jour déjà déposés restent rangés sous leur
-semaine.
+mercredi repart avec le seul rapport de la semaine. Le code du Hub n'a rien à défaire : sans rapport du
+jour, il affiche les semaines comme avant ; les rapports du jour déjà déposés restent rangés sous leur
+semaine. La documentation, elle, est à revenir par une PR le jour même : le guide (`public/guide.html` :
+« Ce que contient un rapport », la page Rapports, le rapport automatique, l'envoi par email),
+`CLAUDE.md` §1 et ce §4 décrivent les rapports du jour.
 
 ## 5. Les quatre workflows n8n
 

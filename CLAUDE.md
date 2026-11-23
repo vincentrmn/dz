@@ -7,17 +7,16 @@ durable dans `docs/contexte/`, la référence technique complète dans `docs/BIB
 
 ## 1. Le projet en dix lignes
 
-Génération industrialisée du rapport technique hebdomadaire par chantier pour DZ Construct
-(Luxembourg). Client : Francis ; décideur : Walter ; utilisateur interne : Fares. Phase 2 en
-production depuis juillet 2026. Le mercredi matin, pour chaque chantier actif, un rapport PDF + Word
-organisé par jour avec trois chapitres : activité des équipes (Traxxeo), illustrations et explications
-techniques (conversation Teams `-RT-`), matériel et bons de livraison (conversation Teams `-BL&L-`).
-En plus, un rapport du jour par jour (lundi → vendredi, week-end si actif), tiré de la même extraction.
-Le tout part dans un seul email à `dzconstruct@dzconstruct.lu` (1 mail = 1 chantier). Pas de couche IA :
-**passthrough strict** des textes et photos, on n'invente jamais de contenu. Le cockpit web « Hub
-Rapport Technique » (Express + front statique, Railway) pilote les chantiers, la période, les runs,
-les rapports et la configuration ; quatre workflows n8n font le travail. Budget facturé : 1 à 2 jours,
-donc toujours la solution la plus simple qui remplit le besoin, rien de spéculatif.
+Génération industrialisée du rapport technique hebdomadaire par chantier pour DZ Construct (Luxembourg).
+Client : Francis ; décideur : Walter ; utilisateur interne : Fares. Phase 2 en production depuis juillet
+2026. Le mercredi matin, pour chaque chantier actif, un rapport PDF + Word organisé par jour avec trois
+chapitres : activité des équipes (Traxxeo), illustrations et explications techniques (Teams `-RT-`),
+matériel et bons de livraison (Teams `-BL&L-`) ; plus un rapport du jour par jour (lundi → vendredi,
+week-end si actif), même extraction, le tout dans un seul email à `dzconstruct@dzconstruct.lu` (1 mail =
+1 chantier). Pas de couche IA : **passthrough strict** des textes et photos, on n'invente jamais de
+contenu. Le cockpit web « Hub Rapport Technique » (Express + front statique, Railway) pilote chantiers,
+période, runs, rapports et configuration ; quatre workflows n8n font le travail. Budget facturé : 1 à 2
+jours, donc toujours la solution la plus simple qui remplit le besoin, rien de spéculatif.
 
 ## 2. Stack et commandes
 

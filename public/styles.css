@@ -397,15 +397,14 @@ button.danger:disabled:hover { background: var(--blanc); border-color: #e5aeaa; 
   .pg-bouton { margin-left: 58px; }
 }
 
-/* Téléphone : l'en-tête et ses liens passent à la ligne, les tableaux se
-   resserrent : la page ne défile jamais à l'horizontale. */
+/* Téléphone : l'en-tête et ses liens passent à la ligne, pour que le menu ne
+   fasse plus déborder la page à l'horizontale. Sur plusieurs lignes, il ne
+   reste plus collé en haut (il prendrait un cinquième de l'écran). */
 @media (max-width: 760px) {
-  header { flex-wrap: wrap; height: auto; padding: 10px 16px 6px; gap: 4px 16px; }
+  header { flex-wrap: wrap; height: auto; padding: 10px 16px 6px; gap: 4px 16px; position: static; }
   header .titre { border-left: none; padding-left: 0; }
   header nav { margin-left: -12px; width: calc(100% + 12px); flex-wrap: wrap; }
-  main { padding: 24px 16px 60px; }
-  th, td { padding: 9px 6px; }
-  th { letter-spacing: 0.04em; }
+  header .compte { margin-left: -10px; padding-left: 0; border-left: none; }
 }
 
 /* Bouton scindé « Générer » (flèche visible quand l'email du chantier est actif) */
