@@ -16,3 +16,8 @@ dans `docs/journal/`. On n'y revient pas sans une raison nouvelle.
 - **25/09** Tout chantier reçoit `dzconstruct@dzconstruct.lu` par défaut (fiches vides remplies, découverte, bouton « Ajouter un chantier ») ; la règle du 30/07 « 1 mail = 1 chantier » ne change pas.
 - **25/09** 26.07 MaisonFluhe : envoi mail rallumé (`mail_actif` repassé à true), coupé par erreur.
 - **25/09** Écartés par Vincent : alerte rouge sur la carte chantier sans adresse, récapitulatif envoyé à Vincent, Vincent en copie cachée des mails.
+- **23/11** Rapports du jour : en plus du rapport de la semaine, qui reste inchangé, un rapport par jour et par chantier, tiré de la même extraction dans le même run (boucle `Lot documents` du générateur). PDF et Word. Lundi à vendredi toujours, même vides ; samedi et dimanche seulement s'il y a eu de l'activité. Page de garde « Rapport technique journalier ».
+- **23/11** Un seul mail par chantier, qui contient la semaine et les rapports du jour : la règle du 30/07 « 1 mail = 1 chantier » ne change pas. Tout est joint si le total, mesuré une fois encodé, tient sous 3 Mo ; sinon le mail ne contient que des liens et le dit.
+- **23/11** Génération manuelle : rapports du jour seulement si la période fait 7 jours ou moins ; les archives mensuelles restent un seul rapport.
+- **23/11** Pas d'interrupteur : mise en service directe pour le cron du mercredi 25/11, parce que DZ utilise déjà la plateforme. Retour arrière : republier la version `e8bc88ae-bdf7-48ea-a068-a4d106f4ef8d` du générateur.
+- **23/11** Vérification sans mail de test : par la page Rapports, la page Debug, puis par la confirmation de Fares ou Francis après le cron.

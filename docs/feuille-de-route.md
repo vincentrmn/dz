@@ -3,20 +3,22 @@
 À faire, prochaine étape, ce qui attend l'humain. Mis à jour en fin de session.
 
 ## Prochaine étape
-DZ dit ne pas recevoir les rapports du mercredi. Diagnostic du 25/09 : six chantiers actifs sans
-destinataire (jamais de mail, sans trace) et cinq envoyés sans preuve de réception (n8n ne garde
-pas les exécutions). Plan écrit et validé : `docs/plans/mails-rapports-traces.md`. Exécuter
-`/construire docs/plans/mails-rapports-traces.md`, lot 1 en urgence (traçabilité des envois,
-adresses par défaut, Fluhe rallumé, rattrapage du 14 au 20/09), puis lot 2 (visibilité cockpit,
-prévention).
+DZ veut recevoir le mercredi, pour chaque chantier, le rapport de la semaine et un rapport par jour,
+dans un seul mail. Plan écrit et validé le 23/11 : `docs/plans/rapports-du-jour.md`. Lot 1 (Hub et
+docs) le 23/11, lot 2 (générateur) le 24/11 au plus tard, avant le cron du mercredi 25/11 à 7 h.
+Exécuter `/construire docs/plans/rapports-du-jour.md`.
 
 ## À faire
 - [x] Nouvelle fiche `26.05-Logements-Leudelange` (id 22) créée inactive par le scan du 22/09 :
       la fiche est maintenant active, sans destinataire ; couverte par le plan mails
       (`docs/plans/mails-rapports-traces.md`, lot 1).
 - [ ] Bugs remontés par Francis : Vincent apporte la liste, à traiter.
-- [ ] Premier vrai login avec un compte DZ (Vincent ne peut pas le tester) ; puis régénérer le
-      secret client de l'app login (il a circulé en clair) et noter sa date d'expiration.
+- [ ] Régénérer le secret client de l'app login (il a circulé en clair) et noter sa date
+      d'expiration. (Le premier login DZ est fait : DZ utilise déjà la plateforme.)
+- [ ] Lot 2 du plan mails (`docs/plans/mails-rapports-traces.md`), après la mise en service des
+      rapports du jour : ligne « Dernier run », badge orange de Debug, destinataire par défaut à la
+      découverte et au bouton « Ajouter un chantier », docs. Critères 5, 6 et 11 du plan mails
+      (rattrapage du 14 au 20/09, confirmation de DZ) à constater ou à clore.
 - [ ] Relecture du guide `/guide` par Vincent (et Francis), manuel PDF si demandé.
 - [ ] Qualité, non bloquant : credentials n8n à la place des secrets en clair dans `Auth Microsoft`
       ×2 et `Convertir en PDF` ; `EXECUTIONS_DATA_MAX_AGE=168` sur le service n8n Railway.
@@ -25,9 +27,18 @@ prévention).
 - [ ] Questions ouvertes à Francis : conversations RT non alimentées ; compte assembleur dans chaque
       conversation (ou canaux d'équipe Teams).
 
+## Ce qui attend Vincent (rapports du jour, 23/11)
+- [ ] Vérifier le forfait et le solde PDFShift avant mercredi (on passe d'environ 45 à environ 250
+      PDF par mois).
+- [ ] Demander à Fares de chercher le mail « Rapport technique — 26.01 SoeursFranciscaines — semaine
+      du 2026-11-09 au 2026-11-15 » (envoi du 18/11 en erreur 504). S'il n'y est pas, faire
+      « Générer et envoyer » sur 26.01 pour le 09/11 au 15/11 depuis le Dashboard.
+- [ ] Mercredi 25/11 après 7 h : regarder `/debug` et obtenir la confirmation de Fares ou Francis.
+
 ## Ce qui attend Vincent (mails rapports, 25/09)
 - [ ] Envoyer à Fares et Francis la demande de recherche de « Rapport technique » dans la boîte
-      `dzconstruct@dzconstruct.lu` (Autres, envoyés, indésirables).
+      `dzconstruct@dzconstruct.lu` (Autres, envoyés, indésirables). Peut se faire avec la demande
+      du 26.01 ci-dessus, en une seule fois.
 - [ ] Si rien n'est trouvé alors que Graph a accepté l'envoi, demander à CBC un suivi des messages.
 
 ## Ce qui attend Vincent (workflow korr, 21/09)
@@ -40,6 +51,8 @@ prévention).
       bien les exemples `22.06A-…` (non testé depuis ici, le MCP Railway masque les variables).
 
 ## Fait
+- 23/11 : plan rapports du jour validé (`docs/plans/rapports-du-jour.md`) ; preuves des critères 1 à 4
+  du plan mails fusionnées (elles étaient restées sur une branche non fusionnée).
 - 22/09 : conversations A et C rattachées par le scan 10006 après le premier message posté par DZ
   (cause du blocage : une conversation Teams sans message n'existe pas encore pour Graph) ; plan
   Gaichel terminé de bout en bout ; fiche `26.05-Logements-Leudelange` découverte, inactive.
