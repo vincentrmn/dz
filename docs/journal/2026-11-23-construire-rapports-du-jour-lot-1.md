@@ -22,7 +22,7 @@ Branche `claude/affectionate-gates-oy354j`, PR ouverte juste après cette entré
 - Critère 13 : `npm run check` sort 0 (syntaxe, eslint sans avertissement, `node --test` 9/9).
 - Débordement horizontal : mesuré connecté (`/auth/moi` simulé), sur les cinq pages, de 390 à 1440 px : débordement nul.
 - Relecture en quatre passes. Première : 1 bloquant (resserrement des tableaux sous 760 px, hors périmètre, retiré) et 5 mineurs, tous corrigés. Deuxième et troisième : mineurs uniquement, tous sur le seuil de l'en-tête, porté de 760 à 1 023 puis à 1 079 px, sauf une erreur de compte dans une preuve, corrigée. Quatrième : RAS.
-- Vérificateur : PASS (9e8c9cb), revérifié au commit final (la session principale corrigera si le verdict change).
+- Vérificateur : PASS au commit `9e8c9cb`, puis PASS au commit final du code `ab93417` (`check` 9/9, captures 1440/390 regardées, en-tête connecté mesuré sur les cinq pages à dix largeurs).
 - Migrateur : sans objet, aucun schéma.
 
 ## Ce qui n'a pas pu être vérifié
