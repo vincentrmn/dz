@@ -106,13 +106,27 @@ Ce qui se passe le mercredi à 7 h (ou lors d'un clic sur « Générer le rappor
    par partie, donc un rapport et un mail par partie.
 7. **Assemblage.** Le nœud `Fusionner sources` regroupe tout par jour ; `Préparer rapport` génère le
    HTML final (logo, page de garde, icônes de chapitres servies par le Hub, tableaux d'heures, photos).
+   **Rapports du jour** (cron du 25/11/2026 et suivants) : pour une période de 2 à 7 jours,
+   `Préparer rapport` rend le document de la semaine, inchangé, puis un document par jour : lundi à
+   vendredi toujours, même vides ; samedi et dimanche seulement s'il y a une heure Traxxeo ou un message
+   RT ou BL&L. Chaque jour a la page de garde « Rapport technique journalier » et la période
+   `<jour>_<jour>`. Une période d'un jour donne un seul document, à garde journalière ; au-delà de
+   7 jours (archives mensuelles) et en démo, un seul document. Même extraction, même run : le contenu
+   d'un jour est exactement la journée du rapport de la semaine, Graph n'est lu qu'une fois.
 8. **Conversions et dépôt.** Le HTML part chez PDFShift (→ PDF) et vers le Hub (`/api/convert/docx`,
    → Word). Les trois fichiers (aperçu HTML, PDF, Word) sont déposés sur le Hub via
    `POST /api/reports/upload` et stockés sur le **volume Railway `/app/data`** (persistant).
-   Régénérer la même période **remplace** les fichiers (pas de doublon).
+   Régénérer la même période **remplace** les fichiers (pas de doublon). La boucle `Lot documents` fait
+   passer la semaine puis chaque rapport du jour, un à la fois, dans cette chaîne. Le Hub range chaque
+   jour sous sa semaine : `GET /api/reports` lui ajoute un champ `semaine` (la période de 2 à 7 jours
+   du même chantier qui le contient, lundi → dimanche en priorité) ; un jour sans semaine garde sa
+   ligne. Le ZIP des archives mensuelles ignore les rapports du jour.
 9. **Bilan.** Statut final calculé : Succès / Succès partiel / Erreur. « Succès partiel » couvre une
    conversion en échec **et** des photos annoncées par Teams mais non téléchargées (`Assembler RT` /
-   `Assembler BLL` comparent `nbImagesAttendues` à `nbImages`).
+   `Assembler BLL` comparent `nbImagesAttendues` à `nbImages`). La ligne `dz_runs` reste unique par
+   chantier : `pdf_url`/`docx_url` sont ceux de la semaine, et le message ajoute « 5 rapports du jour »,
+   ou « 4 rapports du jour sur 5 · 18/11 : conversion PDF en échec » (un jour en échec donne « Succès
+   partiel » ; « Erreur » reste réservé à une semaine sans aucun fichier).
 10. **Email éventuel.** Six conditions cumulatives : interrupteur général `mail_actif` (nœud Config)
     + toggle email du chantier + destinataires non vides + pas en mode démo + fichier produit
     + `envoyer=true` (cron hebdo ou demande explicite du Hub). L'envoi passe par **Microsoft Graph
@@ -124,8 +138,23 @@ Ce qui se passe le mercredi à 7 h (ou lors d'un clic sur « Générer le rappor
     0,07 Mo et 2 dépassent la limite : les chantiers les plus actifs. Joindre systématiquement
     exigerait une session d'envoi en plusieurs morceaux (brouillon + upload par tranches + envoi),
     bien plus lourde — à faire seulement si DZ juge la pièce jointe indispensable partout.
+    Avec les rapports du jour, le mail reste **unique par chantier** : l'objet est suivi de
+    « (+ 5 rapports du jour) », le corps a une ligne « PDF · Word » par document et dit en clair tout
+    jour manquant. `Lister pièces jointes` prend, pour chaque document, le PDF ou à défaut le Word ; tout
+    est joint si le total, mesuré **une fois encodé** (ce que Microsoft compte), tient sous 3 Mo et que
+    chaque fichier est récupéré. Sinon rien n'est joint, et le mail le dit.
 11. **Journal final.** La ligne `dz_runs` est complétée : statut, étape, URLs PDF/Word, statistiques
     (« BLL : 5 message(s), 11 photo(s)… »).
+
+**Coût PDFShift des rapports du jour.** Un PDF par jour ouvré et par chantier actif s'ajoute à celui
+de la semaine : on passe d'environ 45 à environ 250 PDF par mois. Si les crédits manquent, la
+conversion PDF d'un jour échoue : le Word part à sa place et le run passe en « Succès partiel ».
+
+**Retour arrière des rapports du jour.** Republier la version `e8bc88ae-bdf7-48ea-a068-a4d106f4ef8d`
+du générateur `DZ — Générer rapport chantier` (active du 25/09 au passage aux rapports du jour) : le
+mercredi repart avec le seul rapport de la semaine. Le Hub n'a rien à défaire : sans rapport du jour,
+il affiche les semaines comme avant ; les rapports du jour déjà déposés restent rangés sous leur
+semaine.
 
 ## 5. Les quatre workflows n8n
 

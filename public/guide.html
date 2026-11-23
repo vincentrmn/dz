@@ -84,6 +84,14 @@
       <li><strong>Matériel et bons de livraison</strong> : les photos et messages postés dans la conversation Teams <strong>BL&amp;L</strong> (Bons de Livraison &amp; Location).</li>
     </ol>
     <p>Un chapitre sans information ce jour-là est simplement indiqué comme vide : c'est le reflet fidèle de ce qui a été partagé.</p>
+    <p>
+      En plus du rapport de la semaine, l'outil produit des <strong>rapports du jour</strong> : un par jour,
+      du lundi au vendredi toujours, et le samedi ou le dimanche seulement s'il y a eu de l'activité (des heures
+      dans Traxxeo ou un message dans Teams). Chaque rapport du jour porte la mention <strong>« Rapport technique
+      journalier »</strong> en page de garde et reprend exactement la journée telle qu'elle figure dans le rapport
+      de la semaine. Une génération manuelle sur un seul jour produit uniquement le rapport de ce jour ; sur plus
+      de 7 jours (un mois, par exemple), elle produit un seul rapport, sans rapports du jour.
+    </p>
 
     <h2 id="teams">Bien nommer les conversations Teams</h2>
     <p>
@@ -125,7 +133,7 @@
       <thead><tr><th>Page</th><th>À quoi elle sert</th></tr></thead>
       <tbody>
         <tr><td><strong>Dashboard</strong></td><td>C'est la page de travail au quotidien. Elle liste tous les chantiers et permet de les activer, de les configurer, de choisir une période et de lancer une génération manuelle, ou encore de scanner les nouvelles conversations Teams. Les derniers rapports produits s'affichent en bas.</td></tr>
-        <tr><td><strong>Rapports</strong></td><td>Elle regroupe tous les rapports générés depuis le début, classés par chantier puis par semaine. Chaque rapport se télécharge en PDF ou en Word, et peut aussi se consulter directement dans le navigateur grâce au lien Aperçu.</td></tr>
+        <tr><td><strong>Rapports</strong></td><td>Elle regroupe tous les rapports générés depuis le début, classés par chantier puis par semaine. Sous chaque semaine, le repli « 5 rapports du jour » (par exemple) ouvre une ligne par jour. Chaque rapport se télécharge en PDF ou en Word, et peut aussi se consulter directement dans le navigateur grâce au lien Aperçu.</td></tr>
         <tr><td><strong>Configuration</strong></td><td>Elle permet de régler le jour et l'heure du rapport automatique de la semaine, et de tenir à jour le carnet d'adresses des personnes qui peuvent recevoir les rapports par email sur les différents chantiers.</td></tr>
         <tr><td><strong>Comment ça marche ?</strong></td><td>C'est la page que vous lisez en ce moment. Elle sert de guide de référence pour comprendre le fonctionnement de l'outil, former un nouvel utilisateur ou retrouver une procédure oubliée, comme l'activation d'un nouveau chantier.</td></tr>
         <tr><td><strong>Debug</strong></td><td>Elle affiche l'état de santé de l'outil et le journal de toutes les générations. Si un rapport n'est pas arrivé ou semble incomplet, c'est la première page à consulter pour comprendre ce qui s'est passé et où ça a bloqué.</td></tr>
@@ -135,7 +143,7 @@
     <h2 id="hebdo">Le rapport automatique hebdomadaire</h2>
     <p>
       Chaque semaine, <strong>au jour et à l'heure que tu as définis dans la page Configuration</strong>,
-      l'outil génère le rapport de la <strong>semaine précédente</strong> (lundi → dimanche) pour
+      l'outil génère le rapport de la <strong>semaine précédente</strong> (lundi → dimanche) et ses rapports du jour pour
       <strong>tous les chantiers actifs</strong>, et l'envoie par email aux destinataires des chantiers
       dont l'envoi est activé. Le créneau se change à tout moment. Une génération manuelle reste
       possible depuis le Dashboard, sur n'importe quelle période.
@@ -148,6 +156,12 @@
       <li>Au moins un <strong>destinataire</strong> coché (le carnet d'adresses se gère dans Configuration).</li>
       <li>Un envoi déclenché : soit le <strong>rapport automatique du mercredi</strong> (envoi systématique), soit l'option <strong>« Générer et envoyer par email »</strong> de la petite flèche à côté du bouton « Générer le rapport ». Le clic simple sur « Générer le rapport » produit le rapport <em>sans</em> l'envoyer.</li>
     </ol>
+    <p>
+      Le mail reste <strong>unique par chantier</strong> : il contient le rapport de la semaine et ses rapports du jour,
+      et son objet se termine par « (+ 5 rapports du jour) », par exemple. Les rapports sont joints en PDF (en Word si
+      un PDF manque) quand l'ensemble tient sous la limite de taille de Microsoft, 3&nbsp;Mo ; sinon, le mail ne contient
+      que les liens vers les rapports, et le dit. Un jour manquant est signalé en clair dans le mail.
+    </p>
 
     <h2 id="suppression">Supprimer ou restaurer un chantier</h2>
     <p>

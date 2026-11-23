@@ -12,7 +12,8 @@ Génération industrialisée du rapport technique hebdomadaire par chantier pour
 production depuis juillet 2026. Le mercredi matin, pour chaque chantier actif, un rapport PDF + Word
 organisé par jour avec trois chapitres : activité des équipes (Traxxeo), illustrations et explications
 techniques (conversation Teams `-RT-`), matériel et bons de livraison (conversation Teams `-BL&L-`).
-Le rapport part par email à `dzconstruct@dzconstruct.lu` (1 mail = 1 chantier). Pas de couche IA :
+En plus, un rapport du jour par jour (lundi → vendredi, week-end si actif), tiré de la même extraction.
+Le tout part dans un seul email à `dzconstruct@dzconstruct.lu` (1 mail = 1 chantier). Pas de couche IA :
 **passthrough strict** des textes et photos, on n'invente jamais de contenu. Le cockpit web « Hub
 Rapport Technique » (Express + front statique, Railway) pilote les chantiers, la période, les runs,
 les rapports et la configuration ; quatre workflows n8n font le travail. Budget facturé : 1 à 2 jours,
