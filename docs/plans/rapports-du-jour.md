@@ -83,7 +83,7 @@ semaine côté Hub (pas de garde journalière, Word à refaire).
 | 10 | Docs alignées | `grep -c "rapports du jour" docs/BIBLE.md public/guide.html` ≥ 1 chacun | réussi : `docs/BIBLE.md:9`, `public/guide.html:6` ; BIBLE §4 étapes 7 à 10, coût PDFShift (≈ 45 → 250 PDF par mois), retour arrière `e8bc88ae…` ; guide : rapport, page Rapports, rapport automatique, mail ; `CLAUDE.md` §1 (124 lignes). Guide capturé à 1440 et 390 px (`.verif/guide-rapport-*.png`, `guide-email-*.png`) |
 | 11 | Le cron du 25/11 envoie tout | `GET /webhook/dz/api/runs` du 25/11 : une ligne par chantier actif, « email envoyé à » et « N rapports du jour » | échec |
 | 12 | DZ confirme la réception | message de Fares ou Francis citant un mail reçu avec ses rapports du jour, noté au journal | échec |
-| 13 | `npm run check` sort 0 | sortie de `check` | échec |
+| 13 | `npm run check` sort 0 | sortie de `check` | réussi (lot 1) : `npm run check` exit 0 (syntaxe, eslint sans avertissement, `node --test` 9/9) ; à refaire au lot 2 |
 
 ## Lots
 
