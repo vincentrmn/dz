@@ -45,6 +45,10 @@ Tests ciblés : `tests/word.test.js` (chaque défaut vu en prod donne un test).
 - Depuis l'environnement de dev distant, Chromium ne sort pas sur Internet : pour vérifier l'UI,
   servir `public/` en local avec des stubs `/api/*` et capturer sur `127.0.0.1`. `curl` sur la prod
   fonctionne. Vérifier un déploiement en pollant un marqueur dans les assets (~30 s après le push).
+- Débordement horizontal : mesurer avec l'en-tête CONNECTÉ (router `/auth/moi` pour simuler une
+  session). Avec « Déconnexion » il est plus large de ~150 px (jusqu'à ~1 060 px sur Configuration) ;
+  le banc sans `MS_*` ne l'affiche pas et laisse passer un menu qui déborde. Sous 1 080 px, l'en-tête
+  passe à la ligne et n'est plus collant.
 - Suppression d'un chantier = soft-delete (`supprime=true, actif=false`), restaurable depuis le bloc
   « Chantiers supprimés » ; rapports et historique conservés.
 - Archives : `GET /api/archives.zip` ne prend que les rapports MENSUELS non vides (seuil 92 000
