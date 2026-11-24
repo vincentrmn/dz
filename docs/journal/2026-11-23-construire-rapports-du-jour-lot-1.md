@@ -39,3 +39,32 @@ Le plan met les docs au lot 1. Dès le merge, le guide annonce donc les rapports
 
 ## Prochaine étape
 Lot 2 (critères 4 à 9, le générateur) au plus tard le mardi 24/11, avec `/construire docs/plans/rapports-du-jour.md 2`. Avant mercredi, Vincent vérifie son forfait PDFShift (question ouverte du plan).
+
+## Livraison (24/11/2026)
+
+### Décidé
+- Pas de staging : le projet n'en a pas, Vincent l'a dit et a demandé `/livrer 10` directement. Le lot avait été vérifié avant le merge sur le banc local (captures 1440, 834 et 390 px).
+- Calendrier revu par rapport au conseil de la veille (livrer après la publication du générateur) : le lot 1 est livré le 24/11, avant le lot 2. Raisons : le plan veut le lot 1 en ligne d'abord, pour que les rapports du jour produits par les tests du lot 2 arrivent déjà rangés sous leur semaine ; le lot 2 se fait le même jour, donc le guide n'annonce les rapports du jour que quelques heures trop tôt.
+
+### Fait
+- PR vincentrmn/dz#10 : CI `check` verte sur `3a2c539`, `mergeable_state` clean, aucun fil de relecture ni commentaire. Squash-merge en `e3c36a1` vers 12 h 50 UTC.
+- Déploiement Railway `f3445cbf` en SUCCESS, environ 45 s après sa création. Dernier déploiement sain avant celui-ci, à garder comme repli : `63855e9c` (commit `23759d7`).
+
+### Vérifié et comment
+- Déploiement : la prod servait encore l'ancien CSS (empreinte `bc482625…`, celle de `23759d7`) juste avant le merge, puis le nouveau (`ceeff27b…`) 63 s après. Cette empreinte est identique à celle de `git show e3c36a1:public/styles.css` et de la branche vérifiée ; le diff entre `3a2c539` et `e3c36a1` est vide.
+- Smoke en ligne, vérificateur PASS, en `curl` sans jeton :
+  - `/api/health` : 200, `cockpit ok`, `n8n ok`, `stockage ok`, `rapports 747`.
+  - `/styles.css` : 200, contient `@media (max-width: 1079px)` et `.repli-jours`.
+  - `/icons/equipes.png`, `/icons/illustrations.png`, `/icons/materiel.png` et `/login` : 200.
+  - `/`, `/rapports`, `/guide`, `/configuration`, `/debug`, `/rapports.js` et `/app.js` : 302 vers `/login?suite=…`.
+  - `/api/reports` et `/api/archives.zip` : 401.
+  - Webhooks n8n `dz/api/chantiers` et `dz/api/runs` : 200 en JSON.
+
+### Non vérifié en ligne
+Session Microsoft ou jeton de service requis : le rendu connecté des pages, l'en-tête sur téléphone et tablette en vrai, le contenu de `/api/reports` avec le champ `semaine`, le guide en ligne. C'est à Vincent de les voir, connecté, sur ordinateur et téléphone. Aucun rapport du jour n'existe encore en prod, donc Rapports et Dashboard s'affichent comme avant.
+
+### Leçons
+Aucune nouvelle : la règle de `.claude/rules/cockpit.md` sur le marqueur de déploiement couvre déjà l'essentiel ici (l'empreinte de `/styles.css`, route publique, a servi de marqueur).
+
+### Prochaine étape
+Aujourd'hui avant le soir : le lot 2 avec `/construire docs/plans/rapports-du-jour.md 2`. Le forfait PDFShift est à vérifier par Vincent avant mercredi.
