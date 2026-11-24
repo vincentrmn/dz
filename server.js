@@ -209,6 +209,42 @@ app.post('/api/reports/upload', express.raw({ type: '*/*', limit: '100mb' }), (r
   res.json({ ok: true, fichier: name, url: `/reports/${encodeURIComponent(name)}` });
 });
 
+// Rapports du jour : un rapport d'un jour (période `<jour>_<jour>`) est rattaché à
+// la période de 2 à 7 jours du même chantier qui le contient, la semaine
+// lundi → dimanche en priorité (puis la plus longue, puis la plus récente). Il
+// reçoit alors un champ `semaine`. Un jour qu'aucune période ne contient reste seul.
+const PERIODE_RE = /^(\d{4})-(\d{2})-(\d{2})_(\d{4})-(\d{2})-(\d{2})$/;
+const JOUR_MS = 86400000;
+
+function bornesPeriode(periode) {
+  const m = String(periode).match(PERIODE_RE);
+  if (!m) return null;
+  const debut = Date.UTC(+m[1], +m[2] - 1, +m[3]);
+  const fin = Date.UTC(+m[4], +m[5] - 1, +m[6]);
+  return { debut, fin, jours: Math.round((fin - debut) / JOUR_MS) + 1 };
+}
+
+function rattacherJours(fichiers) {
+  const semaines = {};
+  for (const f of fichiers) {
+    const b = bornesPeriode(f.periode);
+    if (!b || b.jours < 2 || b.jours > 7) continue;
+    const liste = (semaines[f.chantier] = semaines[f.chantier] || []);
+    if (liste.some((s) => s.periode === f.periode)) continue;
+    const lundiDimanche = b.jours === 7 && new Date(b.debut).getUTCDay() === 1;
+    liste.push({ periode: f.periode, ...b, lundiDimanche });
+  }
+  for (const liste of Object.values(semaines)) {
+    liste.sort((a, b) => (b.lundiDimanche - a.lundiDimanche) || (b.jours - a.jours) || (b.debut - a.debut));
+  }
+  return fichiers.map((f) => {
+    const b = bornesPeriode(f.periode);
+    if (!b || b.jours !== 1) return f;
+    const s = (semaines[f.chantier] || []).find((x) => x.debut <= b.debut && b.debut <= x.fin);
+    return s ? { ...f, semaine: s.periode } : f;
+  });
+}
+
 app.get('/api/reports', (req, res) => {
   const files = fs.readdirSync(REPORTS_DIR).map((f) => {
     const st = fs.statSync(path.join(REPORTS_DIR, f));
@@ -224,7 +260,7 @@ app.get('/api/reports', (req, res) => {
     };
   });
   files.sort((a, b) => (a.modifie < b.modifie ? 1 : -1));
-  res.json(files);
+  res.json(rattacherJours(files));
 });
 
 // ---------------------------------------------------------------------------
@@ -300,4 +336,4 @@ if (require.main === module) {
   });
 }
 
-module.exports = { app, htmlPourWord, forcerWordModerne, MOIS_RE, SEUIL_VIDE };
+module.exports = { app, htmlPourWord, forcerWordModerne, MOIS_RE, SEUIL_VIDE, rattacherJours };

@@ -4,9 +4,9 @@
 
 ## Prochaine étape
 DZ veut recevoir le mercredi, pour chaque chantier, le rapport de la semaine et un rapport par jour,
-dans un seul mail. Plan écrit et validé le 23/11 : `docs/plans/rapports-du-jour.md`. Lot 1 (Hub et
-docs) le 23/11, lot 2 (générateur) le 24/11 au plus tard, avant le cron du mercredi 25/11 à 7 h.
-Exécuter `/construire docs/plans/rapports-du-jour.md`.
+dans un seul mail. Plan : `docs/plans/rapports-du-jour.md`. Lot 1 (Hub et docs) construit le 23/11,
+en PR. Reste le lot 2 (générateur, critères 4 à 9) au plus tard le mardi 24/11, avant le cron du
+mercredi 25/11 à 7 h : `/construire docs/plans/rapports-du-jour.md 2`.
 
 ## À faire
 - [x] Nouvelle fiche `26.05-Logements-Leudelange` (id 22) créée inactive par le scan du 22/09 :
@@ -30,6 +30,10 @@ Exécuter `/construire docs/plans/rapports-du-jour.md`.
 ## Ce qui attend Vincent (rapports du jour, 23/11)
 - [ ] Vérifier le forfait et le solde PDFShift avant mercredi (on passe d'environ 45 à environ 250
       PDF par mois).
+- [ ] Lot 1 : passer par `/staging`, puis `/livrer`. Calendrier : le guide annonce les rapports du
+      jour dès le merge, alors qu'ils n'existent qu'après le lot 2 (24/11) ; l'en-tête change aussi
+      dès le merge, visible par DZ sur téléphone et tablette. Conseil : `/livrer` le 24/11 juste
+      après la publication du générateur, ou accepter un jour d'écart.
 - [ ] Demander à Fares de chercher le mail « Rapport technique — 26.01 SoeursFranciscaines — semaine
       du 2026-11-09 au 2026-11-15 » (envoi du 18/11 en erreur 504). S'il n'y est pas, faire
       « Générer et envoyer » sur 26.01 pour le 09/11 au 15/11 depuis le Dashboard.
@@ -51,6 +55,10 @@ Exécuter `/construire docs/plans/rapports-du-jour.md`.
       bien les exemples `22.06A-…` (non testé depuis ici, le MCP Railway masque les variables).
 
 ## Fait
+- 23/11 : lot 1 des rapports du jour construit (PR) : rattachement des jours à leur semaine dans
+  `GET /api/reports`, pages Rapports et Dashboard, BIBLE, guide, `CLAUDE.md` §1 ; en-tête qui passe
+  à la ligne sous 1 080 px. Reste à faire à 390 px, préexistant : tableaux du Dashboard, des
+  contacts du guide et de Configuration.
 - 23/11 : plan rapports du jour validé (`docs/plans/rapports-du-jour.md`) ; preuves des critères 1 à 4
   du plan mails fusionnées (elles étaient restées sur une branche non fusionnée).
 - 22/09 : conversations A et C rattachées par le scan 10006 après le premier message posté par DZ

@@ -21,3 +21,4 @@ dans `docs/journal/`. On n'y revient pas sans une raison nouvelle.
 - **23/11** Génération manuelle : rapports du jour seulement si la période fait 7 jours ou moins ; les archives mensuelles restent un seul rapport.
 - **23/11** Pas d'interrupteur : mise en service directe pour le cron du mercredi 25/11, parce que DZ utilise déjà la plateforme. Retour arrière : republier la version `e8bc88ae-bdf7-48ea-a068-a4d106f4ef8d` du générateur.
 - **23/11** Vérification sans mail de test : par la page Rapports, la page Debug, puis par la confirmation de Fares ou Francis après le cron.
+- **23/11** En-tête du Hub : sous 1 080 px, il passe à la ligne et n'est plus collant (165 px sur trois lignes à 390 px), parce que le menu de 840 px (jusqu'à ~1 060 px connecté) faisait déborder toutes les pages et que le critère « sans scroll horizontal » des rapports du jour l'exige. Les tableaux préexistants qui débordent à 390 px restent hors périmètre.

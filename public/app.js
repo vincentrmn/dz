@@ -407,12 +407,29 @@ async function chargerRapports() {
       zone.innerHTML = '<div class="vide">Aucun rapport pour l’instant. Lancez une génération (ou une démo) depuis un chantier.</div>';
       return;
     }
+    // Un rapport du jour rattaché à sa semaine (champ `semaine`) n'a pas sa ligne :
+    // il est compté sur celle de la semaine, qui prend la date la plus récente du
+    // groupe (un jour régénéré seul remonte sa semaine). Un jour sans semaine garde sa ligne.
     const parCle = {};
+    const joursParSemaine = {};
     fichiers.forEach((f) => {
+      if (f.semaine) {
+        const j = (joursParSemaine[`${f.chantier}__${f.semaine}`] = joursParSemaine[`${f.chantier}__${f.semaine}`] || { periodes: new Set(), modifie: f.modifie });
+        j.periodes.add(f.periode);
+        if (f.modifie > j.modifie) j.modifie = f.modifie;
+        return;
+      }
       const cle = `${f.chantier}__${f.periode}`;
-      (parCle[cle] = parCle[cle] || { chantier: f.chantier, periode: f.periode, modifie: f.modifie, formats: [] }).formats.push(f);
+      const l = (parCle[cle] = parCle[cle] || { chantier: f.chantier, periode: f.periode, modifie: f.modifie, formats: [] });
+      l.formats.push(f);
+      if (f.modifie > l.modifie) l.modifie = f.modifie;
     });
     const lignes = Object.values(parCle);
+    lignes.forEach((l) => {
+      const j = joursParSemaine[`${l.chantier}__${l.periode}`];
+      l.jours = j ? j.periodes.size : 0;
+      if (j && j.modifie > l.modifie) l.modifie = j.modifie;
+    });
     lignes.sort((a, b) => (a.modifie < b.modifie ? 1 : -1));
     const tbl = document.createElement('table');
     tbl.innerHTML = '<thead><tr><th>Chantier</th><th>Période</th><th>Généré le</th><th>Téléchargements</th></tr></thead>';
@@ -423,7 +440,9 @@ async function chargerRapports() {
         .sort((a, b) => a.type.localeCompare(b.type))
         .map((f) => `<a href="${f.url}" ${f.type === 'html' ? 'target="_blank" rel="noopener"' : ''} title="${octets(f.taille)}">${f.type === 'html' ? 'Aperçu' : f.type.toUpperCase()}</a>`)
         .join('');
-      tr.innerHTML = `<td></td><td>${l.periode.replace(/_/g, ' → ')}</td>
+      const n = l.jours;
+      const jours = n ? `<div class="detail">+ ${n} rapport${n > 1 ? 's' : ''} du jour</div>` : '';
+      tr.innerHTML = `<td></td><td>${l.periode.replace(/_/g, ' → ')}${jours}</td>
         <td class="detail">${new Date(l.modifie).toLocaleString('fr-FR')}</td>
         <td><div class="liens-rapport">${liens}</div></td>`;
       tr.children[0].textContent = l.chantier;
